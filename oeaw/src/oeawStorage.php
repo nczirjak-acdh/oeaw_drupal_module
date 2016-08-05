@@ -4,25 +4,36 @@ namespace Drupal\oeaw;
 
 class oeawStorage {
     
+    public static $prefixes = 'PREFIX dct: <http://purl.org/dc/terms/> PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#>';
+    public static $sparqlEndpoint = 'http://blazegraph:9999/blazegraph/sparql';
+    public static $fedoraUrl = 'http://fedora:8080/rest/';
+    
 
-    /* way = code/encode */
+    
+    /* 
+     * 
+     * way = code/encode 
+     */
     public function createDetailsUrl($data, $way = 'code')
     {                
         if($way == 'code')
         {
-            $data = str_replace('http://fedora:8080/rest/', '', $data);
+            $data = str_replace(self::$fedoraUrl, '', $data);
             $str = str_replace('/', '_', $data);            
         }
         
         if($way == 'encode')
         {            
             $data = str_replace('_', '/', $data);                        
-            $str = 'http://fedora:8080/rest/'.$data;            
+            $str = self::$fedoraUrl.$data;            
         }
         
         return $str;        
     }
     
+    /*  
+     * generating the table to show the results
+     */
     public function generateTable($data, $text = null, $goBackUrl = '/oeaw_menu')
     {        
         $fields = $data->getFields();
@@ -76,7 +87,6 @@ class oeawStorage {
                 '#type' => 'markup',
                 '#markup' => '<a href="'.$goBackUrl.'">Go Back</a>',          
         );            
-
         
         return array(
             $hdrTxt,
@@ -87,12 +97,14 @@ class oeawStorage {
         
     }
     
+    /*  
+     * get the root elements from fedora
+     */
     public function getRootFromDB()
-    {
-    
-        $sparql = new \EasyRdf_Sparql_Client('http://blazegraph:9999/blazegraph/sparql');
+    {    
+        $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
       
-        $result = $sparql->query('PREFIX dct: <http://purl.org/dc/terms/>'
+        $result = $sparql->query(self::$prefixes.' '
                 . 'select * WHERE {  '                
                 . '?uri dct:title ?title .'                
                 . 'FILTER ('
@@ -102,107 +114,57 @@ class oeawStorage {
                 . ')'
                 . '}'
                 . ''
-        );
-        
-        return $result;
-    
-        /*
-         * 
-         * ez ,mukodik
-        $res = array();        
-        
-        foreach ((array)$result[0] as $d)
-        {
-            $array = (array)$d;
-            $prefix = chr(0).'*'.chr(0);
-            
-            if(!empty($array[$prefix.'uri']))
-            {
-                $res['uri']=$array[$prefix.'uri'];
-            }
-            
-            if(!empty($array[$prefix.'value']))
-            {
-                $res['value']=$array[$prefix.'value'];
-            }        
-        }
-        */
-        
-        return $res;  
-  }
+        );        
+        return $result;    
+    }
   
-  
-    /* Get All Data from Fedora 4 DB */
-    static function getAllSparqlData()
-    {
-        $sparql = new \EasyRdf_Sparql_Client('http://blazegraph:9999/blazegraph/sparql');
-        $result = $sparql->query('PREFIX dct: <http://purl.org/dc/terms/>  SELECT * WHERE { ?s ?p ?o}');    
-    
-        foreach ($result as $row) {
-            //echo "<li>".link_to($row->label, $row->country)."</li>\n";
-            print_r($row);
-        }
-    
-        die();
-
-        $returnArray = array();
-
-        $i=0;
-
-        foreach ($result as $d)
-        {
-            foreach($d as $key => $value)
-            {           
-                $returnArray[$i][$key] = $value;
-            }
-            $i++;
-        }
-    
-        return $returnArray;
-    
-  }
-  
+   /* get all data by uri */
     public static function getPropertyByURI($uri)
     {      
         if(empty($uri)) { return false; }
         
-            $sparql = new \EasyRdf_Sparql_Client('http://blazegraph:9999/blazegraph/sparql');
-            $result = $sparql->query('PREFIX dct: <http://purl.org/dc/terms/>  SELECT * WHERE { <'.$uri.'> ?p ?o}');
+            $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
+            $result = $sparql->query(self::$prefixes.' SELECT * WHERE { <'.$uri.'> ?p ?o}');
         
         return $result;
     }
     
+    /* get all data by property and URI */
     public static function getDefPropByURI($uri, $property)
     {
         if(empty($uri) && empty($property)) { return false; }
         
-            $sparql = new \EasyRdf_Sparql_Client('http://blazegraph:9999/blazegraph/sparql');
+            $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
         
             // the result will be an EasyRdf_Sparql_Result Object
-            $result = $sparql->query('PREFIX dct: <http://purl.org/dc/terms/>  SELECT * WHERE { <'.$uri.'> ?property ?value . <'.$uri.'> '.$property.' ?value . }');
+            $result = $sparql->query(self::$prefixes.' SELECT * WHERE { <'.$uri.'> ?property ?value . <'.$uri.'> '.$property.' ?value . }');
         
         return $result;        
     }
     
+    /* get all data by property */
     public static function getDataByProp($property)
     {        
         if(empty($property)) { return false; }
         
-        $sparql = new \EasyRdf_Sparql_Client('http://blazegraph:9999/blazegraph/sparql');
+        $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
         
         // the result will be an EasyRdf_Sparql_Result Object
-        $result = $sparql->query('PREFIX dct: <http://purl.org/dc/terms/>  SELECT * WHERE { ?uri '.$property.' ?value . }');
+        $result = $sparql->query(self::$prefixes.' SELECT * WHERE { ?uri '.$property.' ?value . }');
         
         return $result;        
     }
     
+    /*
+     * get the child resources by Uri
+     */
     public static function getPartOfUri($uri)
     {
         if(empty($uri)) { return false; }
         
-            $sparql = new \EasyRdf_Sparql_Client('http://blazegraph:9999/blazegraph/sparql');
+            $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
         
-        $result = $sparql->query('PREFIX dct: <http://purl.org/dc/terms/> SELECT * WHERE { ?uri dct:isPartOf <'.$uri.'> .  ?uri dct:title ?title .}');
+        $result = $sparql->query(self::$prefixes.' SELECT * WHERE { ?uri dct:isPartOf <'.$uri.'> .  ?uri dct:title ?title .}');
         
         $res = array();
         

@@ -1,5 +1,5 @@
 name: oeaw
-description: 'oeaw Contact Form.'
+description: 'oeaw Fedora module.'
 type: module
 core: 8.x
 package: oeaw

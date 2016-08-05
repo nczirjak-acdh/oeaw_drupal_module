@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 
 class SearchForm extends FormBase
 {
+     
     
     public function getFormId()
     {
@@ -36,6 +37,8 @@ class SearchForm extends FormBase
             'dct:created' => t('dct:created'),            
             'dct:isPartOf' => t('dct:isPartOf'),              
             'rdf:type' => t('rdf:type'),
+            'ebucore:filename' => t('ebucore:filename'),
+            'ebucore:hasMimeType' => t('ebucore:hasMimeType'),
           ),
         );
         
