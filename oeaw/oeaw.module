@@ -1,0 +1,39 @@
+<?php
+
+/**
+* Implements hook_menu()
+*/
+function oeaw_array() {
+  return array(
+    'admin/content/oeaw' => array(
+      'title' => 'oeaw submissions',
+      'route_name' => 'oeaw_list',
+    ),
+    'oeaw_list' => array(
+      'title' => 'oeaw submissions Frontend',
+      'route_name' => 'oeaw_frontend_list',
+    ),
+    'admin/content/oeaw/add' => array(
+      'title' => 'oeaw',
+      'route_name' => 'oeaw_add',
+    ),
+    'admin/content/oeaw/delete/%' => array(
+      'title' => 'oeaw Contact submission',
+      'route_name' => 'oeaw_delete',
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission()
+ */
+/*function bd_contact_permission() {
+  return array(
+    'manage bd contact forms' => array(
+      'title' => t('Manage bd contact form submissions'),
+    ),
+    'use bd contact form' => array(
+      'title' => t('Use the bd contact form'),
+    ),
+  );
+}*/

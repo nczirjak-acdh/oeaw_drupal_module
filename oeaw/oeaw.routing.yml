@@ -1,0 +1,50 @@
+oeaw_menu:
+  path: '/oeaw_menu'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\AdminController::oeaw_menu'
+  requirements:
+    _permission: 'access content'
+
+oeaw_add:
+  path: '/admin/content/oeaw/add'
+  defaults:
+    _form: '\Drupal\oeaw\AddForm'
+    _title: 'Create contact'
+  requirements:
+    _permission: 'use bd contact form'
+
+oeaw_meta_uri_search:
+  path: '/oeaw_meta_uri_search'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\AdminController::meta_uri_search'
+  requirements:
+    _permission: 'access content'
+
+oeaw_detail_list:
+  path: '/oeaw_detail/{uri}'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\AdminController::detail_list'
+  requirements:
+    _permission: 'access content'
+        
+oeaw_resource_list:
+  path: '/oeaw_resources'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\AdminController::resource_list'
+  requirements:
+    _permission: 'access content'
+    
+oeaw_new_resource:
+  path: '/oeaw_new'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\AdminController::new_resource'
+  requirements:
+    _permission: 'access content'
+    
+oeaw_roots:
+  path: '/oeaw_roots'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\AdminController::roots_list'
+  requirements:
+    _permission: 'access content'    
+    

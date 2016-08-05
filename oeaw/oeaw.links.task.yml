@@ -1,0 +1,4 @@
+oeaw_list:
+  title: oeaw
+  route_name: oeaw_list
+  base_route: system.admin_content
