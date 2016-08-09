@@ -27,6 +27,60 @@ class SearchForm extends FormBase
             '#value' => $my_field_value,
         );*/
         
+        $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
+        
+        /*
+        $propertyArray = array();
+        
+        $shortcuts = array(
+            "http://fedora.info/definitions/v4/repository#" => 'fedorarepo:',
+            "http://vocabs.acdh.oeaw.ac.at/#" => 'vocabs:',
+            "http://www.w3.org/ns/ldp#" => 'w3:',
+            "http://www.oeaw.ac.at/acdh/amc" => 'acdh_amc:',
+        );
+        
+        foreach ($propertys as $r)
+        {               
+            // header elements foreach            
+            $r = (array)$r;    
+            $prop = explode("#",$r['p']);
+            
+            foreach($shortcuts as $key => $value)
+            {
+                echo $key;
+                echo "--";
+            }
+            
+            $propertyArray[] = $prop[0];
+        }
+        
+        $matching = array();
+        
+            
+            echo "<pre>";
+            var_dump($propertyArray);
+            echo "</pre>";
+
+            die();
+
+
+
+
+            die();
+        
+                        echo "<pre>";
+        var_dump($propertyArray);
+        echo "</pre>";
+        
+        foreach($propertyArray as $d)
+        {
+            echo $d; echo "---";
+        }
+        
+        */
+
+
+
         $form['metakey'] = array (
           '#type' => 'select',
           '#title' => ('MetaKey'),
@@ -42,10 +96,16 @@ class SearchForm extends FormBase
           ),
         );
         
+        $form['metavalue'] = array(
+          '#type' => 'textfield',
+          '#title' => ('MetaValue'),          
+        );
+        
         $form['uri'] = array(
           '#type' => 'textfield',
           '#title' => ('URI'),          
         );
+        
      
         $form['actions']['#type'] = 'actions';
         $form['actions']['submit'] = array(
@@ -77,25 +137,8 @@ class SearchForm extends FormBase
         
             $_SESSION['oeaw_form_result_'.$key] = $value;            
             $url = Url::fromRoute('oeaw_resource_list');
-            $form_state->setRedirectUrl($url);
+            $form_state->setRedirectUrl($url);           
            
-            /*if($key == 'uri')              
-            {
-                if(!empty($value)) 
-                {                         
-                    
-                }            
-            }
-          
-            if($key == 'metakey')
-            {                
-                if(!empty($value)) 
-                {                                                          
-                    $_SESSION['oeaw_form_result_'.$key] = $value;            
-                    $url = Url::fromRoute('oeaw_resource_list');
-                    $form_state->setRedirectUrl($url);
-                }                    
-            } */         
         }
     }
   

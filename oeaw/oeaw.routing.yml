@@ -23,7 +23,7 @@ oeaw_meta_uri_search:
 oeaw_detail_list:
   path: '/oeaw_detail/{uri}'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::detail_list'
+    _controller: '\Drupal\oeaw\Controller\AdminController::oeaw_detail'
   requirements:
     _permission: 'access content'
         

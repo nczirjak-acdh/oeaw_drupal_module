@@ -10,6 +10,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\oeaw\oeawStorage;
+use Drupal\oeaw\oeawFunctions;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\SafeMarkup;
@@ -24,15 +25,18 @@ class AdminController extends ControllerBase
      * Detail view after the user clicked on the details button
      * 
      */
-    public function detail_list($uri, Request $request) 
+    public function oeaw_detail($uri, Request $request) 
     {
         if(empty($uri)) { return false; }
+ 
+
+        $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'encode');        
+        $data = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);     
+        $table = \Drupal\oeaw\oeawFunctions::generateTable($data, $text = "root");
+        $data2 = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($uri);
+        $table2 = \Drupal\oeaw\oeawFunctions::generateTable($data2, $text = "child resources");
         
-        $uri = \Drupal\oeaw\oeawStorage::createDetailsUrl($uri, 'encode');        
-        $data = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);        
-        $table = \Drupal\oeaw\oeawStorage::generateTable($data, $text = null);
-        
-        return $table;        
+        return array($table, $table2);
     }      
       
     
@@ -56,17 +60,18 @@ class AdminController extends ControllerBase
         $formData = $_SESSION['oeaw_form_result'];
         $formUri = $_SESSION['oeaw_form_result_uri'];        
         $metaKey = $_SESSION['oeaw_form_result_metakey'];
+        $metaValue = $_SESSION['oeaw_form_result_metavalue'];
         
         if(!empty($formUri))
         {            
-            $result = \Drupal\oeaw\oeawStorage::getDefPropByURI($formUri, $metaKey);        
+            $result = \Drupal\oeaw\oeawStorage::getDefPropByURI($formUri, $metaKey, $metaValue);        
         }
         else
         {
-            $result = \Drupal\oeaw\oeawStorage::getDataByProp($metaKey);
+            $result = \Drupal\oeaw\oeawStorage::getDataByProp($metaKey, $metaValue);
         }
         
-        $result2 = \Drupal\oeaw\oeawStorage::generateTable($result, $metaKey);
+        $result2 = \Drupal\oeaw\oeawFunctions::generateTable($result, $metaKey);
         
         if($result2 == false)
         {
@@ -82,10 +87,11 @@ class AdminController extends ControllerBase
      */
     public function roots_list()
     {
-         $result = \Drupal\oeaw\oeawStorage::getRootFromDB();         
-         $table = \Drupal\oeaw\oeawStorage::generateTable($result);
+         $result = \Drupal\oeaw\oeawStorage::getRootFromDB();                      
+         $table = \Drupal\oeaw\oeawFunctions::generateTable($result);
+         
         
-         return $table;
+         return array($table);
     }
     
     /*
@@ -126,6 +132,9 @@ class AdminController extends ControllerBase
         );
 
         return $table;
-    }    
+    }
+
+    
+    
   
 }
