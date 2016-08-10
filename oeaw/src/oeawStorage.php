@@ -7,7 +7,9 @@ use Drupal\oeaw\oeawFunctions;
 
 class oeawStorage {
     
-    public static $prefixes = 'PREFIX dct: <http://purl.org/dc/terms/> PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#>';
+    public static $prefixes = 'PREFIX dct: <http://purl.org/dc/terms/> PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> '
+            . 'PREFIX premis: <http://www.loc.gov/premis/rdf/v1#> PREFIX acdh: <http://vocabs.acdh.oeaw.ac.at/#> '
+            . 'PREFIX fedora: <http://fedora.info/definitions/v4/repository#> ';
     public static $sparqlEndpoint = 'http://blazegraph:9999/blazegraph/sparql';
     public static $fedoraUrl = 'http://fedora:8080/rest/';
     public static $fedoraDownloadUrl = 'http://fedora.localhost/rest/';

@@ -50,6 +50,21 @@ class AdminController extends ControllerBase
         return $form;                
     }
     
+    /*  
+     * new 
+     */
+    public function add_result()
+    {
+        $formData = $_SESSION['oeaw_form_result'];
+        echo $formUri = $_SESSION['oeaw_form_result_uri'];        
+        echo $root = $_SESSION['oeaw_form_result_root_sparql'];
+        echo $child = $_SESSION['oeaw_form_result_child_sparql'];
+        echo $file_s = $_SESSION['oeaw_form_result_file_sparql'];
+        echo $file = $_SESSION['oeaw_form_result_file'];
+        
+        die();
+    }
+    
     /*
      *  
      * A mostani all_list utani keresonek az eredmeny oldala
@@ -99,7 +114,8 @@ class AdminController extends ControllerBase
      */
     public function new_resource()
     {
-        die("new_resource");
+        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');                            
+        return $form;                
     }
   
     /*

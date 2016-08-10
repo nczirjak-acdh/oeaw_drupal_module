@@ -20,71 +20,15 @@ class SearchForm extends FormBase
    * {@inheritdoc}.
    */
     public function buildForm(array $form, FormStateInterface $form_state) 
-    { 
-        /*
-        $form['uri'] = array(
-             '#type' => 'hidden',
-            '#value' => $my_field_value,
-        );*/
-        
+    {   
         $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
+        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixes($propertys);
         
+        //echo substr(strrchr("http://www.iana.org/assignments/relation/describedby", "/"), 1);
+     
         /*
-        $propertyArray = array();
         
-        $shortcuts = array(
-            "http://fedora.info/definitions/v4/repository#" => 'fedorarepo:',
-            "http://vocabs.acdh.oeaw.ac.at/#" => 'vocabs:',
-            "http://www.w3.org/ns/ldp#" => 'w3:',
-            "http://www.oeaw.ac.at/acdh/amc" => 'acdh_amc:',
-        );
-        
-        foreach ($propertys as $r)
-        {               
-            // header elements foreach            
-            $r = (array)$r;    
-            $prop = explode("#",$r['p']);
-            
-            foreach($shortcuts as $key => $value)
-            {
-                echo $key;
-                echo "--";
-            }
-            
-            $propertyArray[] = $prop[0];
-        }
-        
-        $matching = array();
-        
-            
-            echo "<pre>";
-            var_dump($propertyArray);
-            echo "</pre>";
-
-            die();
-
-
-
-
-            die();
-        
-                        echo "<pre>";
-        var_dump($propertyArray);
-        echo "</pre>";
-        
-        foreach($propertyArray as $d)
-        {
-            echo $d; echo "---";
-        }
-        
-        */
-
-
-
-        $form['metakey'] = array (
-          '#type' => 'select',
-          '#title' => ('MetaKey'),
-          '#options' => array(
+        $hardCoded = array(
             '' => t(''),
             'dct:title' => t('dct:title'),
             'dct:description' => t('dct:description'),
@@ -93,9 +37,17 @@ class SearchForm extends FormBase
             'rdf:type' => t('rdf:type'),
             'ebucore:filename' => t('ebucore:filename'),
             'ebucore:hasMimeType' => t('ebucore:hasMimeType'),
+          );
+            */
+
+          $form['metakey'] = array (
+          '#type' => 'select',
+          '#title' => ('MetaKey'),
+          '#options' => array(
+            $searchTerms
           ),
         );
-        
+       
         $form['metavalue'] = array(
           '#type' => 'textfield',
           '#title' => ('MetaValue'),          

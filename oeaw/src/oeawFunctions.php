@@ -11,7 +11,65 @@ class oeawFunctions {
     public static $fedoraUrl = 'http://fedora:8080/rest/';
     public static $fedoraUrlwHttp = 'fedora:8080/rest/';
     public static $fedoraDownloadUrl = 'http://fedora.localhost/rest/';
+    public static $prefixes = array(
+                                    "http://fedora.info/definitions/v4/repository" => "fedora",
+                                    "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore" => "ebucore",            
+                                    "http://www.loc.gov/premis/rdf/v1" => "premis",            
+                                    "http://www.jcp.org/jcr/nt/1.0" => "nt",
+                                    "http://www.w3.org/2000/01/rdf-schema" => "rdfs",
+                                    "http://www.iana.org/assignments/relation/describedby" => "",
+                                    "http://vocabs.acdh.oeaw.ac.at/" => "acdh",
+                                    "http://purl.org/dc/elements/1.1/" => "dc",
+                                );
+        
 
+    /*
+     * 
+     * Creates an array from the $prefixes array 
+     * and from the propertys from fedora
+     * 
+     */
+    
+    public function createPrefixes($propertys)
+    {
+        if(empty($propertys)) { return false; }
+        
+        $fields = $propertys->getFields();
+        $propArr = array();
+        
+        foreach ($propertys as $p)
+        {
+            foreach($fields as $f)
+            {
+                $p = (array)$p;
+                $val = $p[$f];                
+                $val = $val->dumpValue('string');                                
+                $propArr[$val] = t($val);                
+            }
+        }        
+        
+        foreach($propArr as $key => $value)
+        {
+            $kUri = explode('#', $key);            
+            foreach(self::$prefixes as $pkey => $pvalue)
+            {    
+                if(!empty($kUri[1]))
+                {
+                    if($kUri[0] == $pkey)
+                    {
+                        $newProp[$pvalue.':'.$kUri[1]] = $pvalue.':'.$kUri[1];
+                    }                    
+                }
+                else
+                {
+                    $newProp[$key] = $key;
+                }
+            }    
+        }
+        
+        return $newProp;
+    }
+    
     /*
      * We need to check the URL
      * case 1: if it is starting with http then we creating a LINK
@@ -33,13 +91,7 @@ class oeawFunctions {
                 }
                 $value = t('<a href="'.$value.'">'.$value.'</a>');            
                 return $value;
-            }            
-            /*elseif(substr($value, 0,17) == self::$fedoraUrlwHttp)
-            {
-                $value = str_replace(self::$fedoraUrlwHttp, self::$fedoraDownloadUrl, $value);
-                $value = t('<a href="'.$value.'">'.$value.'</a>');            
-                return $value;
-            }*/
+            }                        
             $value = t('<a href="'.$value.'">'.$value.'</a>');            
             return $value;
         }
@@ -92,8 +144,7 @@ class oeawFunctions {
                 $header[$h] = t($h);                                                                       
                 $val = $r[$h];                                            
                 $value = $val->dumpValue('string'); 
-               
-                /* get the length for the file checking */
+                               
                 $length = strlen($value);
                 if(substr($value, $length-8, 8) == 'filename'){$filename = true; }
                 
@@ -126,7 +177,7 @@ class oeawFunctions {
                         
             $downText = array(
                 '#type' => 'markup',
-                '#markup' => '<div></br><a href="'.$downloadURL.'" target="_blank">Download Content</a></br></br></div>'
+                '#markup' => '<div></br><h2><a href="'.$downloadURL.'" target="_blank">Download Content</a></br></h2></br></div>'
                 );
         }
       
