@@ -22,7 +22,9 @@ class SearchForm extends FormBase
     public function buildForm(array $form, FormStateInterface $form_state) 
     {   
         $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
-        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixes($propertys);
+        
+        //modify the prefixes
+        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixes($propertys);        
         
         //echo substr(strrchr("http://www.iana.org/assignments/relation/describedby", "/"), 1);
      
@@ -38,7 +40,7 @@ class SearchForm extends FormBase
             'ebucore:filename' => t('ebucore:filename'),
             'ebucore:hasMimeType' => t('ebucore:hasMimeType'),
           );
-            */
+*/
 
           $form['metakey'] = array (
           '#type' => 'select',
@@ -87,6 +89,7 @@ class SearchForm extends FormBase
         foreach ($form_state->getValues() as $key => $value) {
         //  drupal_set_message($key . ': ' . $value);
         
+            // I pass the values with the session to the redirected url where i generating the tables
             $_SESSION['oeaw_form_result_'.$key] = $value;            
             $url = Url::fromRoute('oeaw_resource_list');
             $form_state->setRedirectUrl($url);           

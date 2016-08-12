@@ -39,7 +39,7 @@ class oeawStorage {
    /* get all data by uri */
     public static function getPropertyByURI($uri)
     {      
-        if(empty($uri)) { return false; }
+        if(empty($uri)) {  throw new \RuntimeException('URI empty'); }
         
             $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
             $result = $sparql->query(self::$prefixes.' SELECT * WHERE { <'.$uri.'> ?p ?o}');
@@ -49,7 +49,7 @@ class oeawStorage {
     
     public static function getChildrenPropertyByRoot($uri)
     {      
-        if(empty($uri)) { return false; }
+        if(empty($uri)) {  throw new \RuntimeException('URI empty'); }
         
             $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
             $result = $sparql->query(self::$prefixes.' SELECT * WHERE {  ?uri dct:isPartOf <'.$uri.'>}');
@@ -60,7 +60,7 @@ class oeawStorage {
     /* get all data by property and URI */
     public static function getDefPropByURI($uri, $property, $value)
     {
-        if(empty($uri) && empty($property)) { return false; }
+        if(empty($uri) && empty($property)) {  throw new \RuntimeException('Property or/and uri is empty.'); }
         
             $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
             if(empty($value))
@@ -79,7 +79,7 @@ class oeawStorage {
     /* get all data by property */
     public static function getDataByProp($property, $value = null)
     {        
-        if(empty($property)) { return false; }
+        if(empty($property)) { throw new \RuntimeException('Property empty'); }
         
         $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
         
@@ -102,7 +102,7 @@ class oeawStorage {
      */
     public static function getPartOfUri($uri)
     {
-        if(empty($uri)) { return false; }
+        if(empty($uri)) {  throw new \RuntimeException('URI EMPTY.'); }
         
         $sparql = new \EasyRdf_Sparql_Client(self::$sparqlEndpoint);
         

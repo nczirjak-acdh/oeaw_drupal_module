@@ -1,50 +1,49 @@
 oeaw_menu:
   path: '/oeaw_menu'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::oeaw_menu'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_menu'
   requirements:
     _permission: 'access content'
 
 oeaw_meta_uri_search:
   path: '/oeaw_meta_uri_search'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::meta_uri_search'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::meta_uri_search'
   requirements:
     _permission: 'access content'
 
 oeaw_new_resource:
   path: '/oeaw_new'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::new_resource'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::new_resource'
   requirements:
     _permission: 'access content'
 
+oeaw_new_resource_result:
+  path: '/oeaw_new_result'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::new_resource_result'
+  requirements:
+    _permission: 'access content'
 
 oeaw_detail_list:
   path: '/oeaw_detail/{uri}'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::oeaw_detail'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_detail'
   requirements:
     _permission: 'access content'
         
 oeaw_resource_list:
   path: '/oeaw_resources'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::resource_list'
-  requirements:
-    _permission: 'access content'
-   
-oeaw_add_result:
-  path: '/oeaw_add_result'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::add_result'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::resource_list'
   requirements:
     _permission: 'access content'
     
 oeaw_roots:
   path: '/oeaw_roots'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\AdminController::roots_list'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::roots_list'
   requirements:
     _permission: 'access content'    
     

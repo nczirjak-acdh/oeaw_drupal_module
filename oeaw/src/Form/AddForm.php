@@ -6,6 +6,10 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+
 
 
 
@@ -73,25 +77,40 @@ class AddForm extends FormBase
         
         //file_get_contents($filename);
         
-        echo "<pre>";
-        var_dump($form);
-        echo "</pre>";
-        echo "----------------------------------------------------------";
         
+        
+        $rootTmp = $_FILES["files"]["tmp_name"]["root_sparql"];
+        $childTmp = $_FILES["files"]["tmp_name"]["child_sparql"];
+        $fileSTmp = $_FILES["files"]["tmp_name"]["file_sparql"];
+        $fileTmp = $_FILES["files"]["tmp_name"]["file"];
+        
+        $_SESSION['oeaw_form_result_root'] = $rootTmp; 
+        $_SESSION['oeaw_form_result_child'] = $childTmp; 
+        $_SESSION['oeaw_form_result_fileS'] = $fileSTmp; 
+        $_SESSION['oeaw_form_result_file'] = $fileTmp; 
+        
+        \Drupal\oeaw\oeawFunctions::saveDataByCurl($rootTmp, "application/sparql-update", "POST");
+        
+        echo "<pre>";
+        //echo file_get_contents($rootTmp);
+        var_dump($_FILES);
+        
+        echo "</pre>";
 
         die();
 
 
 
+        die();
         // drupal_set_message($this->t('@can_name ,Your application is being submitted!', array('@can_name' => $form_state->getValue('candidate_name'))));
         foreach ($form_state->getValues() as $key => $value) {
         //  drupal_set_message($key . ': ' . $value);
         
-            $_SESSION['oeaw_form_result_'.$key] = $value;            
-            $url = Url::fromRoute('oeaw_resource_list');
-            $form_state->setRedirectUrl($url);           
+            $_SESSION['oeaw_form_result_'.$key] = $value;
            
         }
+        $url = Url::fromRoute('oeaw_new_resource_result');
+            $form_state->setRedirectUrl($url);           
     }
     
     

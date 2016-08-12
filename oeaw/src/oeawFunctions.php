@@ -11,6 +11,7 @@ class oeawFunctions {
     public static $fedoraUrl = 'http://fedora:8080/rest/';
     public static $fedoraUrlwHttp = 'fedora:8080/rest/';
     public static $fedoraDownloadUrl = 'http://fedora.localhost/rest/';
+    public static $sparqlEndpoint = 'http://blazegraph:9999/blazegraph/sparql';
     public static $prefixes = array(
                                     "http://fedora.info/definitions/v4/repository" => "fedora",
                                     "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore" => "ebucore",            
@@ -218,6 +219,108 @@ class oeawFunctions {
             $ftrTxt,
            
         );
+    }
+    
+    
+    function runCurl($method, $url, $contentType = null, $file = null, $replace = null){
+    if(is_array($replace)){
+        $data = file_get_contents($file);
+        foreach($replace as $k=>$v){
+            $data = str_replace($k, $v, $data);
+        }
+        $file = $data;
+    }
+
+    $h = curl_init();
+    $opts = array(
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HEADER => true,
+        CURLOPT_HTTPHEADER => array('Content-Type: ' . $contentType),
+        CURLOPT_POSTFIELDS => $file
+    );
+    if(is_file($file)){
+        $opts[CURLOPT_POSTFIELDS] = null;
+        $opts[CURLOPT_INFILE] = fopen($file, 'r');
+    }
+    curl_setopt_array($h, $opts);
+    $res = curl_exec($h);
+    $code = curl_getinfo($h, CURLINFO_HTTP_CODE);
+    if(substr($code, 0, 1) !== '2'){
+        echo "Request failed %d %s\n  %s\n", $code, curl_error($h), $res;
+    }
+    return $res;
+    }
+    
+    function resUrl($data){
+        $data = str_replace(array("\r", "\n"), ' ', $data);
+        $data = preg_replace('/^.*Location: */', '', $data);
+        $data = preg_replace('/ .*$/', '', $data) . '/';
+        return $data;
+    }
+    
+    public function saveDataByCurl($file, $contentType, $method)
+    {
+            
+        //1. curl -i -X POST -H 'Content-Type:application/sparql-update' --data-binary @amc.sparql http://fedora.localhost/rest/
+        //2. curl -i -X POST -H 'Content-Type:application/sparql-update' --data-binary @amc-extract.sparql http://fedora.localhost/rest/
+        //3. curl -i -X POST -H 'Content-Type:text/tsv' --data-binary @freqs_lemma_posTT_ADJx.fl.simplified http://fedora.localhost/rest/
+        //4. curl -i -X PATCH -H 'Content-Type:application/sparql-update' --data-binary @freqs_lemma_posTT_ADJx.fl.simplified.sparql http://fedora.hephaistos.arz.oeaw.ac.at/rest/d9/64/5f/d3/d9645fd3-e31e-48ec-b564-46028721e4f3/fcr:metadata
+        
+        $txt = 'PREFIX acdh: <http://vocabs.acdh.oeaw.ac.at/#>
+        PREFIX dct: <http://purl.org/dc/terms/>
+        PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#>
+        PREFIX rdfs: <http://www.w3.org/TR/rdf-schema/>
+
+        INSERT {
+          <> a acdh:DigitalProject;     
+             dct:title	"amc - austrian media corpus2223" ;
+             dct:created	"2013-2" ;
+             dct:description "austrian media corpus is a large collection of journalistic texts from austrian newspapers and magazines2223" ;
+             rdfs:seeAlso <http://acdh.oeaw.ac.at/redmine/issues/141>;
+                   rdfs:seeAlso <http://www.oeaw.ac.at/acdh/amc>.
+        }
+        WHERE {}
+        ';
+        
+       // $asd = \Drupal\oeaw\oeawFunctions::runCurl('POST', self::$sparqlEndpoint.'?update=', 'application/sparql-update', $txt);
+        //var_dump($asd);
+        //var_dump(file_get_contents($file));
+        $r = curl_init();
+        curl_setopt_array($r, array(
+                                    CURLOPT_CUSTOMREQUEST => 'POST',                                    
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    CURLOPT_HEADER => true,
+                                    CURLOPT_HTTPHEADER => array('Content-Type: application/sparql-update'),
+                                    //CURLOPT_POSTFIELDS => $file,                                    
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    //CURLOPT_INFILE => fopen($file, 'r'),
+                                    //if($contentType == "")
+                                    CURLOPT_URL => self::$sparqlEndpoint.'?update=' . urlencode($txt)
+                                    //CURLOPT_URL => 'http://fedora.localhost/rest/'
+                                    //CURLOPT_URL => self::$sparqlEndpoint.'?query=' . urlencode('select * where {?s ?p ?o}')
+                                    )
+                            );
+        
+        $data = trim(curl_exec($r));	
+        $code = curl_getinfo($r, CURLINFO_HTTP_CODE);
+        curl_close($r);
+       /* $data = explode("\n", $data);
+        array_shift($data);
+        */
+        echo "<pre>";
+        var_dump($code);
+        echo "</pre>";
+        echo "ittt";
+        echo "<pre>";
+        var_dump($data);
+        echo "</pre>";
+
+        
+        die();
+        return $data;
+      
     }
     
 }    
