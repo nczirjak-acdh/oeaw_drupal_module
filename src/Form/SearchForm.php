@@ -9,45 +9,30 @@ use Drupal\Core\Link;
 
 class SearchForm extends FormBase
 {
-     
     
     public function getFormId()
     {
         return "search_form";
     }
     
- /**
-   * {@inheritdoc}.
-   */
+    /*
+    * {@inheritdoc}.
+    */
     public function buildForm(array $form, FormStateInterface $form_state) 
     {   
         $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
         
         //modify the prefixes
-        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixes($propertys);        
+        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromObject($propertys);        
         
         //echo substr(strrchr("http://www.iana.org/assignments/relation/describedby", "/"), 1);
      
-        /*
         
-        $hardCoded = array(
-            '' => t(''),
-            'dct:title' => t('dct:title'),
-            'dct:description' => t('dct:description'),
-            'dct:created' => t('dct:created'),            
-            'dct:isPartOf' => t('dct:isPartOf'),              
-            'rdf:type' => t('rdf:type'),
-            'ebucore:filename' => t('ebucore:filename'),
-            'ebucore:hasMimeType' => t('ebucore:hasMimeType'),
-          );
-*/
-
-          $form['metakey'] = array (
+        $form['metakey'] = array (
           '#type' => 'select',
           '#title' => ('MetaKey'),
-          '#options' => array(
-            $searchTerms
-          ),
+          '#options' => 
+            $searchTerms          
         );
        
         $form['metavalue'] = array(
@@ -64,7 +49,7 @@ class SearchForm extends FormBase
         $form['actions']['#type'] = 'actions';
         $form['actions']['submit'] = array(
           '#type' => 'submit',
-          '#value' => $this->t('Save'),
+          '#value' => $this->t('Search'),
           '#button_type' => 'primary',
         );
         

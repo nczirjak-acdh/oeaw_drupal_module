@@ -3,7 +3,7 @@ oeaw_menu:
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_menu'
   requirements:
-    _permission: 'access content'
+    _permission: 'access content'    
 
 oeaw_meta_uri_search:
   path: '/oeaw_meta_uri_search'
@@ -17,7 +17,23 @@ oeaw_new_resource:
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::new_resource'
   requirements:
+    _permission: 'access content'    
+
+oeaw_edit_resource:
+  path: '/oeaw_edit'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::edit_resource'
+  requirements:
     _permission: 'access content'
+
+
+oeaw_delete_resource:
+  path: '/oeaw_delete'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::delete_resource'
+  requirements:
+    _permission: 'access content'
+
 
 oeaw_new_resource_result:
   path: '/oeaw_new_result'
@@ -47,3 +63,38 @@ oeaw_roots:
   requirements:
     _permission: 'access content'    
     
+oeaw_create_child_resource:
+  path: '/oeaw_create_child/{uri}'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::create_child_resource'
+  requirements:
+    _permission: 'access content'
+    _permission: 'access files overview'
+
+oeaw_multi_new_resource:
+  path: '/oeaw_multi_new_resource'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::multi_new_resource'
+  requirements:
+    _permission: 'access content'
+    _permission: 'access files overview'
+    
+oeaw_newresource_one:
+  path: '/oeaw_newresource_one'
+  defaults:
+    _form: '\Drupal\oeaw\Form\NewResourceOneForm'
+    _title: 'Add new Resource, Step 1'
+  requirements:
+    _permission: 'access content'
+    _permission: 'access files overview'
+    
+oeaw_newresource_two:
+  path: '/oeaw_newresource_two'
+  defaults:
+    _form: '\Drupal\oeaw\Form\NewResourceTwoForm'
+    _title: 'Add new Resource, Step 2'
+  requirements:
+    _permission: 'access content'
+    _permission: 'access files overview'
+    
+  

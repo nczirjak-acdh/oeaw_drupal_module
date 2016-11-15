@@ -4,128 +4,133 @@ namespace Drupal\oeaw\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element\FormElement;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Drupal\oeaw\oeawStorage;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\user\PrivateTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
+class AddForm extends FormBase {
 
-
-
-class AddForm extends FormBase
-{
-     
-    
-    public function getFormId()
-    {
+    public function getFormId() {
         return "add_form";
     }
-    
- /**
-   * {@inheritdoc}.
-   */
-    public function buildForm(array $form, FormStateInterface $form_state) 
-    {      
+
+    /**
+     * {@inheritdoc}.
+     */
+    public function buildForm(array $form, FormStateInterface $form_state) {
+        $form['#attributes']['enctype'] = "multipart/form-data";
+        /* get the root elements */
+        //$roots = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        /* create the array with the roots for the select menu */
+        /*foreach ((array) $roots as $key => $value) {
+            $value = (array) $value;
+
+            foreach ($value as $v) {
+                $v = (array) $v;
+                if (!empty($v["\0*\0" . "uri"])) {
+                    $rootURI[$v["\0*\0" . "uri"]] = $v["\0*\0" . "uri"];
+                }
+            }
+        }
         
-        $form['root_sparql'] = array(
-            '#type' => 'file', 
-            '#title' => t('ROOT SPARQL'), 
-            '#description' => t('Upload a file, allowed extensions: SPARQL'),
+        $form["roots"] = array(
+            "#type" => "select",
+            "#title" => t("SELECT YOUR ROOT ELEMENT"),
+            "#options" =>
+            $rootURI,
+            "#description" => t("Select plugin."),
         );
-   
-        $form['child_sparql'] = array(
-            '#type' => 'file', 
-            '#title' => t('CHILD SPARQL'), 
-            '#description' => t('Upload a file, allowed extensions: SPARQL'),
-        );
-        $form['file_sparql'] = array(
-            '#type' => 'file', 
-            '#title' => t('FILE SPARQL'), 
-            '#description' => t('Upload a file, allowed extensions: SPARQL'),
-        );
+        */
         $form['file'] = array(
-            '#type' => 'file', 
-            '#title' => t('FILE'), 
-            '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
+            '#type' => 'managed_file',
+            '#title' => t('FILE'),
+            '#upload_validators' => array(
+                'file_validate_extensions' => array('xml doc txt simplified docx pdf xsl rdf owl zip ttl xls xlsx csv sql gz zip tar php css html'),
+            ),
+            '#description' => t('Upload a file, allowed extensions: xml doc txt simplified docx pdf xsl rdf owl zip ttl xls xlsx csv sql gz zip tar php css html'),
         );
-        
-     
+
+        $form['file_sparql'] = array(
+            '#type' => 'managed_file',
+            '#title' => t('FILE SPARQL'),
+            '#upload_validators' => array(
+                'file_validate_extensions' => array('sparql'),
+            ),
+            '#description' => t('Upload a file, allowed extensions: SPARQL'),
+        );
+
         $form['actions']['#type'] = 'actions';
         $form['actions']['submit'] = array(
-          '#type' => 'submit',
-          '#value' => $this->t('Save'),
-          '#button_type' => 'primary',
+            '#type' => 'submit',
+            '#value' => $this->t('Save'),
+            '#button_type' => 'primary',
         );
-        
+
         return $form;
     }
-    
-    
-    public function validateForm(array &$form, FormStateInterface $form_state) 
-    {
+
+    public function validateForm(array &$form, FormStateInterface $form_state) {
         
-        /*if (strlen($form_state->getValue('candidate_number')) < 10) {
-            $form_state->setErrorByName('candidate_number', $this->t('Mobile number is too short.'));
-        }*/
-        
+        if (empty($form_state->getValue('file_sparql'))) {
+            $form_state->setErrorByName('file_sparql', $this->t('Please upload a sparql file'));
+        }
+/*
+        if (empty($form_state->getValue('file'))) {
+            $form_state->setErrorByName('file', $this->t('Please upload a file'));
+        }
+ * 
+ */
+/*
+        if (empty($form_state->getValue('roots'))) {
+            $form_state->setErrorByName('roots', $this->t('Please select a root element'));
+        } 
+ */
     }
-  
-  
-  
+
     public function submitForm(array &$form, FormStateInterface $form_state) {
-        
-        //file_get_contents($filename);
-        
-        
-        
-        $rootTmp = $_FILES["files"]["tmp_name"]["root_sparql"];
-        $childTmp = $_FILES["files"]["tmp_name"]["child_sparql"];
-        $fileSTmp = $_FILES["files"]["tmp_name"]["file_sparql"];
-        $fileTmp = $_FILES["files"]["tmp_name"]["file"];
-        
-        $_SESSION['oeaw_form_result_root'] = $rootTmp; 
-        $_SESSION['oeaw_form_result_child'] = $childTmp; 
-        $_SESSION['oeaw_form_result_fileS'] = $fileSTmp; 
-        $_SESSION['oeaw_form_result_file'] = $fileTmp; 
-        
-        \Drupal\oeaw\oeawFunctions::saveDataByCurl($rootTmp, "application/sparql-update", "POST");
-        
-        echo "<pre>";
-        //echo file_get_contents($rootTmp);
-        var_dump($_FILES);
-        
-        echo "</pre>";
 
-        die();
-
-
-
-        die();
-        // drupal_set_message($this->t('@can_name ,Your application is being submitted!', array('@can_name' => $form_state->getValue('candidate_name'))));
-        foreach ($form_state->getValues() as $key => $value) {
-        //  drupal_set_message($key . ': ' . $value);
+        //get the uploaded files values
+        $sparqlFileID = $form_state->getValue('file_sparql');
+        $sparqlFileID = $sparqlFileID[0];
         
-            $_SESSION['oeaw_form_result_'.$key] = $value;
-           
+        $fileID = $form_state->getValue('file');
+        
+        $fileID = $fileID[0];
+        // get the root select value
+        //$root = $form_state->getValue('roots');
+
+        //create file object with file data        
+        $sfObj = file_load($sparqlFileID);
+        $fObj = file_load($fileID);
+
+        //get the temp file uri
+        $sfUri = $sfObj->getFileUri();
+        $fUri = $fObj->getFileUri();
+        $mime = mime_content_type($fUri);
+
+        //get file content
+        $sfContent = file_get_contents($sfUri);
+        $fContent = file_get_contents($fUri);
+
+        //insert the content with the transaction based curl
+        $saveFile = \Drupal\oeaw\oeawStorage::insertDataToFedora($fContent, $sfContent, false, $mime);
+
+        if ($saveFile != false) {
+            $_SESSION['newFedoraUri'] = $saveFile;
+
+            $url = Url::fromRoute('oeaw_new_resource_result');
+            $form_state->setRedirectUrl($url);
+        } else {
+            drupal_set_message(t('An error occurred and processing did not complete. Please check your sparql query!'), 'error');
         }
-        $url = Url::fromRoute('oeaw_new_resource_result');
-            $form_state->setRedirectUrl($url);           
-    }
-    
-    
-    private function getRequestFile(Request $request) {
-        $file = $request->files->get('file');
-        if (empty($file)) {
-            throw new \RuntimeException('No file provided or file upload failed.');
-        }
-        return array(
-            'path' => $file->getPathName(),
-            'name' => $file->getFileName(),
-            'mime' => $file->getClientMimeType()
-        );
     }
 
-  
 }
-
