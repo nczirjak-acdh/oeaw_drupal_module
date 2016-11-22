@@ -31,7 +31,17 @@ class NewResourceTwoForm extends NewResourceFormBase {
 
         // get the actual class dct:identifier to we can compare it with the digResource
         $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($class, "dct:identifier"); 
-        $classValue = $classValue["dct:identifier"]["value"];
+        
+        foreach($classValue["dct:identifier"] as $cv){
+            
+            if(!empty($cv["value"])){
+               if($cv["value"]->getUri() !== null){
+                    $classVal = $cv["value"]->getUri();                    
+                }
+            }
+        }
+        
+        $classValue = $classVal;
         $this->store->set('ontologyClassIdentifier', $classValue);
 
         // compare the digRes and the actual class, because if it is a DigColl then 
@@ -48,8 +58,6 @@ class NewResourceTwoForm extends NewResourceFormBase {
         }
         
         $fieldsArray = array();
-        
-        
 
         foreach ($metadata as $m) {
 
