@@ -14,14 +14,13 @@ use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\oeaw\oeawFunctions;
+use acdhOeaw\fedora\FedoraResource;
+use acdhOeaw\util\SparqlEndpoint;
+use zozlak\util\Config;
+
 
 abstract class NewResourceFormBase extends FormBase {
-    
-    public static $prefixes = 'PREFIX dct: <http://purl.org/dc/terms/> PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> '
-        . 'PREFIX premis: <http://www.loc.gov/premis/rdf/v1#> PREFIX acdh: <http://vocabs.acdh.oeaw.ac.at/#> '
-        . 'PREFIX fedora: <http://fedora.info/definitions/v4/repository#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> '
-        . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>';
-
+   
     /**
     * @var \Drupal\user\PrivateTempStoreFactory
     */
@@ -94,65 +93,66 @@ abstract class NewResourceFormBase extends FormBase {
     */
     
     protected function saveData()
-    {        
+    {
         $root = $this->store->get('form1Elements')['root'];
-        $class = $this->store->get('form1Elements')['class'];        
+        $class = $this->store->get('form1Elements')['class'];
         $metadata = $this->store->get('form2Elements');
         $propertysArray = $this->store->get('propertysArray');
         $valuesArray = $this->store->get('valuesArray');
         $fileMIME = $this->store->get('fileMIME');
-        $fileContent = $this->store->get('fileContent');        
+        $fileContent = $this->store->get('fileContent');
+        $fileName = $this->store->get('fileName');
+        $uriAndValue = $this->store->get('uriAndValue');
+        $ontologyClassIdentifier = $this->store->get('ontologyClassIdentifier');
+  
+        $graph = new \EasyRdf_Graph();        
+        $meta = $graph->resource('acdh');
         
-        $propWithVal = array();
-        // i creating a new array for the propertys
-        foreach($propertysArray as $p)
-        {             
-            $propEnd = explode("/", $p);            
-            $propEnd = end($propEnd);
-            $identifier = \Drupal\oeaw\oeawStorage::getIdentifier($p);
-            
-            if(strpos($identifier, 'http://') !== false){            
-                $identifier = \Drupal\oeaw\oeawFunctions::createPrefixesFromString($identifier);
+        foreach($uriAndValue as $key => $value){
+        
+            if($key == "http://purl.org/dc/terms/isPartOf"){
+                $value = $root;
             }
-            //$propWithVal[$propEnd] = $p; 
-            
-            if(empty($identifier)){
-                $key = $p;
-            }else{
-                $key = $identifier;
-            }
-            if(isset($valuesArray[$propEnd])){
-                $propWithVal[$key] = $valuesArray[$propEnd];
-            }
+            if (strpos($value, 'http') !== false) {
+                //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
+                $meta->addResource($key, $value);
+            } else {
+                //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
+                $meta->addLiteral($key, $value);
+            }            
         }
-       
-        $sparql = self::$prefixes.' 
-                    INSERT {
-                      <> 
-                         ';     
         
-        foreach($propWithVal as $key => $value)
-        {         
-            if($key !== "dc:isPartOf"){
-                $sparql .= $key.' "'.$value.'" ;';            
-            }
+        //add the ontologyClass dct:identifier to the new resource rdf:type, to we can
+        // recognize the ontologyclass and required fields to the editing form
+        $meta->addResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", $ontologyClassIdentifier);  
+        
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');                
+        $sparqlEndpoint = new SparqlEndpoint($config->get('sparqlUrl'));
+        $init = FedoraResource::init($config);
+        FedoraResource::begin();
+        
+        // ha van fajl akkor a masodik ertek az lesz
+        try{
+            $res = FedoraResource::factory($meta, $fileName);
             
-        }        
-        $sparql .= '}
-                    WHERE {}
-                    ';
-        
-        error_log($sparql);
-        $insert = \Drupal\oeaw\oeawStorage::insertDataToFedora($fileContent, $sparql, $root, $fileMIME);         
-        
-        if($insert == false)
-        {
+            FedoraResource::commit();
+            $uri = $res->getUri();
+            $uriArr = str_replace('http://fedora/rest/', '', $uri);
+            $uriArr = explode('/', $uriArr);
+            $uri = str_replace($uriArr[0].'/', '', $uri);
+            $uri = str_replace('http://fedora/rest/', 'http://fedora.localhost/rest/', $uri);
+            $uri = $uri.'/fcr:metadata';
+            
+            $this->deleteStore($metadata);
+            drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a>'));
+            
+            
+        } catch (Exception $ex) {
+            FedoraResource::rollback();
             $this->deleteStore($metadata);
             drupal_set_message($this->t('Error during the saving process'), 'error');
-        } else {
-            $this->deleteStore($metadata);
-            drupal_set_message($this->t('The form has been saved. Your new resource is: '.$insert));
         }
+        
     }
     
     

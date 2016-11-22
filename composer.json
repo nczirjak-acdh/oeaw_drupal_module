@@ -1,0 +1,10 @@
+{
+    "name": "drupal/oeaw",
+    "description": "This is an example composer.json for example module.",
+    "type": "drupal-module",
+    "license": "MIT",
+    "require": {
+           "acdh-oeaw/repo-php-util": "*"
+    }
+}
+

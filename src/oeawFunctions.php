@@ -177,7 +177,7 @@ class oeawFunctions {
      * generating the table to show the results
      */
 
-    public static function generateTable($data, $text = null, $goBackUrl = '/oeaw_menu') {
+    public static function generateTable($data, $text = null, $edit = null) {
         
         /* get the fields from the sparql query */
         $fields = $data->getFields();
@@ -239,6 +239,12 @@ class oeawFunctions {
             } else {
                 $finalArray[$i][] = t('NO Details');
             }
+            
+            if($edit != null){
+                $finalArray[$i][] = t('<a href="/oeaw_editing/' . $details . '">edit</a>');
+                $finalArray[$i][] = t('<a href="/oeaw_delete/' . $details . '">delete</a>');
+            }
+            
 
             $i++;
         }
@@ -256,6 +262,11 @@ class oeawFunctions {
         }
 
         $header['details'] = t('details');
+        if($edit != null){
+            $header['edit'] = t('edit');
+            $header['delete'] = t('delete');
+        }
+        
         $rows = $finalArray;
 
         $table = array(
@@ -299,7 +310,7 @@ class oeawFunctions {
 
         $ftrTxt = array(
             '#type' => 'markup',
-            '#markup' => '<div class="tableFooterTxt" ><a href="' . $goBackUrl . '" class="tableBackTxt">Go Back</a></br></br></div>',
+            '#markup' => '<div class="tableFooterTxt" ><a href="/oeaw_menu" class="tableBackTxt">Go Back to the menu</a></br></br></div>',
         );
 
         return array(
@@ -364,8 +375,19 @@ class oeawFunctions {
         curl_setopt_array($h, $opts);
         $res = curl_exec($h);
         $code = curl_getinfo($h, CURLINFO_HTTP_CODE);
+        $info = curl_getinfo($h);
         
         if(substr($code, 0, 1) !== '2'){
+            echo "error:";
+            echo curl_errno($h);
+            echo "__";
+            echo curl_error($h);
+        echo $url;
+        echo "----|||";
+        echo $code = curl_getinfo($h, CURLINFO_HTTP_CODE);
+            
+
+            die();
             //throw new Exception(sprintf("Request failed %d %s\n  %s\n", $code, curl_error($h), $res));
              return false;
         }

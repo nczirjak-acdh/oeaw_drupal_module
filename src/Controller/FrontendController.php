@@ -38,10 +38,20 @@ class FrontendController extends ControllerBase {
         $data2 = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($uri);
 
         if (!empty((array) $data2)) {
-            $table2 = \Drupal\oeaw\oeawFunctions::generateTable($data2, $text = "child resources");
+            $table2 = \Drupal\oeaw\oeawFunctions::generateTable($data2, $text = "child resources", true);
         }
 
         return array($newText, $table, $table2);
+    }
+    
+    public function oeaw_editing($uri, Request $request) {
+        
+        $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
+        $data = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);
+
+        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
+        return $form;
+        
     }
 
     /*
@@ -78,7 +88,7 @@ class FrontendController extends ControllerBase {
             $result = \Drupal\oeaw\oeawStorage::getDataByProp($metaKey, $metaValue);
         }
 
-        $result2 = \Drupal\oeaw\oeawFunctions::generateTable($result, $metaKey);
+        $result2 = \Drupal\oeaw\oeawFunctions::generateTable($result, $metaKey, true);
 
         if ($result2 == false) {
             $error_msg = drupal_set_message($this->t('Data is not available, please change your searching criteria!! <br> <a href="/oeaw_all">go back</a>'), 'error');
@@ -104,14 +114,10 @@ class FrontendController extends ControllerBase {
      */
 
     public function new_resource() {
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');
+        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm', $uri);
         return $form;
     }
-    
-    public function edit_resource() {
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');
-        return $form;
-    }
+   
     
     public function delete_resource() {
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');
@@ -159,9 +165,6 @@ class FrontendController extends ControllerBase {
 
         $link3 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
         $rows[3] = array('data' => array($link3));
-        
-        $link4 = Link::fromTextAndUrl('Edit Resource', Url::fromRoute('oeaw_edit_resource'));
-        $rows[4] = array('data' => array($link4));
         
         $link5 = Link::fromTextAndUrl('Delete Resource', Url::fromRoute('oeaw_delete_resource'));
         $rows[5] = array('data' => array($link5));

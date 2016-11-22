@@ -1,0 +1,6 @@
+datatable:
+  version: 1.x  
+  js:
+    js/cuddly-slider.js: {}
+    dependencies:
+    - core/jquery

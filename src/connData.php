@@ -3,7 +3,15 @@ namespace Drupal\oeaw;
 
 class connData 
 {
-   
+    public static $prefixes = ''
+            . 'PREFIX dct: <http://purl.org/dc/terms/> '
+            . 'PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> '
+            . 'PREFIX premis: <http://www.loc.gov/premis/rdf/v1#> '
+            . 'PREFIX acdh: <http://vocabs.acdh.oeaw.ac.at/#> '
+            . 'PREFIX fedora: <http://fedora.info/definitions/v4/repository#> '
+            . 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> '
+            . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>';
+
 
     public function sparqlEndpoint() {
         if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            

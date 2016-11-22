@@ -24,6 +24,7 @@ class NewResourceOneForm extends NewResourceFormBase {
         $form["roots"] = array(
             "#type" => "select",
             "#title" => t("SELECT YOUR ROOT ELEMENT"),
+            '#required' => TRUE,
             "#options" =>
             $roots,
             '#default_value' => $this->store->get('roots') ? $this->store->get('roots') : '',
@@ -36,6 +37,7 @@ class NewResourceOneForm extends NewResourceFormBase {
         $form['class'] = array(
             '#type' => 'select',
             '#title' => $this->t('SELECT YOUR CLASS'),
+            '#required' => TRUE,
             "#options" =>
             $classes,
             '#default_value' => $this->store->get('class') ? $this->store->get('class') : '',

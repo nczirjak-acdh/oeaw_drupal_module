@@ -19,21 +19,12 @@ oeaw_new_resource:
   requirements:
     _permission: 'access content'    
 
-oeaw_edit_resource:
-  path: '/oeaw_edit'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::edit_resource'
-  requirements:
-    _permission: 'access content'
-
-
 oeaw_delete_resource:
   path: '/oeaw_delete'
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::delete_resource'
   requirements:
     _permission: 'access content'
-
 
 oeaw_new_resource_result:
   path: '/oeaw_new_result'
@@ -48,6 +39,14 @@ oeaw_detail_list:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_detail'
   requirements:
     _permission: 'access content'
+
+oeaw_edit:
+  path: '/oeaw_editing/{uri}'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_editing'
+  requirements:
+    _permission: 'access content'
+        
         
 oeaw_resource_list:
   path: '/oeaw_resources'
