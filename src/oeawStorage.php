@@ -11,66 +11,265 @@ use acdhOeaw\util\SparqlEndpoint;
 
 class oeawStorage {
 
-
-
-
     public static $prefixes = 'PREFIX dct: <http://purl.org/dc/terms/> '
             . 'PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> '
             . 'PREFIX premis: <http://www.loc.gov/premis/rdf/v1#> '
             . 'PREFIX acdh: <http://vocabs.acdh.oeaw.ac.at/#> '
             . 'PREFIX fedora: <http://fedora.info/definitions/v4/repository#> '
             . 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> '
-            . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>';
+            . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>'
+            . 'PREFIX dc: <http://purl.org/dc/elements/1.1/>';
 
     
     /*
-     * get the root elements from fedora
-     * @selectList: generate key => value array from the result
+     * Get the root elements from fedora
+     * 
+     * @return Array
+     * 
      */
 
-    public function getRootFromDB($selectList = false) {
+    public function getRootFromDB() {
   
         $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
 
-        $result = $sparql->query(self::$prefixes . ' '
-                . 'select * WHERE {  '
-                    . '?uri dct:title ?title .'
+        try {
+            
+            $result = $sparql->query(self::$prefixes . ' '
+                . 'select ?uri ?title WHERE {  '
+                    . '?uri dc:title ?title .'
                     . 'FILTER ('
                         . '!EXISTS {'
                             . '?uri dct:isPartOf ?y .'
                             . '}'
                         . ')'
                     . '}'                
-        );
+            );
         
+            $fields = $result->getFields(); 
+        
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+        
+            return $getResult;
+            
+        } catch (Exception $ex) {            
+            throw new Exception("Error during the getRootFromDB function");
+        }
+    }
+    
+    /*
+     * Get all property based on the provided uri
+     * 
+     * @uri Fedora resource uri
+     * 
+     * @return Array
+     * 
+    */
+    
+    public static function getPropertyByURI(string $uri) {
+        
+        if (empty($uri)) {
+            throw new Exception('URI empty');
+        }
 
-        if ($selectList != false) {
-            /* create the array with the roots for the select menu */
-            foreach ((array) $result as $key => $value) {
-                $value = (array) $value;
-                $uri = (array) $value["uri"];
-                $title = (array) $value["title"];
+        try {
+            
+            $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+            $result = $sparql->query(self::$prefixes . ' SELECT ?p ?o  WHERE { <' . $uri . '> ?p ?o}');
 
-                if (!empty($uri["\0*\0" . "uri"]) && !empty($title["\0*\0" . "value"])) {
-                    $rootURI[$uri["\0*\0" . "uri"]] = $title["\0*\0" . "value"];
-                }
-            }
+            $fields = $result->getFields(); 
 
-            return $rootURI;
-        } else {
-            return $result;
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;
+            
+        } catch (Exception $ex) {            
+            throw new Exception("Error during the getPropertyByURI function");
+        }
+    }
+
+    /*
+     * Get all uri from the uri child resources
+     * 
+     * @uri Fedora resource uri
+     * 
+     * @return Array
+     * 
+    */
+    public static function getChildrenPropertyByRoot(string $uri) {
+        
+        if (empty($uri)) {
+            throw new Exception('URI empty');
+        }
+        
+        try {
+            
+            $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+            $result = $sparql->query(self::$prefixes . ' SELECT ?uri  WHERE {  ?uri dct:isPartOf <' . $uri . '>}');
+        
+            $fields = $result->getFields(); 
+
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;
+            
+        } catch (Exception $ex) {            
+            throw new Exception("Error during the getChildrenPropertyByRoot function");
         }
     }
     
     
+    /*
+     * Get all data by, Uri, Property and value
+     * 
+     * @uri Fedora resource uri
+     * @property property what value is intresting for us
+     * @value optional
+     * 
+     * @return Array
+     * 
+    */
+    public static function getDefPropByURI(string $uri, string $property, string $value=null) {
+        
+        if (empty($uri) && empty($property)) {
+            throw new Exception('Property or/and uri is empty.');
+        }
 
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        
+        if ($value == null) {
+            // the result will be an EasyRdf_Sparql_Result Object
+            try {                
+                $result = $sparql->query(self::$prefixes . ' SELECT ?property ?value WHERE { <' . $uri . '> ?property ?value . <' . $uri . '> ' . $property . ' ?value . }');
+                
+                $fields = $result->getFields(); 
+
+                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+                return $getResult;
+                
+            } catch (Exception $ex) {
+                throw new \Exception('error durong the sparql query!');
+            }
+        } else {
+            
+            try {
+                
+                $result = $sparql->query(self::$prefixes . ' SELECT ?property ? value WHERE { '
+                    . '<' . $uri . '> ?property ?value . '
+                    . '<' . $uri . '> ' . $property . ' ?value . '
+                    . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
+                    . '}');
+                
+                $fields = $result->getFields(); 
+
+                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+                return $getResult;                
+                
+            } catch (Exception $ex) {
+                throw new \Exception('error during the sparql query!');
+            }
+        }        
+    }
+    
+    /*
+     * Get all property for search
+     * 
+     * @return Array
+     * 
+    */
+    public static function getAllPropertyForSearch() {
+        
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+
+        try {
+            
+            $result = $sparql->query(self::$prefixes . ' SELECT distinct ?p WHERE { ?s ?p ?o }');
+
+            $fields = $result->getFields(); 
+
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;                
+            
+        } catch (Exception $ex) {
+            
+            throw new \Exception('error during the sparql query!');
+        }        
+    }
+    
+    /* 
+     * Get all data by property.
+     * @property: fedora:created
+     * @valueType = Literal / Resource
+     */
+    public static function getDataByProp($property, string $value = null) {
+        
+        if (empty($property)) {
+            throw new Exception('Property empty');
+        }
+
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+
+        try {        
+            
+            if (empty($value)) {
+                $result = $sparql->query(self::$prefixes . ' SELECT ?uri ?value WHERE { ?uri ' . $property . ' ?value . }');
+            } else {
+                $result = $sparql->query(self::$prefixes . ' SELECT ?uri WHERE { ?uri ' . $property . ' <'.$value.'> }'); 
+            }    
+            
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;                
+        
+        } catch (Exception $ex) {
+            
+            throw new \Exception('error during the sparql query!');
+        }
+    }
+    
+    
+    /* 
+     * 
+     * Get all class data for the new resource adding form.
+     *      
+     */
+    
+    public static function getClass() {
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        
+        try {
+            
+            $result = $sparql->query(self::$prefixes . ' 
+                select ?uri ?title where {
+                        ?uri a owl:Class .
+                        ?uri rdfs:label ?title .
+                          }
+            ');
+            
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult; 
+            
+        } catch (Exception $ex) {
+            throw new \Exception('error during the sparql query!');
+        }    
+        
+    }
+    
     /* 
      * Get the digital rescources to we can know which is needed a file upload
      */
     public function getDigitalResources()
     {
         $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        $result = $sparql->query(
+        
+        try {
+            
+            $result = $sparql->query(
                 self::$prefixes . ' SELECT ?id ?collection WHERE {
                                         ?class a owl:Class .
                                         ?class dct:identifier ?id .
@@ -88,164 +287,167 @@ class oeawStorage {
                                         }
                                     }
                                 ');
-        
-        $res = array();
-
-        $i = 0;
-        foreach ($result as $r) {
-            $r = (array) $r;
-            $r1 = $r['id'];
-            $r2 = $r['collection'];
-            if($r2 == true) 
-            {
-                $res[$i] = $r1->dumpValue('string');                
-                $i++;
-            }
             
-        }
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
 
-        return $res;
+            return $getResult;
+            
+        } catch (Exception $ex) {
+            throw new Exception('error during the getDigitalResources function!');
+        }
     }
     
-    /* get all data by uri */
-    public static function getPropertyByURI($uri) {
-        if (empty($uri)) {
-            throw new \RuntimeException('URI empty');
-        }
-
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        $result = $sparql->query(self::$prefixes . ' SELECT * WHERE { <' . $uri . '> ?p ?o}');
-
-        return $result;
-    }
-
-    public static function getChildrenPropertyByRoot($uri) {
-        if (empty($uri)) {
-            throw new \Exception('URI empty');
-        }
-
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        $result = $sparql->query(self::$prefixes . ' SELECT * WHERE {  ?uri dct:isPartOf <' . $uri . '>}');
-        
-        return $result;
-    }
-
-    /* get all data by property and URI */
-
-    public static function getDefPropByURI($uri, $property, $value=null) {
-        
-        if (empty($uri) && empty($property)) {
-            throw new \Exception('Property or/and uri is empty.');
-        }
-
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        if ($value == null) {
-            // the result will be an EasyRdf_Sparql_Result Object
-            try {
-                
-                $result = $sparql->query(self::$prefixes . ' SELECT * WHERE { <' . $uri . '> ?property ?value . <' . $uri . '> ' . $property . ' ?value . }');
-                
-                for ($x = 0; $x <= count($result)-1; $x++) {
-                    
-                    $resP = $result[$x]->property;                    
-                    $resV = $result[$x]->value;
-                    
-                    $returnArray[$property][$x]['property'] = $resP;
-                    $returnArray[$property][$x]['value'] = $resV;                    
-                }
-                
-                return $returnArray;
-                
-            } catch (Exception $ex) {
-                throw new \Exception('error durong the sparql query!');
-            }
-            
-        } else {
-            
-            try {
-                
-                $result = $sparql->query(self::$prefixes . ' SELECT * WHERE { '
-                    . '<' . $uri . '> ?property ?value . '
-                    . '<' . $uri . '> ' . $property . ' ?value . '
-                    . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
-                    . '}');
-                
-                foreach($result as $r){
-                    
-                    $resP = $r->property;
-                    $resV = $r->value;
-                    
-                    if(!empty($resP)){
-                        if(get_class($resP) == "EasyRdf_Resource"){
-                            $returnArray[$property]['property'] = $resP->getUri();
-                        } 
-                        if(get_class($resP) == "EasyRdf_Literal"){
-                            $returnArray[$property]['property'] = $resP->dumpValue('string');
-                        } 
-                    }
-                    if(!empty($resV)){
-                        if(get_class($resP) == "EasyRdf_Resource"){
-                            $returnArray[$property]['value'] = $resV->getUri();
-                        } 
-                        if(get_class($resP) == "EasyRdf_Literal"){
-                            $returnArray[$property]['value'] = $resV->dumpValue('string');
-                        }
-                    }
-                }
-                
-                return $returnArray;
-                
-            } catch (Exception $ex) {
-                throw new \Exception('error durong the sparql query!');
-            }
-        }
-        
-    }
-
     /* 
-     * get all data by property.
-     * @property: fedora:created
-     * @valueType = Literal / Resource
-     */
-    public static function getDataByProp($property, $value = null, $valueType = "Literal") {
-        if (empty($property)) {
-            throw new \Exception('Property empty');
+     * Get the digital rescources Meta data by ResourceUri
+    */
+    
+    public static function getClassMeta($classURI){
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());        
+        
+        try {
+            
+            $result = $sparql->query(self::$prefixes . ' 
+                    SELECT ?id ?label WHERE {
+                      {
+                        { <' . $classURI . '> dct:identifier / ^rdfs:domain ?property . }
+                        UNION
+                        { <' . $classURI . '> rdfs:subClassOf / (^dct:identifier / rdfs:subClassOf)* / ^rdfs:domain ?property . }
+                      }
+                      ?property dct:identifier ?id
+                      OPTIONAL {
+                        ?property dct:label ?label .
+                      }
+                    }            
+                ');
+            
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+            
+            return $getResult;    
+            
+            
+        } catch (Exception $ex) {
+
+             throw new Exception($ex->getMessage());
         }
-
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-
-        if (empty($value)) {
-            
-            $result = $sparql->query(self::$prefixes . ' SELECT * WHERE { ?uri ' . $property . ' ?value . }');
-            
-        } else {
-            
-            if($valueType == "Resource"){
-            
-                try {
-                    $result = $sparql->query(self::$prefixes . ' SELECT ?uri WHERE { ?uri ' . $property . ' <'.$value.'> }');
-                    
-                    foreach($result as $r){                        
-                        $res = $r->uri->getUri();                    
-                    }
-                    return $res;
-                                    
-                } catch (Exception $ex) {
-                    throw new \Exception('error durong the sparql query!');
-                }
-                
-            }else {
-                
-                $result = $sparql->query(self::$prefixes . ' SELECT * WHERE { ?uri ' . $property . ' ?value . FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . }');
-                
-            }
-            
-        }
-        // the result will be an EasyRdf_Sparql_Result Object
-
-
-        return $result;
+      
     }
+    
+    /*
+     * Get the field values to the editing form
+     * 
+     */
+    
+    public function getFieldValByUriProp($uri, $resourceProperty){
+        
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());                  
+        
+            try {                
+                $result = $sparql->query(self::$prefixes . ' SELECT ?value WHERE { <' . $uri . '> ?property ?value .  <' . $uri . '> <'. $resourceProperty .'> ?value . } ');
+
+                $fields = $result->getFields(); 
+                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+                
+                return $getResult;
+
+            } catch (Exception $ex) {
+                throw new \Exception('error durong the sparql query!');
+            }
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+     /* 
+      * 
+      * 
+      * !!!!!!!!!!!!!!!!!!!!!!! NOT USED
+      * 
+     * Get the actual class label 
+    */
+    
+    public function getClassLabel($classUri, $prefix ='rdfs', $property = 'label'){
+        
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        
+        try {
+            
+            $result = $sparql->query(self::$prefixes . ' 
+                    select ?'.$property.' where {		
+  			<' . $classUri . '> '.$prefix.':'.$property.'  ?'.$property.' .
+                    }');
+        
+            $res = array();
+        
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+            
+            return $getResult;    
+            
+        } catch (Exception $e) {
+            
+            echo $e->getMessage(); 
+        }
+    }
+    
+    
+
+   
+    
+    
+   
+
+    
 
     /*
      * get the child resources by Uri
@@ -273,43 +475,9 @@ class oeawStorage {
         return $res;
     }
 
-    public static function getAllPropertyForSearch() {
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-
-        $result = $sparql->query(self::$prefixes . ' SELECT distinct ?p WHERE { ?s ?p ?o }');
-
-        return $result;
-    }
     
-    public function getClassLabel($classUri, $prefix ='rdfs', $property = 'label'){
-        
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        
-        try {
-            
-            $result = $sparql->query(self::$prefixes . ' 
-                    select ?'.$property.' where {		
-  			<' . $classUri . '> '.$prefix.':'.$property.'  ?'.$property.' .
-                    }');
-        
-            $res = array();
-        
-            foreach ($result as $r) {
-                $r = (array) $r;
-                $lbl = $r[$property]->dumpValue('string');
-                $lblArray = explode('"', $lbl);
-                $lbl = $lblArray[1];
-                $res[] = $lbl;
-
-            }
-        
-            return $res;
-            
-        } catch (Exception $e) {
-            
-            echo $e->getMessage(); 
-        }
-    }
+    
+  
     
     /* 
      * Get the Class Values, to we can compare it with the already uploaded
@@ -345,39 +513,7 @@ class oeawStorage {
         }        
     }            
 
-    public static function getClassMeta($classURI){
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        //$result = $sparql->query(self::$prefixes . ' SELECT distinct ?metadata WHERE {  ?metadata rdfs:domain <' . $classURI . '> . }');
-        
-        try {
-            
-            $result = $sparql->query(self::$prefixes . ' 
-                    SELECT ?id ?label WHERE {
-                      {
-                        { <' . $classURI . '> dct:identifier / ^rdfs:domain ?property . }
-                        UNION
-                        { <' . $classURI . '> rdfs:subClassOf / (^dct:identifier / rdfs:subClassOf)* / ^rdfs:domain ?property . }
-                      }
-                      ?property dct:identifier ?id
-                      OPTIONAL {
-                        ?property dct:label ?label .
-                      }
-                    }            
-                ');
-            
-            foreach($result as $r){            
-                $resID = $r->id;
-                $returnArray[] = $resID->getUri();
-            }
-            return $returnArray;            
-            
-            
-        } catch (Exception $ex) {
-
-             throw new Exception($ex->getMessage());
-        }
-      
-    }
+    
     
     /* For the multiple form, to get the class meta data */
     /* OLD QUERY  */
@@ -411,29 +547,7 @@ class oeawStorage {
         }
     }
 
-    public static function getClass() {
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        //$result = $sparql->query(self::$prefixes . ' select ?uri where {?uri a owl:Class}');
-        $result = $sparql->query(self::$prefixes . ' 
-        select ?uri ?title where {
-  		?uri a owl:Class .
-                ?uri rdfs:label ?title .
-                  }
-        ');
-        
-        foreach ((array) $result as $r) {
-            $r = (array) $r;
-            $r1 = $r['uri'];
-            $r2 = $r['title'];
-            $res['uri'] = $r1->dumpValue('string');
-            $res['title'] = $r2->dumpValue('string');            
-            $title = explode('"', $res["title"]);
-            $title = $title[1];
-            $class[$res["uri"]] = $title;
-        }
-
-        return $class;
-    }
+   
 
     public function getIdentifier($class){
         
@@ -566,70 +680,6 @@ class oeawStorage {
         return $finalURL;
         
     }
-    
-    
-    
-    /*  Delete Sparqls */
-    public function deleteTriple()
-    {
-        
-        try {
-            $sparql = 'DELETE DATA {
-                <http://blazegraph.localhost/blazegraph/namespace/kb/sparql> <http://vocabs.acdh.oeaw.ac.at/#depositor> "utzutz" 
-            }';
-            
-            $query = 'DELETE DATA {
-                <http://blazegraph.localhost/blazegraph/namespace/kb/sparql> <http://vocabs.acdh.oeaw.ac.at/#represents> "tzutzu" ;
-                                                                     dcterm:isPartOf "amc - austrian media corpus" .
-            }';
-            
-        } catch (Exception $ex) {
-            echo 'Message: ' .$ex->getMessage();
-        }
-        
-        
-    }
-    
-    
-    /* add sparqls */
-    public function addTriple(){
-        
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-        
-        try {
-            
-            $query = ' INSERT DATA {
-                    <http://blazegraph.localhost/blazegraph/namespace/kb/sparql> <http://vocabs.acdh.oeaw.ac.at/#represents> "a new vocab" ;
-                                                               <http://vocabs.acdh.oeaw.ac.at/#depositor> "acdh depositor new".
-                }';
-            
-        } catch (Exception $ex) {
-
-            echo 'Message: ' .$ex->getMessage();
-        }
-        
-    }
-    
-    public function createResource($uri){
-         
-        echo file_get_contents($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $config = new zozlak\util\Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        acdhOeaw\util\SparqlEndpoint::init($config->get('sparqlUrl'));
-        acdhOeaw\redmine\Redmine::init($config);
-        acdhOeaw\FedoraResource\FedoraResource::init($config);
-        acdhOeaw\storage\Indexer::init($config);
-        
-        
-        acdhOeaw\fedora\FedoraResource::begin();
-
-        $res = new acdhOeaw\fedora\FedoraResource('http://fedora.localhost/rest/0c/c3/d0/ba/0cc3d0ba-2836-41d2-aa97-9c1d56907068');
-        $ind = new acdhOeaw\storage\Indexer($res);
-        $ind->index(1000, 2, false, true);
-        
-        acdhOeaw\fedora\FedoraResource::commit();
-        
-    }
-            
             
             
 

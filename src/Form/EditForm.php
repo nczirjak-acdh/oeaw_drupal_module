@@ -77,100 +77,111 @@ class EditForm extends FormBase {
         
         if (empty($editHash)) {  return false; }
         
-        $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
+        echo $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
         
-        // get the digital resource classes where the user must upload binary file
-        $digitalResources = \Drupal\oeaw\oeawStorage::getDigitalResources();
+         // get the digital resource classes where the user must upload binary file
+        $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
+        
+        $digitalResources = array();
+        
+        foreach($digitalResQuery as $dr){            
+            if(isset($dr["collection"])){
+                $digitalResources[] = $dr["id"];
+            }            
+        }
         
         // get the actual class dct:identifier to we can compare it with the digResource
+        // if this is a binaryResource then we need to show the file upload possibility
         $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
-        
-        foreach($classValue["rdf:type"] as $cv){
+                 
+        foreach($classValue as $cv){
             
-            if(!empty($cv["value"])){                
-               if($cv["value"]->getUri() !== null){
-                    $val = $cv["value"]->getUri();
-                    if (strpos($val, 'http://vocabs.acdh.oeaw.ac.at') !== false) {
-                        
-                        echo $digResCheckVal = $val;
-                        $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $val, $valueType = "Resource");
-                    }
+            if(!empty($cv["value"])){
+                if (strpos($cv["value"], 'http://vocabs.acdh.oeaw.ac.at') !== false) {                        
+                    $classVal[] = $cv["value"];
+                   // $editUriClass = \Drupal\oeaw\oeawStorage::getDefPropByURI($classVal, "rdf:type");
                 }
             }
         }
         
-        $metadata = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
-        // get the triples from the ontology  
-        $ontologyMeta = \Drupal\oeaw\oeawStorage::getOntologyMeta($editUriClass);
+        if(!empty($classVal)){
+            foreach($classVal as $cval){            
+                $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
+                $actualClassUri = $cval;
+            }
+        }
+        
+        // this will contains the onotology uri, what will helps to use to know
+        // which fields we need to show in the editing form
+        $editUriClass = $editUriClass[0]["uri"];
+        
+        
+        //the actual fields for the editing form based on the editUriClass variable
+        $editUriClassMetadata = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
         
         $attributes = array();
-        // build the form with the fields and values
         
-        //foreach ($ontologyMeta as $ont){
-        for($i=0; $i < count($ontologyMeta); $i++){
+        for($i=0; $i < count($editUriClassMetadata); $i++){
             
-            $arr = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "<".$ontologyMeta[$i].">");
+            // get the field values based on the edituri and the metadata uri
+            $value = \Drupal\oeaw\oeawStorage::getFieldValByUriProp($editUri, $editUriClassMetadata[$i]["id"]);
+            $value = $value[0]["value"];
             
-            $label = explode("/", $ontologyMeta[$i]);                
+            // get the field uri s last part to show it as a label title
+            $label = explode("/", $editUriClassMetadata[$i]["id"]);                
             $label = end($label);
             $label = str_replace('#', '', $label);
             
-            if(!empty($arr[0])){                
-                $a = (array)($arr[0]);
-                $a = $a["value"];
-                // get the triples value
-                $value = \Drupal\oeaw\oeawFunctions::getProtectedValue($a,"value");
-            }
-            
-            // get the ispartof triple value            
+            // if the label is the isPartOf, then we need to disable the editing
+            // to the users, they do not have a permission to change it
             if($label == "isPartOf"){                    
-                $value = \Drupal\oeaw\oeawFunctions::getProtectedValue($a,"uri");
-                $isPartOf = \Drupal\oeaw\oeawStorage::getDefPropByURI($value, "dct:title");           
-                $isPartOf = (array)$isPartOf[0];
-                $value = \Drupal\oeaw\oeawFunctions::getProtectedValue($isPartOf["value"],"value");
+                $titleProperty = \Drupal\oeaw\oeawStorage::getDefPropByURI($value, 'dc:title');
+                $value = $titleProperty[0]["value"];
                 $attributes =  array('readonly' => 'readonly');
             }else {
                 $attributes =  array();
             }
-
+            
+            // generate the form fields
             $form[$label] = array(
                 '#type' => 'textfield',
                 '#title' => $this->t($label),
                 '#default_value' => $value,  
                 '#attributes' => $attributes,
             );
-
+            
+            //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
             $form[$labelVal.':oldValues'] = array(
                 '#type' => 'hidden',
                 '#value' => $value,
             );
-            $property[$label] = $ontologyMeta[$i];
+            $property[$label] = $editUriClassMetadata[$i]["id"];
             $fieldsArray[] = $label;
-            $fieldsArrayOldValues[] = $labelVal.':oldValues';               
+            $fieldsArrayOldValues[] = $labelVal.':oldValues';              
+            
         }
+        
         
         $this->store->set('formEditFields', $fieldsArray);
         $this->store->set('formEditOldFields', $fieldsArrayOldValues);
         $this->store->set('propertysArray', $property);
         $this->store->set('resourceUri', $editUri);
         
-        echo $checkDigRes = in_array($digResCheckVal, $digitalResources);
-        echo $digResCheckVal;
-        
+        $checkDigRes = in_array($actualClassUri, $digitalResources);
+       
         // if we have a digital resource then the user must upload a binary resource
         if($checkDigRes == true){
             $form['file'] = array(
                 '#type' => 'managed_file', 
-                '#title' => t('FILE'), 
-                '#required' => TRUE,
+                '#title' => t('FILE'),                 
                 '#upload_validators' => array(
                     'file_validate_extensions' => array('xml doc txt simplified docx'),
                  ),
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
             );
         }
-      
+        
         $form['submit'] = array(
             '#type' => 'submit',
             '#value' => t('Submit sample'),
@@ -178,6 +189,7 @@ class EditForm extends FormBase {
 
 
         return $form;
+        
     }
     
 
@@ -263,3 +275,4 @@ class EditForm extends FormBase {
     }
 
 }
+

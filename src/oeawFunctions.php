@@ -9,40 +9,268 @@ use Drupal\oeaw\connData;
  
 class oeawFunctions {
    
-    public static $prefixesToChange = array(
-        "http://fedora.info/definitions/v4/repository" => "fedora",
-        "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore" => "ebucore",
-        "http://www.loc.gov/premis/rdf/v1" => "premis",
-        "http://www.jcp.org/jcr/nt/1.0" => "nt",
-        "http://www.w3.org/2000/01/rdf-schema" => "rdfs",
-        "http://www.iana.org/assignments/relation/" => "iana",
-        "http://vocabs.acdh.oeaw.ac.at/" => "acdh",        
-        "http://purl.org/dc/elements/1.1/" => "dc",
-        "http://purl.org/dc/terms/" => "dct",
-    );
+    
+    /*
+     * Simple function to create array from sparql object
+     *      
+     * $result: EasyRdf_Sparql_Result 
+     * $fields: Array of the sparql query fields
+     */
+    
+    public function createSparqlResult($result, array $fields){
+        
+        $resCount = count($result) -1;
+        for ($x = 0; $x <= $resCount; $x++) {
+        
+            foreach($fields as $f){                
+                
+                if(!empty($result[$x]->$f)){
+                    
+                    $objClass = get_class($result[$x]->$f);
+                    
+                    if($objClass == "EasyRdf_Resource"){
+                        
+                        $val = $result[$x]->$f;
+                        $val = $val->getUri();
+                        $res[$x][$f] = $val;
+                        
+                    }else if($objClass == "EasyRdf_Literal"){
+                                                
+                        $val = $result[$x]->$f;
+                        $val = $val->__toString();
+                        $res[$x][$f] = $val;
+                        
+                    } else {
+                        $res[$x][$f] = $result[$x]->$f->__toString();
+                    } 
+                }
+            }
+        }
+       
+        return $res;        
+    }
     
     
+     /*
+     * generating the table to showing the results
+     * 
+     * $data = array with result of the sparql query
+     * $text = 
+     * $esit = 
+     *  
+     */
+
+    public static function generateTable(array $data, string $text = null, string $edit = null) {
+
+        /* get the fields from the sparql query */
+        $fields = array_keys($data[0]);
+        $i = 0;
+        
+        $finalArray = array();
+        $filename = false;
+        
+        // it is a special prefix
+        $describedby = false;
+        $descVal = "";
+        
+        //creating the header and the rows part
+        foreach ($data as $r) {
+            
+            // header elements foreach
+            foreach ($fields as $h) {                
+                $header[$h] = t($h);
+                $val = $r[$h];
+                
+                $value = (string)$val;
+                
+                if (substr($value,0,7) == 'http://')
+                {            
+                    $asd = \Drupal\oeaw\oeawFunctions::createPrefixesFromString($val);
+                }
+                    
+                $length = strlen($value);
+
+                if (substr($value, $length - 8, 8) == 'filename') {
+                    $filename = true;
+                }
+                if ($h == 'uri') {
+                    $ResURL = $value;
+                    $details = \Drupal\oeaw\oeawFunctions::createDetailsUrl($value, 'encode');
+                    
+                }
+
+                if (\Drupal\oeaw\oeawFunctions::generateUrl($value) != false) {
+                    $value = \Drupal\oeaw\oeawFunctions::generateUrl($value);
+                }
+                
+                $finalArray[$i][] = $value;
+            }
+
+            if (!empty($details)) {
+                $finalArray[$i][] = t('<a href="/oeaw_detail/' . $details . '">Details</a>');
+            } else {
+                $finalArray[$i][] = t('NO Details');
+            }
+            
+            if($edit != null){
+                $finalArray[$i][] = t('<a href="/oeaw_editing/' . $details . '">edit</a>');
+                $finalArray[$i][] = t('<a href="/oeaw_delete/' . $details . '">delete</a>');
+            }
+
+            $i++;
+        }
+
+        if (($filename == true) && ($describedby == true)) {
+            $current_uri = \Drupal::request()->getRequestUri();
+            $downloadURL = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode', true);
+
+            $value = t('<a href="' . $downloadURL . '">Download content</a>');
+
+            $downText = array(
+                '#type' => 'markup',
+                '#markup' => $value
+            );
+        }
+
+        $header['details'] = t('details');
+        if($edit != null){
+            $header['edit'] = t('edit');
+            $header['delete'] = t('delete');
+        }
+        
+        $rows = $finalArray;
+
+        $table = array(
+            '#type' => 'table',
+            '#header' => $header,
+            '#rows' => $rows,
+            '#attributes' => array(
+                'id' => 'oeaw-table',
+            ),
+        );
+
+        $current_uri = \Drupal::request()->getRequestUri();
+        $actualMenu = explode('/', $current_uri);
+        
+        // we are checking the actual menupoint, if it is the details then we are showing the title and download url 
+        if ($actualMenu[1] == 'oeaw_detail') {
+
+            if (empty($ResURL)) {
+
+                $current_uri = \Drupal::request()->getRequestUri();
+                                
+                /* url for the resource */
+                $ResURL = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode', true);
+                
+                /* fedora url for the sparql  */
+                $ResURLFedora = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode');
+                                
+                $titleProperty = \Drupal\oeaw\oeawStorage::getDefPropByURI($ResURLFedora, 'dc:title');
+                                
+                $title = $titleProperty[0]["value"];
+                
+                $hdrTxt = array(
+                    '#type' => 'markup',
+                    '#markup' => '<div class="tableHeaderTxt"><h2>' . $title . '</h2><br>' . $ResURL . ' <br><br></div>',
+                );
+            }
+        }
+
+        $ftrTxt = array(
+            '#type' => 'markup',
+            '#markup' => '<div class="tableFooterTxt" ><a href="/oeaw_menu" class="tableBackTxt">Go Back to the menu</a></br></br></div>',
+        );
+
+        return array(
+            $hdrTxt,
+            $downText,
+            $table,
+            $ftrTxt,
+        );
+    }
     
-    public function createPrefixesFromString($string){
+    
+     /*
+     * create prefix from string based on the connData.php prefixes
+     * 
+     * $string 
+     * $text = 
+     * $esit = 
+     *  
+     */
+    
+    public function createPrefixesFromString(string $string){
         
         if (empty($string)) {
             return false;
         }
         
-        if (strpos($string, '#')) {
-            $arr = explode("#", $string, 2);        
-            $string = $arr[0];
-            $value = end($arr);
-        } 
+        $endValue = explode('/', $string);
+        $endValue = end($endValue);
+        if (strpos($endValue, '#') !== false) {
+            $endValue = explode('#', $string);
+            $endValue = end($endValue);
+        }
         
-        if(!empty(self::$prefixesToChange[$string])){
+        $newString = explode($endValue, $string);
+        $newString = $newString[0];
+        
+        
+        if(!empty(\Drupal\oeaw\connData::$prefixesToChange[$newString])){
             
-            $result = self::$prefixesToChange[$string].':'.$value;
+            $result = \Drupal\oeaw\connData::$prefixesToChange[$newString].':'.$endValue;
+        }
+        else {
+            $result = $string;
         }
          
         return $result;
         
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     /*
      * Creates an array from the $prefixes obj
@@ -173,154 +401,11 @@ class oeawFunctions {
         return $data;
     }
 
-    /*
-     * generating the table to show the results
-     */
+   
 
-    public static function generateTable($data, $text = null, $edit = null) {
-        
-        /* get the fields from the sparql query */
-        $fields = $data->getFields();
-        $i = 0;
-        
-        $finalArray = array();
-        $filename = false;
-        
-        // it is a special prefix
-        $describedby = false;
-        $descVal = "";
-        
-        $data = (array)$data;
-       
-        //creating the header and the rows part
-        foreach ($data as $r) {
-            // header elements foreach
-            foreach ($fields as $h) {
-                $r = (array) $r;
-                $header[$h] = t($h);
-                $val = $r[$h];
-                
-                $value = (string)$val;
-                
-                if (substr($value,0,7) == 'http://')
-                {
-                    
-                    $asd = \Drupal\oeaw\oeawFunctions::createPrefixesFromString($val);
-                    
-                    
-                }
-                    
-                $length = strlen($value);
-
-                if (substr($value, $length - 8, 8) == 'filename') {
-                    $filename = true;
-                }
-/*
-                if (substr($value, $length - 11, 11) == 'describedby') {
-                    $describedby = true;
-                    $descVal = $value;
-                }
-*/
-                if ($h == 'uri') {
-                    $ResURL = $value;
-                    $details = \Drupal\oeaw\oeawFunctions::createDetailsUrl($value, 'encode');
-                    
-                }
-
-                if (\Drupal\oeaw\oeawFunctions::generateUrl($value) != false) {
-                    $value = \Drupal\oeaw\oeawFunctions::generateUrl($value);
-                }
-                
-                $finalArray[$i][] = $value;
-            }
-
-            if (!empty($details)) {
-                $finalArray[$i][] = t('<a href="/oeaw_detail/' . $details . '">Details</a>');
-            } else {
-                $finalArray[$i][] = t('NO Details');
-            }
-            
-            if($edit != null){
-                $finalArray[$i][] = t('<a href="/oeaw_editing/' . $details . '">edit</a>');
-                $finalArray[$i][] = t('<a href="/oeaw_delete/' . $details . '">delete</a>');
-            }
-            
-
-            $i++;
-        }
-
-        if (($filename == true) && ($describedby == true)) {
-            $current_uri = \Drupal::request()->getRequestUri();
-            $downloadURL = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode', true);
-
-            $value = t('<a href="' . $downloadURL . '">Download content</a>');
-
-            $downText = array(
-                '#type' => 'markup',
-                '#markup' => $value
-            );
-        }
-
-        $header['details'] = t('details');
-        if($edit != null){
-            $header['edit'] = t('edit');
-            $header['delete'] = t('delete');
-        }
-        
-        $rows = $finalArray;
-
-        $table = array(
-            '#type' => 'table',
-            '#header' => $header,
-            '#rows' => $rows,
-            '#attributes' => array(
-                'id' => 'oeaw-table',
-            ),
-        );
-
-        $current_uri = \Drupal::request()->getRequestUri();
-        $actualMenu = explode('/', $current_uri);
-        
-        /* we are checking the actual menupoint, if it is the details then we are showing the title and download url */
-        if ($actualMenu[1] == 'oeaw_detail') {
-
-            if (empty($ResURL)) {
-
-                $current_uri = \Drupal::request()->getRequestUri();
-                /* url for the resource */
-                $ResURL = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode', true);
-                /* fedora url for the sparql  */
-                $ResURLFedora = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode');
-                $prop = \Drupal\oeaw\oeawStorage::getDefPropByURI($ResURLFedora, 'dc:title');
-                
-                $title = (array) $prop[0];
-
-                if(!empty($title)){
-                    $title = $title['value']->dumpValue('string');
-                    $titleArray = explode('"', $title);
-                    $title = $titleArray[1];
-                } else { $title = ""; }
-                
-                $hdrTxt = array(
-                    '#type' => 'markup',
-                    '#markup' => '<div class="tableHeaderTxt"><h2>' . $title . '</h2><br>' . $ResURL . ' <br><br></div>',
-                );
-            }
-        }
-
-        $ftrTxt = array(
-            '#type' => 'markup',
-            '#markup' => '<div class="tableFooterTxt" ><a href="/oeaw_menu" class="tableBackTxt">Go Back to the menu</a></br></br></div>',
-        );
-
-        return array(
-            $hdrTxt,
-            $downText,
-            $table,
-            $ftrTxt,
-        );
-    }
-
+    
+    
+    
     public static function resUrl($data) {
         $data = str_replace(array("\r", "\n"), ' ', $data);
         $data = preg_replace('/^.*Location: */', '', $data);

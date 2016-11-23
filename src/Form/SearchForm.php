@@ -22,17 +22,21 @@ class SearchForm extends FormBase
     {   
         $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
         
-        //modify the prefixes
-        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromObject($propertys);        
+        /* get the fields from the sparql query */
+        $fields = array_keys($propertys[0]);
         
-        //echo substr(strrchr("http://www.iana.org/assignments/relation/describedby", "/"), 1);
-     
+        foreach($propertys as $p){
+            
+            $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromString($p[$fields[0]]); 
+            $select[$searchTerms] = t($searchTerms);
+        }
         
+
         $form['metakey'] = array (
           '#type' => 'select',
           '#title' => ('MetaKey'),
           '#options' => 
-            $searchTerms          
+              $select
         );
        
         $form['metavalue'] = array(
@@ -70,9 +74,8 @@ class SearchForm extends FormBase
   
     public function submitForm(array &$form, FormStateInterface $form_state) {
         
-    // drupal_set_message($this->t('@can_name ,Your application is being submitted!', array('@can_name' => $form_state->getValue('candidate_name'))));
+    
         foreach ($form_state->getValues() as $key => $value) {
-        //  drupal_set_message($key . ': ' . $value);
         
             // I pass the values with the session to the redirected url where i generating the tables
             $_SESSION['oeaw_form_result_'.$key] = $value;            

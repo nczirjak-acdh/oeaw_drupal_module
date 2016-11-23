@@ -17,29 +17,40 @@ class NewResourceOneForm extends NewResourceFormBase {
         $form = parent::buildForm($form, $form_state);
 
         $form['#attributes']['enctype'] = "multipart/form-data";
-
-        /* get the root elements */
-        $roots = \Drupal\oeaw\oeawStorage::getRootFromDB(true);
         
+        /* get the root elements */
+        $roots = \Drupal\oeaw\oeawStorage::getRootFromDB();
+                
+        /* get the fields from the sparql query */
+        $fields = array_keys($roots[0]);
+        
+        foreach($roots as $r){
+           $rootSelect[$r["uri"]] = t($r["title"]);
+        }
+       
+
         $form["roots"] = array(
             "#type" => "select",
             "#title" => t("SELECT YOUR ROOT ELEMENT"),
             '#required' => TRUE,
             "#options" =>
-            $roots,
+            $rootSelect,
             '#default_value' => $this->store->get('roots') ? $this->store->get('roots') : '',
         );
-
+        
         
         $classes = \Drupal\oeaw\oeawStorage::getClass();
         
-
+        foreach($classes as $c){
+           $classesSelect[$c["uri"]] = t($c["title"]);
+        }
+        
         $form['class'] = array(
             '#type' => 'select',
             '#title' => $this->t('SELECT YOUR CLASS'),
             '#required' => TRUE,
             "#options" =>
-            $classes,
+            $classesSelect,
             '#default_value' => $this->store->get('class') ? $this->store->get('class') : '',
         );
 

@@ -27,40 +27,46 @@ class NewResourceTwoForm extends NewResourceFormBase {
         $root =  $formVal['root'];
         
         // get the digital resource classes where the user must upload binary file
-        $digitalResources = \Drupal\oeaw\oeawStorage::getDigitalResources();
+        $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
 
+        $digitalResources = array();
+        foreach($digitalResQuery as $dr){            
+            if(isset($dr["collection"])){
+                $digitalResources[] = $dr["id"];
+            }            
+        }
+        
         // get the actual class dct:identifier to we can compare it with the digResource
         $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($class, "dct:identifier"); 
         
-        foreach($classValue["dct:identifier"] as $cv){
+        foreach($classValue as $cv){
             
             if(!empty($cv["value"])){
-               if($cv["value"]->getUri() !== null){
-                    $classVal = $cv["value"]->getUri();                    
-                }
+                $classVal = $cv["value"];
             }
         }
         
         $classValue = $classVal;
         $this->store->set('ontologyClassIdentifier', $classValue);
-
+        
         // compare the digRes and the actual class, because if it is a DigColl then 
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
-                
+        
         // get the actual class metadata
-        $metadata = \Drupal\oeaw\oeawStorage::getClassMeta($class);
+        $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);
         
-        $rootTitle = \Drupal\oeaw\oeawStorage::getClassLabel($root, 'dct', 'title');
-        
-        if(empty($rootTitle)){
-            $rootTitle = $root;
+        foreach($metadataQuery as $m){            
+            $metadata[] = $m["id"];
         }
         
+        $rootTitle = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dc:title");
+        $rootTitle = $rootTitle[0]["value"];
+        
         $fieldsArray = array();
-
+        
         foreach ($metadata as $m) {
-
+            
             $expProp = explode("/", $m);            
             $expProp = end($expProp);
             if (strpos($expProp, '#') !== false) {
@@ -98,6 +104,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
             $fieldsArray[] = $labelVal.':prop';                
             
         }
+               
              
         $this->store->set('form2Fields', $fieldsArray);
         // if we have a digital resource then the user must upload a binary resource
@@ -127,16 +134,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
     
     public function validateForm(array &$form, FormStateInterface $form_state) 
     {    
-        $formVal = $this->store->get('form1Elements');
-                
-        $form2Fields = $this->store->get('form2Fields');
-                
-        /* check that all field have content */
-     /*   foreach($form2Fields as $f){            
-            if (empty($form_state->getValue($f))) {
-                $form_state->setErrorByName($f, $this->t('Please fill the fields!'));
-            }
-        }*/
+        
     }
 
     /**
