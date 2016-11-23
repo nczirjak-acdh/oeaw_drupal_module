@@ -172,7 +172,7 @@ class EditForm extends FormBase {
        
         // if we have a digital resource then the user must upload a binary resource
         if($checkDigRes == true){
-            $form['file'] = array(
+             $form['file'] = array(
                 '#type' => 'managed_file', 
                 '#title' => t('FILE'),                 
                 '#upload_validators' => array(
@@ -217,6 +217,18 @@ class EditForm extends FormBase {
         $editOldForm = $this->store->get('formEditOldFields');
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
+        
+//get the uploaded files values
+        $fileID = $form_state->getValue('file');
+        $fileID = $fileID[0];
+        
+        $fObj = file_load($fileID);
+        
+        if(!empty($fObj) || isset($fObj))
+        {                
+            //get the temp file uri        
+            $fUri = $fObj->getFileUri();
+        }
         
         // create array with new form values
         foreach($editForm as $e){                        
@@ -263,15 +275,34 @@ class EditForm extends FormBase {
             
             $fr->setMetadata($meta);
             $fr->updateMetadata();
+            
+            if(!empty($fUri)){
+                $fr->updateContent($fUri);
+            }
+            
             FedoraResource::commit();
+            $this->deleteStore($editForm);
             drupal_set_message($this->t('The form has been saved and you resource was changed'));
             
         } catch (Exception $ex) {
             
             FedoraResource::rollback();
-            $this->deleteStore($metadata);
+            $this->deleteStore($editForm);
             drupal_set_message($this->t('Error during the saving process'), 'error');
         }        
+    }
+    
+    
+    /**
+    * Helper method that removes all the keys from the store collection used for
+    * the multistep form.
+    */
+    
+    protected function deleteStore($metadata) {
+        
+        foreach($metadata as $key => $value){
+            $this->store->delete($key);
+        }
     }
 
 }

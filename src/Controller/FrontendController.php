@@ -150,44 +150,9 @@ class FrontendController extends ControllerBase {
         return $form;
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    /*
+    * the editing form
+    */
     
     public function oeaw_editing($uri, Request $request) {
         
@@ -198,12 +163,53 @@ class FrontendController extends ControllerBase {
         return $form;
         
     }
-
-  
-   
-
     
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+////////////////////////////////////////////////////////////////////////////////
+/*
+ * 
+ * 
+ * NOT USED
+ * 
+ * 
+ */
+   
    
 
     /*

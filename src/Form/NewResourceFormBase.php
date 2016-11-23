@@ -131,7 +131,7 @@ abstract class NewResourceFormBase extends FormBase {
         $init = FedoraResource::init($config);
         FedoraResource::begin();
         
-        // ha van fajl akkor a masodik ertek az lesz
+        
         try{
             $res = FedoraResource::factory($meta, $fileName);
             
@@ -144,6 +144,7 @@ abstract class NewResourceFormBase extends FormBase {
             $uri = $uri.'/fcr:metadata';
             
             $this->deleteStore($metadata);
+            
             drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a>'));
             
             

@@ -157,11 +157,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
         if(!empty($fObj) || isset($fObj))
         {                
             //get the temp file uri        
-            $fUri = $fObj->getFileUri();
-            $mime = mime_content_type($fUri);
-
-            //get file content        
-            $fContent = file_get_contents($fUri);
+            $fUri = $fObj->getFileUri();            
         }
         
         foreach($form2Fields as $f){
@@ -187,10 +183,9 @@ class NewResourceTwoForm extends NewResourceFormBase {
             $uriAndValue[$value] = $valuesArray[$key];            
         }
        
+
         $this->store->set('propertysArray', $property);
-        $this->store->set('valuesArray', $valuesArray);
-        $this->store->set('fileMIME', $mime);
-        $this->store->set('fileContent', $fContent);
+        $this->store->set('valuesArray', $valuesArray);        
         $this->store->set('fileName', $fUri);
         $this->store->set('uriAndValue', $uriAndValue);
         
