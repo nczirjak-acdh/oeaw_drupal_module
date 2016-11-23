@@ -37,8 +37,7 @@ class NewResourceOneForm extends NewResourceFormBase {
             $rootSelect,
             '#default_value' => $this->store->get('roots') ? $this->store->get('roots') : '',
         );
-        
-        
+                
         $classes = \Drupal\oeaw\oeawStorage::getClass();
         
         foreach($classes as $c){

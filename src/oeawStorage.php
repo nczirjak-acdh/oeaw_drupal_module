@@ -344,7 +344,8 @@ class oeawStorage {
         $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());                  
         
             try {                
-                $result = $sparql->query(self::$prefixes . ' SELECT ?value WHERE { <' . $uri . '> ?property ?value .  <' . $uri . '> <'. $resourceProperty .'> ?value . } ');
+                //$result = $sparql->query(self::$prefixes . ' SELECT ?value WHERE { <' . $uri . '> ?property ?value .  <' . $uri . '> <'. $resourceProperty .'> ?value . } ');
+                $result = $sparql->query(self::$prefixes . ' SELECT ?value WHERE {  <' . $uri . '> <'. $resourceProperty .'> ?value . } ');
 
                 $fields = $result->getFields(); 
                 $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
@@ -394,23 +395,21 @@ class oeawStorage {
     
     
     
+    //////////////////////////////////////////////////////////////////////////
+    /*
+     * 
+     *  DEPRECATED FUNCTIONS
+     * 
+     */
     
     
     
     
     
     
+
     
-    
-    
-    
-    
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-     /* 
-      * 
-      * 
+     /*       
       * !!!!!!!!!!!!!!!!!!!!!!! NOT USED
       * 
      * Get the actual class label 
@@ -452,7 +451,7 @@ class oeawStorage {
     /*
      * get the child resources by Uri
      */
-
+/*
     public static function getPartOfUri($uri) {
         if (empty($uri)) {
             throw new \Exception('URI EMPTY.');
@@ -475,7 +474,7 @@ class oeawStorage {
         return $res;
     }
 
-    
+    */
     
   
     
@@ -483,6 +482,7 @@ class oeawStorage {
      * Get the Class Values, to we can compare it with the already uploaded
      * resources
      */
+    /*
     public function getOntologyMeta($classURI){
     
         $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
@@ -512,11 +512,12 @@ class oeawStorage {
             return false;
         }        
     }            
-
+*/
     
     
     /* For the multiple form, to get the class meta data */
     /* OLD QUERY  */
+    /*
     public static function getClassMetadata($classURI, $createPrefix = true) {
 
         
@@ -547,8 +548,9 @@ class oeawStorage {
         }
     }
 
-   
+   */
 
+    /*
     public function getIdentifier($class){
         
         $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
@@ -572,7 +574,7 @@ class oeawStorage {
             return false;
         }
     }
-    
+    */
     
     
     /*
@@ -582,6 +584,7 @@ class oeawStorage {
      * @root: the root uri for the isPartOf
      * @mime: mime type of the uploaded file
      */
+    /*
     public static function insertDataToFedora($file, $sparql, $root = false, $mime, $resourceID = null) {
 
         if (empty($sparql) ) {
@@ -671,7 +674,7 @@ class oeawStorage {
         }
        
        
-        /* if everything was okay then commit the */
+        // if everything was okay then commit the 
         $transactionCommit = \Drupal\oeaw\oeawFunctions::runCurl('POST', $transactionUrl, '/fcr:tx/fcr:commit');        
        
         $finalURL = str_replace($transactionUrl, '', $fileInsertingUrl);
@@ -681,6 +684,6 @@ class oeawStorage {
         
     }
             
-            
+            */
 
 }

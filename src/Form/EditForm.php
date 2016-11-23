@@ -77,7 +77,7 @@ class EditForm extends FormBase {
         
         if (empty($editHash)) {  return false; }
         
-        echo $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
+        $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
         
          // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
@@ -94,12 +94,10 @@ class EditForm extends FormBase {
         // if this is a binaryResource then we need to show the file upload possibility
         $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
                  
-        foreach($classValue as $cv){
-            
+        foreach($classValue as $cv){            
             if(!empty($cv["value"])){
                 if (strpos($cv["value"], 'http://vocabs.acdh.oeaw.ac.at') !== false) {                        
-                    $classVal[] = $cv["value"];
-                   // $editUriClass = \Drupal\oeaw\oeawStorage::getDefPropByURI($classVal, "rdf:type");
+                    $classVal[] = $cv["value"];                   
                 }
             }
         }
@@ -125,6 +123,17 @@ class EditForm extends FormBase {
             
             // get the field values based on the edituri and the metadata uri
             $value = \Drupal\oeaw\oeawStorage::getFieldValByUriProp($editUri, $editUriClassMetadata[$i]["id"]);
+            
+            /*
+            echo "<pre>";
+            var_dump($editUriClassMetadata[$i]["id"]);
+            var_dump($value);
+            echo "</pre>";
+
+            die();
+            */
+
+
             $value = $value[0]["value"];
             
             // get the field uri s last part to show it as a label title
@@ -158,11 +167,9 @@ class EditForm extends FormBase {
             );
             $property[$label] = $editUriClassMetadata[$i]["id"];
             $fieldsArray[] = $label;
-            $fieldsArrayOldValues[] = $labelVal.':oldValues';              
-            
+            $fieldsArrayOldValues[] = $labelVal.':oldValues';                          
         }
-        
-        
+                
         $this->store->set('formEditFields', $fieldsArray);
         $this->store->set('formEditOldFields', $fieldsArrayOldValues);
         $this->store->set('propertysArray', $property);
@@ -195,20 +202,6 @@ class EditForm extends FormBase {
 
     public function validateForm(array &$form, FormStateInterface $form_state) {
         
-      /*  if (empty($form_state->getValue('file_sparql'))) {
-            $form_state->setErrorByName('file_sparql', $this->t('Please upload a sparql file'));
-        }*/
-/*
-        if (empty($form_state->getValue('file'))) {
-            $form_state->setErrorByName('file', $this->t('Please upload a file'));
-        }
- * 
- */
-/*
-        if (empty($form_state->getValue('roots'))) {
-            $form_state->setErrorByName('roots', $this->t('Please select a root element'));
-        } 
- */
     }
 
     public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -218,7 +211,7 @@ class EditForm extends FormBase {
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
         
-//get the uploaded files values
+        //get the uploaded files values
         $fileID = $form_state->getValue('file');
         $fileID = $fileID[0];
         
@@ -298,7 +291,7 @@ class EditForm extends FormBase {
     * the multistep form.
     */
     
-    protected function deleteStore($metadata) {
+    protected function deleteStore($editForm) {
         
         foreach($metadata as $key => $value){
             $this->store->delete($key);

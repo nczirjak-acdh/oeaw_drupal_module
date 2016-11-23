@@ -228,145 +228,6 @@ class oeawFunctions {
         
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    /*
-     * Creates an array from the $prefixes obj
-     * and from the propertys from fedora      
-    */
-    public function createPrefixesFromObject($propertys) {
-        
-        if (empty($propertys)) {
-            return false;
-        }
-
-        $fields = $propertys->getFields();
-        $propArr = array();
-        /* the Object always has two important property. uri -> fedora uri
-         * value which is the name/title of the uri */
-        $i = 0;
-        foreach ($propertys as $p) {
-            foreach ($fields as $f) {
-                $p = (array) $p;
-                $val = (array)$p[$f];
-                
-                if(!empty($val["\0*\0" . "uri"])) {
-                    $uri = $val["\0*\0" . "uri"];
-                    /* get the property name from the end of the uri */
-                    $parts = explode('/', $uri);
-                    $value = end($parts);
-                    
-                    if (strpos($uri, '#')) {
-                        $arr = explode("#", $uri, 2);
-                        // the repo uri. F.e.: http://fedora.info/definitions/v4/repository
-                        $uri = $arr[0];
-                        $value = end($arr);
-                    }else {
-                        $uri = str_replace($value, '', $uri);
-                    }
-                }
-                /* only one variable from the sparql query */
-                if(!empty($val["\0*\0" . "value"])) {
-                    $value = $val["\0*\0" . "value"]; 
-                }
-                
-                if(!empty($uri) && !empty($value)) { 
-                    $propArr[$i] = array($uri => $value);
-                } else {
-                    $propArr[$i] = array($uri => $uri);
-                }
-            }
-            $i++;
-        }
-        /* change the prefixes */
-        foreach($propArr as $p){
-            /* check whoch property has no shortcut in our system */
-            $diff = array_diff_key($p, self::$prefixesToChange);
-            
-            foreach($p as $key => $value){            
-                if(!empty($diff)){
-                    $newProp[$key.'/'.$value] = $key.'/'.$value;
-                }else {
-                    foreach(self::$prefixesToChange as $pkey => $pvalue){
-                        if($pkey == $key){
-                            $newProp[$pvalue . ':' . $value] = $pvalue . ':' . $value;
-                        }
-                    }
-                }
-            }
-        }
-        
-        return $newProp;
-     
-    }
-
-    /*
-     * We need to check the URL
-     * case 1: if it is starting with http then we creating a LINK
-     * case 2: if it is starting with http://fedora:8080/rest/, then we need
-     * to change it because users cant reach http://fedora:8080/rest/, only the 
-     * http://fedora.localhost/rest/
-     */
-
-    public function generateUrl($value, $dl = null) {
-        if (substr($value, 0, 4) == 'http') {
-            if (substr($value, 0, 24) == \Drupal\oeaw\connData::fedoraUrl()) {
-                $value = str_replace(\Drupal\oeaw\connData::fedoraUrl(), \Drupal\oeaw\connData::fedoraDownloadUrl(), $value);
-                if ($dl == true) {
-                    return $value;
-                }
-                $value = t('<a href="' . $value . '">' . $value . '</a>');
-                return $value;
-            }
-            $value = t('<a href="' . $value . '">' . $value . '</a>');
-            return $value;
-        }
-
-        return false;
-    }
-
     /*     
      * way = encode/decode 
      * details button url generating to pass the uri value to the next page
@@ -401,6 +262,147 @@ class oeawFunctions {
         return $data;
     }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //////////////////////////////////////////////////////////////////////////
+    /*
+     * 
+     *  DEPRECATED FUNCTIONS
+     * 
+     */
+    
+    
+    
+    /*
+     * Creates an array from the $prefixes obj
+     * and from the propertys from fedora      
+    */
+  /*  public function createPrefixesFromObject($propertys) {
+        
+        if (empty($propertys)) {
+            return false;
+        }
+
+        $fields = $propertys->getFields();
+        $propArr = array();
+        // the Object always has two important property. uri -> fedora uri
+        // value which is the name/title of the uri 
+        $i = 0;
+        foreach ($propertys as $p) {
+            foreach ($fields as $f) {
+                $p = (array) $p;
+                $val = (array)$p[$f];
+                
+                if(!empty($val["\0*\0" . "uri"])) {
+                    $uri = $val["\0*\0" . "uri"];
+                    // get the property name from the end of the uri 
+                    $parts = explode('/', $uri);
+                    $value = end($parts);
+                    
+                    if (strpos($uri, '#')) {
+                        $arr = explode("#", $uri, 2);
+                        // the repo uri. F.e.: http://fedora.info/definitions/v4/repository
+                        $uri = $arr[0];
+                        $value = end($arr);
+                    }else {
+                        $uri = str_replace($value, '', $uri);
+                    }
+                }
+                // only one variable from the sparql query 
+                if(!empty($val["\0*\0" . "value"])) {
+                    $value = $val["\0*\0" . "value"]; 
+                }
+                
+                if(!empty($uri) && !empty($value)) { 
+                    $propArr[$i] = array($uri => $value);
+                } else {
+                    $propArr[$i] = array($uri => $uri);
+                }
+            }
+            $i++;
+        }
+        // change the prefixes 
+        foreach($propArr as $p){
+            // check whoch property has no shortcut in our system 
+            $diff = array_diff_key($p, self::$prefixesToChange);
+            
+            foreach($p as $key => $value){            
+                if(!empty($diff)){
+                    $newProp[$key.'/'.$value] = $key.'/'.$value;
+                }else {
+                    foreach(self::$prefixesToChange as $pkey => $pvalue){
+                        if($pkey == $key){
+                            $newProp[$pvalue . ':' . $value] = $pvalue . ':' . $value;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return $newProp;
+     
+    }
+*/
+    
+    
+    /*
+     * We need to check the URL
+     * case 1: if it is starting with http then we creating a LINK
+     * case 2: if it is starting with http://fedora:8080/rest/, then we need
+     * to change it because users cant reach http://fedora:8080/rest/, only the 
+     * http://fedora.localhost/rest/
+     */
+
+    public function generateUrl($value, $dl = null) {
+        if (substr($value, 0, 4) == 'http') {
+            if (substr($value, 0, 24) == \Drupal\oeaw\connData::fedoraUrl()) {
+                $value = str_replace(\Drupal\oeaw\connData::fedoraUrl(), \Drupal\oeaw\connData::fedoraDownloadUrl(), $value);
+                if ($dl == true) {
+                    return $value;
+                }
+                $value = t('<a href="' . $value . '">' . $value . '</a>');
+                return $value;
+            }
+            $value = t('<a href="' . $value . '">' . $value . '</a>');
+            return $value;
+        }
+
+        return false;
+    }
+
+    
    
 
     
@@ -576,7 +578,7 @@ class oeawFunctions {
 
         return $matching;
     }
-    
+    /*
     public static function createFormattedString($string)
     {
         $str = explode('"', $string);
@@ -584,14 +586,14 @@ class oeawFunctions {
         
         return $string;
     }
-    
+    */
     /* get the protected value from the object */
-    function getProtectedValue($obj,$name) {
+    /*function getProtectedValue($obj,$name) {
         
             $array = (array)$obj;
             $prefix = chr(0).'*'.chr(0);
             
         return $array[$prefix.$name];
     }
-
+    */
 }

@@ -27,28 +27,7 @@ class AddForm extends FormBase {
      */
     public function buildForm(array $form, FormStateInterface $form_state) {
         $form['#attributes']['enctype'] = "multipart/form-data";
-        /* get the root elements */
-        //$roots = \Drupal\oeaw\oeawStorage::getRootFromDB();
-        /* create the array with the roots for the select menu */
-        /*foreach ((array) $roots as $key => $value) {
-            $value = (array) $value;
-
-            foreach ($value as $v) {
-                $v = (array) $v;
-                if (!empty($v["\0*\0" . "uri"])) {
-                    $rootURI[$v["\0*\0" . "uri"]] = $v["\0*\0" . "uri"];
-                }
-            }
-        }
         
-        $form["roots"] = array(
-            "#type" => "select",
-            "#title" => t("SELECT YOUR ROOT ELEMENT"),
-            "#options" =>
-            $rootURI,
-            "#description" => t("Select plugin."),
-        );
-        */
         $form['file'] = array(
             '#type' => 'managed_file',
             '#title' => t('FILE'),

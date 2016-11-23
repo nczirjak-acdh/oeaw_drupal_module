@@ -41,11 +41,8 @@ class FrontendController extends ControllerBase {
         $rows[2] = array('data' => array($link2));
 
         $link3 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
-        $rows[3] = array('data' => array($link3));
+        $rows[3] = array('data' => array($link3));        
         
-        $link5 = Link::fromTextAndUrl('Delete Resource', Url::fromRoute('oeaw_delete_resource'));
-        $rows[5] = array('data' => array($link5));
-
         $table = array(
             '#type' => 'table',
             '#header' => $header,
