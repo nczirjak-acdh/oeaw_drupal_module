@@ -1,0 +1,53 @@
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            
+            {% for item in header %} 
+                <th>{{ item }}</th>                    
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody> 
+            {% for item in result %}
+            <tr>
+                <td>{{ item.p }}</td>
+                <td>{{ item.o }}</td>                
+            </tr>
+        {% endfor %}                        
+    </tbody>
+</table>
+  
+{% if childResult %}    
+
+    <div>
+        
+        Child Resources
+    
+        <table id="example" class="display" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+
+                    {% for item in childHeader %} 
+                        <th>{{ item }}</th>                    
+                    {% endfor %}
+
+                    <th>Details</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody> 
+                    {% for item in childResult %}
+                    <tr>
+                        <td>{{ item.p }}</td>
+                        <td>{{ item.o }}</td>
+                        <td><a href="{{ item.detail }}">Details</a></td>
+                        <td><a href="{{ item.edit }}">edit</a></td>
+                    </tr>
+                {% endfor %}                        
+            </tbody>
+        </table>
+    
+    </div>    
+    
+    
+{% endif %}    

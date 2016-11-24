@@ -3,7 +3,16 @@ oeaw_menu:
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_menu'
   requirements:
-    _permission: 'access content'    
+    _permission: 'access content'
+    _access: 'TRUE'
+
+oeaw_list:
+  path: '/oeaw_list'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_menu'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
 
 oeaw_meta_uri_search:
   path: '/oeaw_meta_uri_search'

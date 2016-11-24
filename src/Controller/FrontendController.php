@@ -61,10 +61,42 @@ class FrontendController extends ControllerBase {
      */
 
     public function roots_list() {
+        
         $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        $header = array_keys($result[0]);
+       
+        for ($i = 0; $i < count($result); $i++) {
+            
+            foreach($result[$i] as $key => $value)
+            {
+                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                
+                if($decodeUrl !== false){                             
+                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                }
+                $res[$i][$key] = $value; 
+            }
+        }
+        
+        $datatable = array(
+            '#theme' => 'oeaw_root_dt',
+            '#result' => $res,
+            '#header' => $header,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', //include our custom library for this response
+                ]
+            ]
+        );
+        
+        
+        return $datatable;
+        
+        /*$result = \Drupal\oeaw\oeawStorage::getRootFromDB();
         $table = \Drupal\oeaw\oeawFunctions::generateTable($result);
 
-        return array($table);
+        return array($table);*/
     }
     
     
@@ -78,20 +110,68 @@ class FrontendController extends ControllerBase {
         if (empty($uri)) {
             return false;
         }
-
+        
         // decode the uri hash
         $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
 
         // get the table data by the details uri from the URL
-        $data = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);
-
-        // generate the table
-        $table = \Drupal\oeaw\oeawFunctions::generateTable($data, $text = "root");
-
-        $current_uri = \Drupal::request()->getRequestUri();
-        $current_uri = str_replace('oeaw_detail/', '', $current_uri);
-
+        $result = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);
+        
+        $header = array_keys($result[0]);
+       
+        for ($i = 0; $i < count($result); $i++) {
+            
+            foreach($result[$i] as $key => $value)
+            {
+                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                
+                if($decodeUrl !== false){                             
+                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                }
+                $res[$i][$key] = $value; 
+            }
+        }
+        
         $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($uri);
+        $childHeader = array_keys($childrenData[0]);
+        
+        for ($x = 0; $x < count($childrenData); $x++) {
+            
+            foreach($childrenData[$x] as $keyC => $valueC)
+            {
+                $decodeUrlC = \Drupal\oeaw\oeawFunctions::isURL($valueC, "decode");
+                
+                if($decodeUrlC !== false){                             
+                     $resC[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
+                     $resC[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;
+                }
+                $resC[$x][$keyC] = $valueC; 
+            }
+        }
+
+        $datatable = array(
+            '#theme' => 'oeaw_detail_dt',
+            '#result' => $res,
+            '#header' => $header,
+            '#childResult' => $resC,
+            '#childHeader' => $childHeader,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', //include our custom library for this response
+                ]
+            ]
+        );
+        
+        
+        return $datatable;
+        
+        
+        
+        
+
+       
+       
         
         
         if (!empty($childrenData)) {
@@ -220,8 +300,30 @@ class FrontendController extends ControllerBase {
    
     
     public function delete_resource() {
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');
-        return $form;
+        
+        $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        $header = array_keys($result[0]);
+       
+        
+        
+        
+        $datatable = array(
+            '#theme' => 'hello_page',
+            '#result' => $result,
+            '#header' => $header,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', //include our custom library for this response
+                ]
+            ]
+        );
+        
+        
+        return $datatable;
+        
+        
+        //$form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');
+        //return $form;
     }
 
     /*

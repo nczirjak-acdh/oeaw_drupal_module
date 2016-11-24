@@ -261,6 +261,19 @@ class oeawFunctions {
         }
         return $data;
     }
+    
+    /*
+     * create detail or edit url from array
+     */
+    public function isURL(string $string, $type = "decode"){
+        
+        if (filter_var($string, FILTER_VALIDATE_URL)) { 
+            $res = \Drupal\oeaw\oeawFunctions::createDetailsUrl($string, 'encode');            
+            return $res;
+        } else {
+            return false;
+        }        
+    }
 
     
     

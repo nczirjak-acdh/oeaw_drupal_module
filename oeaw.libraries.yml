@@ -1,6 +1,12 @@
-datatable:
-  version: 1.x  
+oeaw-styles:  
+  version: 1.0.0
+  css:
+    base:
+      css/oeaw.css: {}
+      css/jquery.dataTables.min.css: {}
   js:
-    js/cuddly-slider.js: {}
-    dependencies:
-    - core/jquery
+      https://code.jquery.com/jquery-1.12.3.js: {type: external, minified: false}
+      https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }
+      js/datatableInit.js: {}
+      
+    
