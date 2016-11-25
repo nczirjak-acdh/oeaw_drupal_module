@@ -36,13 +36,15 @@
                 </tr>
             </thead>
             <tbody> 
+                {% for citem in childHeader %} 
                     {% for item in childResult %}
-                    <tr>
-                        <td>{{ item.uri }}</td>                        
+                    <tr>                        
+                        <td>{{ item[citem] }}</td>                        
                         <td><a href="{{ item.detail }}">Details</a></td>
                         <td><a href="{{ item.edit }}">edit</a></td>
                     </tr>
-                {% endfor %}                        
+                {% endfor %}   
+                {% endfor %}
             </tbody>
         </table>
     
