@@ -17,9 +17,7 @@
     </tbody>
 </table>
   
-{{ childResult }}
-
-{{ childHeader }}
+{% if childResult %}    
 
     <div>
         
@@ -29,8 +27,8 @@
             <thead>
                 <tr>
 
-                    {% for cheader in childHeader %} 
-                        <th>{{ cheader }}</th>                    
+                    {% for item in childHeader %} 
+                        <th>{{ item }}</th>                    
                     {% endfor %}
 
                     <th>Details</th>
@@ -38,11 +36,11 @@
                 </tr>
             </thead>
             <tbody> 
-                    {% for citem in childResult %}
+                    {% for item in childResult %}
                     <tr>
-                        <td>{{ citem.uri }}</td>                        
-                        <td><a href="{{ citem.detail }}">Details</a></td>
-                        <td><a href="{{ citem.edit }}">edit</a></td>
+                        <td>{{ item.uri }}</td>                        
+                        <td><a href="{{ item.detail }}">Details</a></td>
+                        <td><a href="{{ item.edit }}">edit</a></td>
                     </tr>
                 {% endfor %}                        
             </tbody>
@@ -51,4 +49,4 @@
     </div>    
     
     
-
+{% endif %}    

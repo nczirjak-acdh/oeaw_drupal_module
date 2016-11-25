@@ -120,6 +120,8 @@ class EditForm extends FormBase {
 
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetadata = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
+        
+        // temporary fix - Mateusz Norbert - 25. nov. 2016
         $editUriClassMetadata[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
 
         $attributes = array();
@@ -148,10 +150,6 @@ class EditForm extends FormBase {
             }else {
                 $attributes =  array();
             }
-            
-            
-            
-            
             
             // generate the form fields
             $form[$label] = array(
@@ -213,12 +211,6 @@ class EditForm extends FormBase {
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
         
-     
-
-
-
-
-
         //get the uploaded files values
         $fileID = $form_state->getValue('file');
         $fileID = $fileID[0];
