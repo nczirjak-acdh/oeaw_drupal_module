@@ -584,7 +584,7 @@ class oeawStorage {
      * @root: the root uri for the isPartOf
      * @mime: mime type of the uploaded file
      */
-    /*
+    
     public static function insertDataToFedora($file, $sparql, $root = false, $mime, $resourceID = null) {
 
         if (empty($sparql) ) {
@@ -644,15 +644,15 @@ class oeawStorage {
                     FILTER (?p =<http://vocabs.acdh.oeaw.ac.at/#represents>) 
                 }';
       
-        error_log($sparql);
-        $sparqlUpdate = \Drupal\oeaw\oeawFunctions::runCurl('PATCH', $fileInsertingUrl, '', 'application/sparql-update', $sparql);
-           
+        
+        //$sparqlUpdate = \Drupal\oeaw\oeawFunctions::runCurl('PATCH', $fileInsertingUrl, '', 'application/sparql-update', $sparql);
+           /*
         
         if ($sparqlUpdate == false) {
         //    $transactionCommit = \Drupal\oeaw\oeawFunctions::runCurl('POST', $transactionUrl, 'fcr:tx/fcr:rollback');        
             return false;
         }
-        
+        */
         if($root != false || $resourceID == null)
         {            
         
@@ -684,6 +684,6 @@ class oeawStorage {
         
     }
             
-            */
+            
 
 }

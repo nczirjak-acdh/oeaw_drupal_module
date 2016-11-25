@@ -93,10 +93,7 @@ class FrontendController extends ControllerBase {
         
         return $datatable;
         
-        /*$result = \Drupal\oeaw\oeawStorage::getRootFromDB();
-        $table = \Drupal\oeaw\oeawFunctions::generateTable($result);
-
-        return array($table);*/
+        
     }
     
     
@@ -134,6 +131,7 @@ class FrontendController extends ControllerBase {
         }
         
         $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($uri);
+        
         $childHeader = array_keys($childrenData[0]);
         
         for ($x = 0; $x < count($childrenData); $x++) {
@@ -149,7 +147,7 @@ class FrontendController extends ControllerBase {
                 $resC[$x][$keyC] = $valueC; 
             }
         }
-
+       
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
             '#result' => $res,

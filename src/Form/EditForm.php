@@ -11,6 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\SparqlEndpoint;
 use zozlak\util\Config;
@@ -78,8 +79,8 @@ class EditForm extends FormBase {
         if (empty($editHash)) {  return false; }
         
         $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
-        
-         // get the digital resource classes where the user must upload binary file
+
+        // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
         
         $digitalResources = array();
@@ -93,13 +94,17 @@ class EditForm extends FormBase {
         // get the actual class dct:identifier to we can compare it with the digResource
         // if this is a binaryResource then we need to show the file upload possibility
         $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
-                 
+
+        
         foreach($classValue as $cv){            
             if(!empty($cv["value"])){
                 if (strpos($cv["value"], 'http://vocabs.acdh.oeaw.ac.at') !== false) {                        
                     $classVal[] = $cv["value"];                   
-                }
+                } 
             }
+        }
+        if(count($classVal) == 0){
+            $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
         }
         
         if(!empty($classVal)){
@@ -112,27 +117,18 @@ class EditForm extends FormBase {
         // this will contains the onotology uri, what will helps to use to know
         // which fields we need to show in the editing form
         $editUriClass = $editUriClass[0]["uri"];
-        
-        
+
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetadata = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
-        
+        $editUriClassMetadata[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
+
         $attributes = array();
         
         for($i=0; $i < count($editUriClassMetadata); $i++){
             
             // get the field values based on the edituri and the metadata uri
             $value = \Drupal\oeaw\oeawStorage::getFieldValByUriProp($editUri, $editUriClassMetadata[$i]["id"]);
-            
-            /*
-            echo "<pre>";
-            var_dump($editUriClassMetadata[$i]["id"]);
-            var_dump($value);
-            echo "</pre>";
-
-            die();
-            */
-
+           
 
             $value = $value[0]["value"];
             
@@ -143,13 +139,19 @@ class EditForm extends FormBase {
             
             // if the label is the isPartOf, then we need to disable the editing
             // to the users, they do not have a permission to change it
-            if($label == "isPartOf"){                    
-                $titleProperty = \Drupal\oeaw\oeawStorage::getDefPropByURI($value, 'dc:title');
-                $value = $titleProperty[0]["value"];
+            if($label == "isPartOf"){
+                if($value !== null){
+                    $titleProperty = \Drupal\oeaw\oeawStorage::getDefPropByURI($value, 'dc:title');
+                    $value = $titleProperty[0]["value"];
+                }
                 $attributes =  array('readonly' => 'readonly');
             }else {
                 $attributes =  array();
             }
+            
+            
+            
+            
             
             // generate the form fields
             $form[$label] = array(
@@ -211,6 +213,12 @@ class EditForm extends FormBase {
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
         
+     
+
+
+
+
+
         //get the uploaded files values
         $fileID = $form_state->getValue('file');
         $fileID = $fileID[0];
@@ -241,6 +249,7 @@ class EditForm extends FormBase {
             }
         }
         
+        
         $graph = new \EasyRdf_Graph();        
         $meta = $graph->resource('acdh');
         
@@ -257,11 +266,11 @@ class EditForm extends FormBase {
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');                
         $sparqlEndpoint = new SparqlEndpoint($config->get('sparqlUrl'));
         
-        $init = FedoraResource::init($config);
-        FedoraResource::begin();
+        $fedora = new Fedora($config);
+        $fedora->begin();
         $resourceUri = preg_replace('|^.*/rest/|', '', $resourceUri);
         
-        $fr = new FedoraResource($resourceUri);
+        $fr = $fedora->getResourceByUri($resourceUri);
         $fr->getMetadata();
 
         try {
@@ -273,13 +282,13 @@ class EditForm extends FormBase {
                 $fr->updateContent($fUri);
             }
             
-            FedoraResource::commit();
+            $fedora->commit();
             $this->deleteStore($editForm);
             drupal_set_message($this->t('The form has been saved and you resource was changed'));
             
         } catch (Exception $ex) {
             
-            FedoraResource::rollback();
+            $fedora->rollback();
             $this->deleteStore($editForm);
             drupal_set_message($this->t('Error during the saving process'), 'error');
         }        

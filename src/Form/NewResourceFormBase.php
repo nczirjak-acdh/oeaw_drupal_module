@@ -14,6 +14,7 @@ use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\oeaw\oeawFunctions;
+use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\SparqlEndpoint;
 use zozlak\util\Config;
@@ -128,19 +129,16 @@ abstract class NewResourceFormBase extends FormBase {
         
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');                
         $sparqlEndpoint = new SparqlEndpoint($config->get('sparqlUrl'));
-        $init = FedoraResource::init($config);
-        FedoraResource::begin();
         
+        $fedora = new Fedora($config);
+        $fedora->begin();        
         
         try{
-            $res = FedoraResource::factory($meta, $fileName);
+            $res = $fedora->createResource($meta, $fileName);
             
-            FedoraResource::commit();
+            $fedora->commit();
             $uri = $res->getUri();
-            $uriArr = str_replace('http://fedora/rest/', '', $uri);
-            $uriArr = explode('/', $uriArr);
-            $uri = str_replace($uriArr[0].'/', '', $uri);
-            $uri = str_replace('http://fedora/rest/', 'http://fedora.localhost/rest/', $uri);
+            $uri = preg_replace('|/tx:[-a-zA-Z0-9]+/|', '/', $uri);
             $uri = $uri.'/fcr:metadata';
             
             $this->deleteStore($metadata);
@@ -149,7 +147,7 @@ abstract class NewResourceFormBase extends FormBase {
             
             
         } catch (Exception $ex) {
-            FedoraResource::rollback();
+            $fedora->rollback();
             $this->deleteStore($metadata);
             drupal_set_message($this->t('Error during the saving process'), 'error');
         }
