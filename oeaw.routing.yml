@@ -6,39 +6,10 @@ oeaw_menu:
     _permission: 'access content'
     _access: 'TRUE'
 
-oeaw_list:
-  path: '/oeaw_list'
+oeaw_search:
+  path: '/oeaw_search'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_menu'
-  requirements:
-    _permission: 'access content'
-    _access: 'TRUE'
-
-oeaw_meta_uri_search:
-  path: '/oeaw_meta_uri_search'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::meta_uri_search'
-  requirements:
-    _permission: 'access content'
-
-oeaw_new_resource:
-  path: '/oeaw_new'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::new_resource'
-  requirements:
-    _permission: 'access content'    
-
-oeaw_delete_resource:
-  path: '/oeaw_delete'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::delete_resource'
-  requirements:
-    _permission: 'access content'
-
-oeaw_new_resource_result:
-  path: '/oeaw_new_result'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::new_resource_result'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_search'
   requirements:
     _permission: 'access content'
 
@@ -56,11 +27,10 @@ oeaw_edit:
   requirements:
     _permission: 'access content'
         
-        
-oeaw_resource_list:
+oeaw_resources:
   path: '/oeaw_resources'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::resource_list'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_resources'
   requirements:
     _permission: 'access content'
     
@@ -70,15 +40,7 @@ oeaw_roots:
     _controller: '\Drupal\oeaw\Controller\FrontendController::roots_list'
   requirements:
     _permission: 'access content'    
-    
-oeaw_create_child_resource:
-  path: '/oeaw_create_child/{uri}'
-  defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::create_child_resource'
-  requirements:
-    _permission: 'access content'
-    _permission: 'access files overview'
-
+ 
 oeaw_multi_new_resource:
   path: '/oeaw_multi_new_resource'
   defaults:

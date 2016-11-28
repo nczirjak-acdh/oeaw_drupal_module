@@ -79,7 +79,7 @@ class SearchForm extends FormBase
         
             // I pass the values with the session to the redirected url where i generating the tables
             $_SESSION['oeaw_form_result_'.$key] = $value;            
-            $url = Url::fromRoute('oeaw_resource_list');
+            $url = Url::fromRoute('oeaw_resources');
             $form_state->setRedirectUrl($url);           
            
         }

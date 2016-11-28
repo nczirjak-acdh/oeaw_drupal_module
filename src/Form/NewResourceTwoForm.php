@@ -7,21 +7,30 @@ use Drupal\Core\Url;
 
 class NewResourceTwoForm extends NewResourceFormBase {
 
-    /**
-     * {@inheritdoc}.
-     */
+    /* 
+     *
+     * drupal core formid
+     *     
+     * @return string : form id
+    */
     public function getFormId() {
         return 'multistep_form_two';
     }
 
-    /**
-     * {@inheritdoc}.
-     */
+    /* 
+     *
+     * drupal core buildForm function, to create the form what the user will see
+     *
+     * @param array $form : it will contains the form elements
+     * @param FormStateInterface $form_state : form object
+     *
+     * @return void
+    */
     public function buildForm(array $form, FormStateInterface $form_state) {
 
         $form = parent::buildForm($form, $form_state);
         
-        /* get form page 1 class from the session */
+        // get form page 1 stored values
         $formVal = $this->store->get('form1Elements');
         $class = $formVal['class'];
         $root =  $formVal['root'];
@@ -29,6 +38,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
 
+        //create the digitalResources array
         $digitalResources = array();
         foreach($digitalResQuery as $dr){            
             if(isset($dr["collection"])){
@@ -37,22 +47,22 @@ class NewResourceTwoForm extends NewResourceFormBase {
         }
         
         // get the actual class dct:identifier to we can compare it with the digResource
-        $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($class, "dct:identifier"); 
+        $classValue = \Drupal\oeaw\oeawStorage::getValueByUriProperty($class, "dct:identifier"); 
         
         foreach($classValue as $cv){
             
             if(!empty($cv["value"])){
-                $classVal = $cv["value"];
+                $classValue = $cv["value"];
             }
         }
         
-        $classValue = $classVal;
+        //we store the ontology identifier for the saving process
         $this->store->set('ontologyClassIdentifier', $classValue);
         
         // compare the digRes and the actual class, because if it is a DigColl then 
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
-        
+      
         // get the actual class metadata
         $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);
         
@@ -61,8 +71,12 @@ class NewResourceTwoForm extends NewResourceFormBase {
         }
         
         $rootTitle = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dc:title");
-        $rootTitle = $rootTitle[0]["value"];
-        
+        if(!empty($rootTitle)){
+            $rootTitle = $rootTitle[0]["value"];
+        } else {
+            $rootTitle = "";
+        }
+                
         $fieldsArray = array();
         
         foreach ($metadata as $m) {
@@ -148,23 +162,22 @@ class NewResourceTwoForm extends NewResourceFormBase {
         $form2Fields = $this->store->get('form2Fields');
         $ontologyClassIdentifier = $this->store->get('ontologyClassIdentifier');
         
-        //get the uploaded files values
+        //get the uploaded file Drupal number
         $fileID = $form_state->getValue('file');
         $fileID = $fileID[0];
-        
+        //create the file objectt
         $fObj = file_load($fileID);
         
-        if(!empty($fObj) || isset($fObj))
-        {                
-            //get the temp file uri        
-            $fUri = $fObj->getFileUri();            
+        if(!empty($fObj) || isset($fObj)){
+            //get the temp file uri
+            $fUri = $fObj->getFileUri();
         }
         
         foreach($form2Fields as $f){
             
             $fVal = $form_state->getValue($f);
           
-            /* check the field is the value or some hidden input field */
+            // check the field is the value or some hidden input field 
             if (strpos($f, ':') !== false) {
             
                 $fe = explode(':', $f);
@@ -174,15 +187,14 @@ class NewResourceTwoForm extends NewResourceFormBase {
                 }
                 
             } else {
-                /* not hidden input fields values */
+                // not hidden input fields values
                 $valuesArray[$f] = $fVal;                
             }            
         }
  
         foreach($propUrls as $key => $value){            
             $uriAndValue[$value] = $valuesArray[$key];            
-        }
-       
+        }       
 
         $this->store->set('propertysArray', $property);
         $this->store->set('valuesArray', $valuesArray);        
@@ -191,8 +203,6 @@ class NewResourceTwoForm extends NewResourceFormBase {
         
         // Save the data
         parent::saveData();
-
-        //$form_state->setRedirect('some_route');
     }
 
 }

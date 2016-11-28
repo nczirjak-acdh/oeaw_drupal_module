@@ -19,29 +19,25 @@ use Drupal\Component\Utility\SafeMarkup;
 class FrontendController extends ControllerBase {
     
         
-    /*
-     * Main Menu     
-     */
-
+    /* 
+     *
+     * Here the oeaw module menu is generating with the availbale menuopints
+     *
+     * @return array with drupal core table values
+    */
     public function oeaw_menu() {
-        //$perms = array_keys(\Drupal::service('user.permissions')->getPermissions());
         
-        //var_dump($perms);
-        // Table header.
         $header = array('id' => t('MENU'));
         $rows = array();
 
         $link = Link::fromTextAndUrl('List All Root Resource', Url::fromRoute('oeaw_roots'));
         $rows[0] = array('data' => array($link));
 
-        $link1 = Link::fromTextAndUrl('Search by Meta data And URI', Url::fromRoute('oeaw_meta_uri_search'));
+        $link1 = Link::fromTextAndUrl('Search by Meta data And URI', Url::fromRoute('oeaw_search'));
         $rows[1] = array('data' => array($link1));
 
-        $link2 = Link::fromTextAndUrl('Add New Root Resource', Url::fromRoute('oeaw_new_resource'));
-        $rows[2] = array('data' => array($link2));
-
-        $link3 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
-        $rows[3] = array('data' => array($link3));        
+        $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
+        $rows[2] = array('data' => array($link2));        
         
         $table = array(
             '#type' => 'table',
@@ -56,21 +52,26 @@ class FrontendController extends ControllerBase {
     }
     
     
-     /*
-     * root resources menupoint
-     */
+    /* 
+     *
+     * The root Resources list     
+     *
+     * @return array with datatable values and template name
+    */
 
     public function roots_list() {
         
+        // get the root resources
         $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        //generate the header values
         $header = array_keys($result[0]);
        
-        for ($i = 0; $i < count($result); $i++) {
-            
-            foreach($result[$i] as $key => $value)
-            {
+        for ($i = 0; $i < count($result); $i++) {            
+            foreach($result[$i] as $key => $value){
+                // check that the value is an Url or not
                 $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
                 
+                //create details and editing urls
                 if($decodeUrl !== false){                             
                      $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                      $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
@@ -78,29 +79,32 @@ class FrontendController extends ControllerBase {
                 $res[$i][$key] = $value; 
             }
         }
-        
+        //create the datatable values and pass the twig template name what we want to use
         $datatable = array(
             '#theme' => 'oeaw_root_dt',
             '#result' => $res,
             '#header' => $header,
             '#attached' => [
                 'library' => [
-                'oeaw/oeaw-styles', //include our custom library for this response
+                'oeaw/oeaw-styles', 
                 ]
             ]
         );
         
-        
         return $datatable;
-        
-        
     }
     
     
-    /*
+    
+    /* 
+     *
+     * this generates the detail view when a user clicked the detail href on a reuslt page
+     *
+     * @param string $uri : the encoded uri from the url, to we can identify the selected resource
      * 
-     * The detail view after the user clicked on 
-     * the details button in the results table
+     * @param Request $request : drupal core function
+     *
+     * @return array with datatable values and template name
     */
     public function oeaw_detail(string $uri, Request $request) {
         
@@ -112,7 +116,7 @@ class FrontendController extends ControllerBase {
         $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
 
         // get the table data by the details uri from the URL
-        $result = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);
+        $result = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
         
         $header = array_keys($result[0]);
        
@@ -130,29 +134,39 @@ class FrontendController extends ControllerBase {
             }
         }
         
-        $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($uri);
+        //get the root identifier to i can get the children elements
+        $rootIdentifier = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dct:identifier');
+
+        if(!empty($rootIdentifier)){
+            //get the childrens data by the root 
+           $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier[0]["value"]);
         
-        $childHeader = array_keys($childrenData[0]);
-        
-        for ($x = 0; $x < count($childrenData); $x++) {
-            
-            foreach($childrenData[$x] as $keyC => $valueC)
-            {
-                $decodeUrlC = \Drupal\oeaw\oeawFunctions::isURL($valueC, "decode");
-                
-                if($decodeUrlC !== false){                             
-                     $resC[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
-                     $resC[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;
+            $childHeader = array_keys($childrenData[0]);
+
+            for ($x = 0; $x < count($childrenData); $x++) {
+
+                foreach($childrenData[$x] as $keyC => $valueC)
+                {
+                    $decodeUrlC = \Drupal\oeaw\oeawFunctions::isURL($valueC, "decode");
+
+                    if($decodeUrlC !== false){                             
+                         $childResult[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
+                         $childResult[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;
+                    }
+                    $childResult[$x][$keyC] = $valueC; 
                 }
-                $resC[$x][$keyC] = $valueC; 
             }
+        } else {
+            $childResult = "";
+            $childHeader = "";
         }
+        
        
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
-            '#result' => $res,
+            '#result' => $result,
             '#header' => $header,
-            '#childResult' => $resC,
+            '#childResult' => $childResult,
             '#childHeader' => $childHeader,
             '#attached' => [
                 'library' => [
@@ -160,40 +174,32 @@ class FrontendController extends ControllerBase {
                 ]
             ]
         );
-        
-        
+                
         return $datatable;
         
-        
-        
-        
-
-       
-       
-        
-        
-        if (!empty($childrenData)) {
-            $table2 = \Drupal\oeaw\oeawFunctions::generateTable($childrenData, $text = "child resources", true);
-        }
-
-        return array($newText, $table, $table2);
     }
     
     
-    /*
-    * Meta and uri search page
+    /* 
+     *
+     * The searching page FORM
+     *
+     * @return Drupal Form 
     */
 
-    public function meta_uri_search() {
+    public function oeaw_search() {
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\SearchForm');
         return $form;
     }
     
-    /*
-     * The Meta search page Result page
-     */
+    /* 
+     *
+     * This will contains the search page results
+     *
+     * @return array with drupal core table generating
+    */
 
-    public function resource_list() {
+    public function oeaw_resources() {
         
         $formData = $_SESSION['oeaw_form_result'];
         $formUri = $_SESSION['oeaw_form_result_uri'];
@@ -216,131 +222,41 @@ class FrontendController extends ControllerBase {
         return $tableResult;
     }
     
-    /*
-    * multi step new resource form
+    /* 
+     *
+     * The multi step FORM to create resources based on the 
+     * fedora roots and classes      
+     *
+     * @return Drupal Form 
     */
 
     public function multi_new_resource() {
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');
+        
         return $form;
     }
 
-    /*
-    * the editing form
+    /* 
+     *
+     * The editing form, based on the uri resource
+     *
+     * @param string $uri : the encoded uri from the url, to we can identify the selected resource
+     * 
+     * @param Request $request : drupal core function
+     *
+     *
+     * @return Drupal Form 
     */
     
     public function oeaw_editing($uri, Request $request) {
         
         $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
-        $data = \Drupal\oeaw\oeawStorage::getPropertyByURI($uri);
+        $data = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
 
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
         return $form;
         
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-////////////////////////////////////////////////////////////////////////////////
-/*
- * 
- * 
- * NOT USED
- * 
- * 
- */
-   
-   
-
-    /*
-     * New resource uploading
-     */
-
-    public function new_resource() {
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm', $uri);
-        return $form;
-    }
-   
-    
-    public function delete_resource() {
-        
-        $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
-        $header = array_keys($result[0]);
-       
-        
-        
-        
-        $datatable = array(
-            '#theme' => 'hello_page',
-            '#result' => $result,
-            '#header' => $header,
-            '#attached' => [
-                'library' => [
-                'oeaw/oeaw-styles', //include our custom library for this response
-                ]
-            ]
-        );
-        
-        
-        return $datatable;
-        
-        
-        //$form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AddForm');
-        //return $form;
-    }
-
-    /*
-     * New Resource result page
-     */
-
-    public function new_resource_result() {
-        $msg = drupal_set_message($this->t('Your data saved : ' . $_SESSION['newFedoraUri']), 'information');
-        return $msg;
-    }
-
-    /*
-     * New resource uploading
-     */
-
-    public function create_child_resource() {
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\CreateChildForm');
-        return $form;
-    }
-
     
 }
