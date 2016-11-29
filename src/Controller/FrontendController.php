@@ -153,22 +153,14 @@ class FrontendController extends ControllerBase {
                          $childResult[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
                          $childResult[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;
                     } 
-                    
-                    // Norbert temporary fix - some ontology is missing the title
-                    if($keyC == "title"){
-                        if(empty($valueC)){
-                            $childResult[$x][$keyC] = "No title"; 
-                        }
-                    }else{
-                        $childResult[$x][$keyC] = $valueC; 
-                    }
-                    
+                    $childResult[$x][$keyC] = $valueC; 
                 }
             }
         } else {
             $childResult = "";
             $childHeader = "";
         }
+        
 
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
