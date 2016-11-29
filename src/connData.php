@@ -17,7 +17,7 @@ class connData
         if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
             $url = 'http://blazegraph:9999/blazegraph/sparql';
         }else {
-            $url = 'http://blazegraph/blazegraph/sparql';
+            $url = 'http://blazegraph:9999/blazegraph/sparql';
         }        
         return $url;
     }
