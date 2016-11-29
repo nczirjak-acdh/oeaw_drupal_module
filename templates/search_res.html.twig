@@ -1,0 +1,18 @@
+<div class="vcenter">
+    <h2 ><i class="fa fa-search fa-1x"></i> You searched for: <b>{{ searchedValues.metaValue }} in {{ searchedValues.metaKey }}</b> </h2>    
+</div>    
+<table id="" class="display" cellspacing="0" width="100%">
+    <thead>
+        <tr>            
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>  
+            {% for item in result %}
+            <tr>
+                <td><a href="{{ item.uri }}" target="_blank">{{ item.value }}</a></td>
+            </tr>
+        {% endfor %}                                          
+    </tbody>
+</table>
+  

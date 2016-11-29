@@ -441,6 +441,36 @@ class oeawStorage {
             }
         }        
     }
+    
+    public function searchForData(string $value, string $property){
+        
+        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());                  
+        
+        try {
+            //if the property is url then
+            if(!empty(filter_var($resourceProperty, FILTER_VALIDATE_URL))){
+                $resourceProperty = "<". $resourceProperty .">";
+            }
+          
+            $result = $sparql->query(
+                    self::$prefixes . ' SELECT ?uri ?property ?value '
+                    . 'WHERE {'
+                        . '?uri '.$property.' ?value . '
+                        . ' FILTER (  '
+                            . ' regex( str(?value), "' . $value . '", "i")'
+                        . ') '                            
+                    . '} ');
+
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;
+
+        } catch (Exception $ex) {
+            throw new Exception('error durong the sparql query!');
+        }
+        
+    }
             
 
 }

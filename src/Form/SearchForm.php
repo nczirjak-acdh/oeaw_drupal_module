@@ -35,6 +35,7 @@ class SearchForm extends FormBase
         $form['metakey'] = array (
           '#type' => 'select',
           '#title' => ('MetaKey'),
+          '#required' => TRUE,
           '#options' => 
               $select
         );
@@ -42,13 +43,8 @@ class SearchForm extends FormBase
         $form['metavalue'] = array(
           '#type' => 'textfield',
           '#title' => ('MetaValue'),          
+          '#required' => TRUE,
         );
-        
-        $form['uri'] = array(
-          '#type' => 'textfield',
-          '#title' => ('URI'),          
-        );
-        
      
         $form['actions']['#type'] = 'actions';
         $form['actions']['submit'] = array(
@@ -63,9 +59,9 @@ class SearchForm extends FormBase
     
     public function validateForm(array &$form, FormStateInterface $form_state) 
     {
-        
-        /*if (strlen($form_state->getValue('candidate_number')) < 10) {
-            $form_state->setErrorByName('candidate_number', $this->t('Mobile number is too short.'));
+        /*
+        if (strlen($form_state->getValue('metavalue')) < 1) {
+            $form_state->setErrorByName('metavalue', $this->t(''));
         }*/
         
     }

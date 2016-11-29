@@ -12,6 +12,7 @@ oeaw_search:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_search'
   requirements:
     _permission: 'access content'
+    _access: 'TRUE'
 
 oeaw_detail_list:
   path: '/oeaw_detail/{uri}'
@@ -19,6 +20,7 @@ oeaw_detail_list:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_detail'
   requirements:
     _permission: 'access content'
+    _access: 'TRUE'
 
 oeaw_edit:
   path: '/oeaw_editing/{uri}'
@@ -26,6 +28,7 @@ oeaw_edit:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_editing'
   requirements:
     _permission: 'access content'
+    _access: 'TRUE'
         
 oeaw_resources:
   path: '/oeaw_resources'
@@ -33,6 +36,7 @@ oeaw_resources:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_resources'
   requirements:
     _permission: 'access content'
+    _access: 'TRUE'
     
 oeaw_roots:
   path: '/oeaw_roots'
@@ -40,6 +44,7 @@ oeaw_roots:
     _controller: '\Drupal\oeaw\Controller\FrontendController::roots_list'
   requirements:
     _permission: 'access content'    
+    _access: 'TRUE'
  
 oeaw_multi_new_resource:
   path: '/oeaw_multi_new_resource'
@@ -48,6 +53,7 @@ oeaw_multi_new_resource:
   requirements:
     _permission: 'access content'
     _permission: 'access files overview'
+    _access: 'TRUE'
     
 oeaw_newresource_one:
   path: '/oeaw_newresource_one'
@@ -57,6 +63,7 @@ oeaw_newresource_one:
   requirements:
     _permission: 'access content'
     _permission: 'access files overview'
+    _access: 'TRUE'
     
 oeaw_newresource_two:
   path: '/oeaw_newresource_two'
@@ -66,5 +73,6 @@ oeaw_newresource_two:
   requirements:
     _permission: 'access content'
     _permission: 'access files overview'
+    _access: 'TRUE'
     
   

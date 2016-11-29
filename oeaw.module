@@ -20,6 +20,11 @@ function oeaw_theme() {
     'variables' => ['result' => NULL],
     'template' => 'success_res',
   ];
+  
+  $theme['oeaw_search_res_dt'] = [
+    'variables' => ['result' => NULL, 'searchedValues' => NULL],
+    'template' => 'search_res',
+  ];
 
   return $theme;
 }

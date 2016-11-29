@@ -210,37 +210,20 @@ class FrontendController extends ControllerBase {
 
     public function oeaw_resources() {
         
-        $formData = $_SESSION['oeaw_form_result'];
-        $formUri = $_SESSION['oeaw_form_result_uri'];
         $metaKey = $_SESSION['oeaw_form_result_metakey'];
         $metaValue = $_SESSION['oeaw_form_result_metavalue'];
-
-        if (!empty($formUri)) {
-            $result = \Drupal\oeaw\oeawStorage::getDefPropByURI($formUri, $metaKey, $metaValue);
-        } else {
-            $result = \Drupal\oeaw\oeawStorage::getDataByProp($metaKey, $metaValue);
-        }
-
-    
-        for ($i = 0; $i < count($result); $i++) {
-            
-            foreach($result[$i] as $key => $value)
-            {
-                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
-                
-                if($decodeUrl !== false){                             
-                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                }
-                $res[$i][$key] = $value; 
-            }
-        }
-         $header = array_keys($res[0]);
-       
+        
+        $data = \Drupal\oeaw\oeawStorage::searchForData($metaValue, $metaKey);
+        
+        $searchArray = array(
+            "metaKey" => $metaKey,
+            "metaValue" => $metaValue            
+        );
+        
         $datatable = array(
-            '#theme' => 'oeaw_root_dt',
-            '#result' => $res,
-            '#header' => $header,
+            '#theme' => 'oeaw_search_res_dt',
+            '#result' => $data,  
+            '#searchedValues' => $searchArray,
             '#attached' => [
                 'library' => [
                 'oeaw/oeaw-styles', 
