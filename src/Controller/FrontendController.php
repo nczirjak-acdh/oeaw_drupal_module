@@ -160,14 +160,23 @@ class FrontendController extends ControllerBase {
             $childResult = "";
             $childHeader = "";
         }
+        $resEditUrl = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'encode');
+        $resTitle = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dc:title');
         
-
+        
+        $editResData = array(
+            "editUrl" => $resEditUrl, 
+            "title" => $resTitle[0]["value"]
+            );
+        
+        
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
             '#result' => $result,
             '#header' => $header,
             '#childResult' => $childResult,
             '#childHeader' => $childHeader,
+            '#editResData' => $editResData,
             '#attached' => [
                 'library' => [
                 'oeaw/oeaw-styles', //include our custom library for this response
