@@ -35,13 +35,15 @@ class oeawStorage {
         try {
             
             $result = $sparql->query(self::$prefixes . ' '
-                . 'select ?uri ?title WHERE {  '
-                    . '?uri dc:title ?title .'
-                    . 'FILTER ('
-                        . '!EXISTS {'
-                            . '?uri dct:isPartOf ?y .'
-                            . '}'
-                        . ')'
+                . 'SELECT '
+                    . '?uri ?title '
+                    . 'WHERE {  '
+                        . '?uri dc:title ?title .'
+                            . 'FILTER ('
+                                . '!EXISTS {'
+                                    . '?uri dct:isPartOf ?y .'
+                                    . '}'
+                                . ')'
                     . '}'                
             );
         
@@ -74,12 +76,20 @@ class oeawStorage {
         try {
             
             $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-            $result = $sparql->query(self::$prefixes . ' SELECT ?p ?o  WHERE { <' . $uri . '> ?p ?o}');
+            
+            $result = $sparql->query(
+                    self::$prefixes . ' '
+                    . 'SELECT '
+                        . '?property ?value  '
+                    . 'WHERE { '
+                        . '<' . $uri . '> ?property ?value'
+                    . '}');
 
             $fields = $result->getFields(); 
 
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
 
+            
             return $getResult;
             
         } catch (Exception $ex) {            
@@ -104,12 +114,20 @@ class oeawStorage {
         try {
             
             $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
-            $result = $sparql->query(self::$prefixes . ' SELECT ?uri  WHERE {  ?uri dct:isPartOf <' . $uri . '>}');
+            
+            $result = $sparql->query(
+                    self::$prefixes . ' '
+                    . 'SELECT '
+                        . '?uri ?title '
+                    . 'WHERE { '
+                        . '?uri dct:isPartOf <' . $uri . '> . '
+                        . 'OPTIONAL { ?uri dc:title ?title . } '
+                    . '}');
         
             $fields = $result->getFields(); 
-
+          
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
+  
             return $getResult;
             
         } catch (Exception $ex) {            
@@ -131,7 +149,13 @@ class oeawStorage {
 
         try {
             
-            $result = $sparql->query(self::$prefixes . ' SELECT distinct ?p WHERE { ?s ?p ?o }');
+            $result = $sparql->query(
+                    self::$prefixes . ' '
+                    . 'SELECT '
+                        . 'distinct ?p '
+                    . 'WHERE {'
+                        . ' ?s ?p ?o '
+                    . '}');
 
             $fields = $result->getFields(); 
 
@@ -165,9 +189,21 @@ class oeawStorage {
         try {        
             
             if (empty($value)) {
-                $result = $sparql->query(self::$prefixes . ' SELECT ?uri ?value WHERE { ?uri ' . $property . ' ?value . }');
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?uri ?value '
+                        . 'WHERE {'
+                            . ' ?uri ' . $property . ' ?value . '
+                        . '}');
             } else {
-                $result = $sparql->query(self::$prefixes . ' SELECT ?uri WHERE { ?uri ' . $property . ' <'.$value.'> }'); 
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?uri '
+                        . 'WHERE { '
+                            . '?uri ' . $property . ' <'.$value.'> '
+                        . '}'); 
             }    
             
             $fields = $result->getFields(); 
@@ -192,10 +228,13 @@ class oeawStorage {
         
         try {
             
-            $result = $sparql->query(self::$prefixes . ' 
-                select ?uri ?title where {
-                        ?uri a owl:Class .
-                        ?uri rdfs:label ?title .
+            $result = $sparql->query(
+                    self::$prefixes . ' 
+                        SELECT 
+                            ?uri ?title 
+                        WHERE {
+                            ?uri a owl:Class .
+                            ?uri rdfs:label ?title .
                           }
             ');
             
@@ -224,23 +263,26 @@ class oeawStorage {
         try {
             
             $result = $sparql->query(
-                self::$prefixes . ' SELECT ?id ?collection WHERE {
-                                        ?class a owl:Class .
-                                        ?class dct:identifier ?id .
-                                        OPTIONAL {
-                                          {
-                                            {?class rdfs:subClassOf* <http://vocabs.acdh.oeaw.ac.at/#Collection>}
-                                            UNION
-                                            {?class rdfs:subClassOf* <http://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
-                                            UNION
-                                            {?class dct:identifier <http://vocabs.acdh.oeaw.ac.at/#Collection>}
-                                            UNION
-                                            {?class dct:identifier <http://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
-                                          }
-                                          VALUES ?collection {true}
-                                        }
-                                    }
-                                ');
+                self::$prefixes . ' 
+                    SELECT 
+                        ?id ?collection 
+                    WHERE {
+                            ?class a owl:Class .
+                            ?class dct:identifier ?id .
+                            OPTIONAL {
+                              {
+                                {?class rdfs:subClassOf* <http://vocabs.acdh.oeaw.ac.at/#Collection>}
+                                UNION
+                                {?class rdfs:subClassOf* <http://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
+                                UNION
+                                {?class dct:identifier <http://vocabs.acdh.oeaw.ac.at/#Collection>}
+                                UNION
+                                {?class dct:identifier <http://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
+                              }
+                              VALUES ?collection {true}
+                            }
+                        }
+            ');
 
             $fields = $result->getFields(); 
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
@@ -268,16 +310,18 @@ class oeawStorage {
         try {
             
             $result = $sparql->query(self::$prefixes . ' 
-                    SELECT ?id ?label WHERE {
-                      {
-                        { <' . $classURI . '> dct:identifier / ^rdfs:domain ?property . }
-                        UNION
-                        { <' . $classURI . '> rdfs:subClassOf / (^dct:identifier / rdfs:subClassOf)* / ^rdfs:domain ?property . }
-                      }
-                      ?property dct:identifier ?id
-                      OPTIONAL {
-                        ?property dct:label ?label .
-                      }
+                    SELECT 
+                        ?id ?label 
+                    WHERE {
+                        {
+                            { <' . $classURI . '> dct:identifier / ^rdfs:domain ?property . }
+                            UNION
+                            { <' . $classURI . '> rdfs:subClassOf / (^dct:identifier / rdfs:subClassOf)* / ^rdfs:domain ?property . }
+                        }
+                        ?property dct:identifier ?id
+                        OPTIONAL {
+                            ?property dct:label ?label .
+                        }
                     }            
                 ');
             
@@ -314,7 +358,13 @@ class oeawStorage {
                     $resourceProperty = "<". $resourceProperty .">";
                 }
                 
-                $result = $sparql->query(self::$prefixes . ' SELECT ?value WHERE {  <' . $uri . '> '.$resourceProperty.' ?value . } ');
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?value '
+                        . 'WHERE {  '
+                            . '<' . $uri . '> '.$resourceProperty.' ?value . '
+                        . '} ');
 
                 $fields = $result->getFields(); 
                 $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
@@ -348,7 +398,14 @@ class oeawStorage {
         if ($value == null) {
             // the result will be an EasyRdf_Sparql_Result Object
             try {                
-                $result = $sparql->query(self::$prefixes . ' SELECT ?property ?value WHERE { <' . $uri . '> ?property ?value . <' . $uri . '> ' . $property . ' ?value . }');
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?property ?value '
+                        . 'WHERE { '
+                            . '<' . $uri . '> ?property ?value . '
+                            . '<' . $uri . '> ' . $property . ' ?value . '
+                        . '}');
                 
                 $fields = $result->getFields(); 
 
@@ -363,11 +420,15 @@ class oeawStorage {
             
             try {
                 
-                $result = $sparql->query(self::$prefixes . ' SELECT ?property ? value WHERE { '
-                    . '<' . $uri . '> ?property ?value . '
-                    . '<' . $uri . '> ' . $property . ' ?value . '
-                    . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
-                    . '}');
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?property ? value '
+                        . 'WHERE { '
+                            . '<' . $uri . '> ?property ?value . '
+                            . '<' . $uri . '> ' . $property . ' ?value . '
+                            . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
+                        . '}');
                 
                 $fields = $result->getFields(); 
 

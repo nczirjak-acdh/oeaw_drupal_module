@@ -8,8 +8,7 @@ use Drupal\oeaw\connData;
 
  
 class oeawFunctions {
-   
-    
+       
     
     /* 
      *
@@ -23,7 +22,9 @@ class oeawFunctions {
     
     public function createSparqlResult($result, array $fields){
         
-        $resCount = count($result) -1;
+        
+
+        $resCount = count($result)-1;
         for ($x = 0; $x <= $resCount; $x++) {
         
             foreach($fields as $f){                
@@ -47,6 +48,9 @@ class oeawFunctions {
                     } else {
                         $res[$x][$f] = $result[$x]->$f->__toString();
                     } 
+                }
+                else{
+                    $res[$x][$f] = "";
                 }
             }
         }
@@ -140,10 +144,13 @@ class oeawFunctions {
      * @return void
     */
         
-    public function isURL(string $string, $type = "decode"){
+    public function isURL(string $string){
         
         if (filter_var($string, FILTER_VALIDATE_URL)) { 
-            $res = \Drupal\oeaw\oeawFunctions::createDetailsUrl($string, 'encode');            
+            
+            if (strpos($string, \Drupal\oeaw\connData::fedoraUrl()) !== false) {
+                $res = \Drupal\oeaw\oeawFunctions::createDetailsUrl($string, 'encode');                
+            }
             return $res;
         } else {
             return false;

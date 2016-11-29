@@ -4,6 +4,7 @@ oeaw-styles:
     base:
       css/oeaw.css: {}
       css/jquery.dataTables.min.css: {}
+      css/font-awesome/css/font-awesome.min.css: {}
   js:
       https://code.jquery.com/jquery-1.12.3.js: {type: external, minified: false}
       https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }

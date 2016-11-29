@@ -62,10 +62,9 @@ class FrontendController extends ControllerBase {
     public function roots_list() {
         
         // get the root resources
+        // sparql result fields - uri, title
         $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
-        //generate the header values
-        $header = array_keys($result[0]);
-       
+        
         for ($i = 0; $i < count($result); $i++) {            
             foreach($result[$i] as $key => $value){
                 // check that the value is an Url or not
@@ -79,6 +78,8 @@ class FrontendController extends ControllerBase {
                 $res[$i][$key] = $value; 
             }
         }
+        
+        $header = array_keys($res[0]);
         //create the datatable values and pass the twig template name what we want to use
         $datatable = array(
             '#theme' => 'oeaw_root_dt',
@@ -118,31 +119,30 @@ class FrontendController extends ControllerBase {
         // get the table data by the details uri from the URL
         $result = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
         
-        $header = array_keys($result[0]);
-       
         for ($i = 0; $i < count($result); $i++) {
             
             foreach($result[$i] as $key => $value)
-            {
+            {                
                 $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
                 
-                if($decodeUrl !== false){                             
-                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                if($decodeUrl !== false){         
+                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                    $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
                 }
+                
                 $res[$i][$key] = $value; 
             }
         }
-        
+        $header = array_keys($res[0]);
         //get the root identifier to i can get the children elements
         $rootIdentifier = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dct:identifier');
 
         if(!empty($rootIdentifier)){
-            //get the childrens data by the root 
-           $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier[0]["value"]);
-        
+            //get the childrens data by the root             
+            $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier[0]["value"]);
+            
             $childHeader = array_keys($childrenData[0]);
-
+            
             for ($x = 0; $x < count($childrenData); $x++) {
 
                 foreach($childrenData[$x] as $keyC => $valueC)
@@ -152,16 +152,24 @@ class FrontendController extends ControllerBase {
                     if($decodeUrlC !== false){                             
                          $childResult[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
                          $childResult[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;
+                    } 
+                    
+                    // Norbert temporary fix - some ontology is missing the title
+                    if($keyC == "title"){
+                        if(empty($valueC)){
+                            $childResult[$x][$keyC] = "No title"; 
+                        }
+                    }else{
+                        $childResult[$x][$keyC] = $valueC; 
                     }
-                    $childResult[$x][$keyC] = $valueC; 
+                    
                 }
             }
         } else {
             $childResult = "";
             $childHeader = "";
         }
-        
-       
+
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
             '#result' => $result,
@@ -211,6 +219,40 @@ class FrontendController extends ControllerBase {
         } else {
             $result = \Drupal\oeaw\oeawStorage::getDataByProp($metaKey, $metaValue);
         }
+
+    
+        for ($i = 0; $i < count($result); $i++) {
+            
+            foreach($result[$i] as $key => $value)
+            {
+                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                
+                if($decodeUrl !== false){                             
+                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                }
+                $res[$i][$key] = $value; 
+            }
+        }
+         $header = array_keys($res[0]);
+       
+        $datatable = array(
+            '#theme' => 'oeaw_root_dt',
+            '#result' => $res,
+            '#header' => $header,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', 
+                ]
+            ]
+        );
+        
+        return $datatable;
+       
+
+
+
+
 
         $tableResult = \Drupal\oeaw\oeawFunctions::generateTable($result, $metaKey, true);
 
