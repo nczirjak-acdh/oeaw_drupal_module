@@ -7,7 +7,7 @@ use Drupal\oeaw\oeawFunctions;
 use Drupal\oeaw\connData;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\SparqlEndpoint;
-
+use Drupal\Core\Form\ConfigFormBase;
 
 class oeawStorage {
 
@@ -27,10 +27,10 @@ class oeawStorage {
      * @return Array
      * 
      */
-
     public function getRootFromDB() {
   
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
         try {
             
@@ -75,7 +75,8 @@ class oeawStorage {
 
         try {
             
-            $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+            $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+            $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
             
             $result = $sparql->query(
                     self::$prefixes . ' '
@@ -113,7 +114,8 @@ class oeawStorage {
         
         try {
             
-            $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+            $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+            $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
             
             $result = $sparql->query(
                     self::$prefixes . ' '
@@ -145,7 +147,8 @@ class oeawStorage {
     */
     public static function getAllPropertyForSearch() {
         
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
         try {
             
@@ -184,7 +187,8 @@ class oeawStorage {
             throw new Exception('Property empty');
         }
 
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
         try {        
             
@@ -224,7 +228,9 @@ class oeawStorage {
      * @return Array
     */
     public static function getClass() {
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
             
@@ -258,7 +264,8 @@ class oeawStorage {
     */    
     public function getDigitalResources()
     {
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
             
@@ -305,7 +312,9 @@ class oeawStorage {
      * @return Array
     */
     public static function getClassMeta($classURI){
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());        
+        
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
             
@@ -350,30 +359,31 @@ class oeawStorage {
     
     public function getValueByUriProperty($uri, $resourceProperty){
         
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());                  
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
-            try {
-                //if the property is url then
-                if(!empty(filter_var($resourceProperty, FILTER_VALIDATE_URL))){
-                    $resourceProperty = "<". $resourceProperty .">";
-                }
-                
-                $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?value '
-                        . 'WHERE {  '
-                            . '<' . $uri . '> '.$resourceProperty.' ?value . '
-                        . '} ');
-
-                $fields = $result->getFields(); 
-                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-                
-                return $getResult;
-
-            } catch (Exception $ex) {
-                throw new Exception('error durong the sparql query!');
+        try {
+            //if the property is url then
+            if(!empty(filter_var($resourceProperty, FILTER_VALIDATE_URL))){
+                $resourceProperty = "<". $resourceProperty .">";
             }
+
+            $result = $sparql->query(
+                    self::$prefixes . ' '
+                    . 'SELECT '
+                        . '?value '
+                    . 'WHERE {  '
+                        . '<' . $uri . '> '.$resourceProperty.' ?value . '
+                    . '} ');
+
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;
+
+        } catch (Exception $ex) {
+            throw new Exception('error durong the sparql query!');
+        }
     }
     
     
@@ -393,7 +403,8 @@ class oeawStorage {
             throw new Exception('Property or/and uri is empty.');
         }
 
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         if ($value == null) {
             // the result will be an EasyRdf_Sparql_Result Object
@@ -444,7 +455,8 @@ class oeawStorage {
     
     public function searchForData(string $value, string $property){
         
-        $sparql = new \EasyRdf_Sparql_Client(\Drupal\oeaw\connData::sparqlEndpoint());                  
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
             //if the property is url then

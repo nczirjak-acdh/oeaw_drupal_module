@@ -97,6 +97,52 @@ class oeawFunctions {
     }
     
     /* 
+     *
+     * create prefix from string based on the connData.php prefixes
+     *
+     * @param string $string : url     
+     *
+     * @return string
+    */     
+    public function createPrefixesFromArray(array $array, array $header){
+        
+        if (empty($array)) {
+            return false;
+        }
+        $result = array();
+        
+        for ($index = 0; $index < count($header); $index++) {
+            
+            $key = $header[$index];
+            foreach($array as $a){
+                $value = $a[$key];
+                $endValue = explode('/', $value);
+                $endValue = end($endValue);
+                
+                if (strpos($endValue, '#') !== false) {
+                    $endValue = explode('#', $value);
+                    $endValue = end($endValue);
+                }
+                
+                $newString = explode($endValue, $value);
+                $newString = $newString[0];
+                
+                 
+                if(!empty(\Drupal\oeaw\connData::$prefixesToChange[$newString])){            
+                    $result[$key][] = \Drupal\oeaw\connData::$prefixesToChange[$newString].':'.$endValue;
+                }else {
+                    $result[$key][] = $value;
+                }
+            }
+            
+        }
+       
+        return $result;
+        
+    }
+    
+    
+    /* 
      * details button url generating to pass the uri value to the next page     
      *
      * @param string $data :  this is the url

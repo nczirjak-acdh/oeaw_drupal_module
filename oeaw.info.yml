@@ -1,5 +1,8 @@
 name: oeaw
 description: 'oeaw Fedora module.'
-type: module
 core: 8.x
 package: oeaw
+dependencies:
+- node
+- block
+type: module

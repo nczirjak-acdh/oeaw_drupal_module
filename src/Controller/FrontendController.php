@@ -197,6 +197,14 @@ class FrontendController extends ControllerBase {
     */
 
     public function oeaw_search() {
+    
+        /*    
+        $config = $this->config('oeaw.settings');    
+        echo "<pre>";
+        var_dump($config->get('bio'));
+        echo "</pre>";
+        */  
+        
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\SearchForm');
         return $form;
     }
@@ -215,6 +223,22 @@ class FrontendController extends ControllerBase {
         
         $data = \Drupal\oeaw\oeawStorage::searchForData($metaValue, $metaKey);
         
+        for ($i = 0; $i < count($data); $i++) {            
+            foreach($data[$i] as $key => $value){
+                // check that the value is an Url or not
+                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                
+                //create details and editing urls
+                if($decodeUrl !== false){                             
+                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                }
+                $res[$i][$key] = $value; 
+            }
+        }
+
+
+
         $searchArray = array(
             "metaKey" => $metaKey,
             "metaValue" => $metaValue            
@@ -222,7 +246,7 @@ class FrontendController extends ControllerBase {
         
         $datatable = array(
             '#theme' => 'oeaw_search_res_dt',
-            '#result' => $data,  
+            '#result' => $res,  
             '#searchedValues' => $searchArray,
             '#attached' => [
                 'library' => [

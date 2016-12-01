@@ -25,13 +25,12 @@ class SearchForm extends FormBase
         /* get the fields from the sparql query */
         $fields = array_keys($propertys[0]);
         
-        foreach($propertys as $p){
-            
-            $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromString($p[$fields[0]]); 
-            $select[$searchTerms] = t($searchTerms);
+        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromArray($propertys, $fields);
+        
+        foreach($searchTerms["p"] as $terms){
+            $select[$terms] = t($terms);
         }
         
-
         $form['metakey'] = array (
           '#type' => 'select',
           '#title' => ('MetaKey'),

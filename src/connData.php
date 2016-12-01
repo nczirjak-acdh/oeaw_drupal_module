@@ -3,6 +3,10 @@ namespace Drupal\oeaw;
 
 class connData 
 {
+    /*      
+     * prefixes to sparql querys
+     * 
+    */    
     public static $prefixes = ''
             . 'PREFIX dct: <http://purl.org/dc/terms/> '
             . 'PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> '
@@ -12,15 +16,6 @@ class connData
             . 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> '
             . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>';
 
-
-    public function sparqlEndpoint() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
-            $url = 'http://blazegraph:9999/blazegraph/sparql';
-        }else {
-            $url = 'http://blazegraph:9999/blazegraph/sparql';
-        }        
-        return $url;
-    }
     
     public function fedoraUrl() {
         if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
