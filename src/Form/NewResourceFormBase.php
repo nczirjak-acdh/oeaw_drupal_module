@@ -135,14 +135,7 @@ abstract class NewResourceFormBase extends FormBase {
         //load the config file
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');                
         
-        $fedora = new Fedora($config);
-        
-        echo "<pre>";
-        var_dump($config);
-        echo "</pre>";
-
-        die();
-
+        $fedora = new Fedora($config);      
         $fedora->begin();        
         
         try{
