@@ -311,6 +311,7 @@ class FrontendController extends ControllerBase {
         $value =  $classesArr[1];
         
         $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
+       
         $res = array();
         for ($i = 0; $i < count($data); $i++) {            
             foreach($data[$i] as $key => $value){
@@ -332,7 +333,7 @@ class FrontendController extends ControllerBase {
         );
         
         $datatable = array(
-            '#theme' => 'oeaw_search_res_dt',
+            '#theme' => 'oeaw_search_class_res_dt',
             '#result' => $res,  
             '#searchedValues' => $searchArray,
             '#attached' => [

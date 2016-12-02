@@ -90,7 +90,7 @@ class EditForm extends FormBase {
         // get the actual class acdh rdf:type to we can compare it with the digResource
         // if this is a binaryResource then we need to show the file upload possibility
         $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
-
+        
         foreach($classValue as $cv){
             if(!empty($cv["value"])){
                 if (strpos($cv["value"], 'http://vocabs.acdh.oeaw.ac.at') !== false) {
@@ -98,22 +98,23 @@ class EditForm extends FormBase {
                 }
             }
         }
-         
+        
         //if the resource does not have any acdh then we add one - WE NEED THIS OVER THE TEST!!!!
         if(count($classVal) == 0){
             $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
         }
         
         if(!empty($classVal)){
-            foreach($classVal as $cval){                     
+            foreach($classVal as $cval){    
+                echo $cval;
                 $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
                 $actualClassUri = $cval;
             }
         }else {
             drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
         }
-            
-        
+       
+       
         if(empty($editUriClass)){
             drupal_set_message($this->t('URI Class is empty!!'), 'error');
         }   
@@ -124,6 +125,8 @@ class EditForm extends FormBase {
                 
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
+        
+       
         
         // temporary fix - Mateusz and Norbert - 25. nov. 2016
         $editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");

@@ -217,7 +217,7 @@ class oeawStorage {
         
         try {        
             
-            if ($value == null) {
+            if ($value == null) {                
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
@@ -226,16 +226,17 @@ class oeawStorage {
                             . ' ?uri ' . $property . ' ?value . '
                         . '}');
             } else {
-              
+             
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
-                            . '?uri '
+                            . '?uri  '
                         . 'WHERE { '
-                            . '?uri ' . $property . ' '.$value.' '
+                            . '?uri ' . $property . ' '.$value.' . '
+                            . 'OPTIONAL { ?uri dc:title ?title }'
                         . '}'); 
             }    
-            
+         
             $fields = $result->getFields(); 
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
 
