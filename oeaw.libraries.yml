@@ -6,14 +6,14 @@ oeaw-styles:
             css/jquery.dataTables.min.css: {}
             css/font-awesome/css/font-awesome.min.css: {}
     js:
-        https://code.jquery.com/jquery-1.12.3.js: {type: external, minified: false}
+        https://code.jquery.com/jquery-1.12.3.min.js: {type: external, minified: true}
         https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }
         js/datatableInit.js: {}
 
 admin_forms_js:
     version: 1.0.0
     js:
-        https://code.jquery.com/jquery-1.12.3.js: {type: external, minified: false}
+        https://code.jquery.com/jquery-1.12.3.min.js: {type: external, minified: true}
         https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }
         js/admin_forms.js: {}
       
