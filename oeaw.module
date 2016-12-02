@@ -28,3 +28,17 @@ function oeaw_theme() {
 
   return $theme;
 }
+
+
+/*
+ * Create a hook for the admin form page to we can use an external javascript file
+ * 
+ */
+function oeaw_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id){
+
+    $form['#attached']['library'][] = 'oeaw/admin_forms_js';
+    $form['#attached']['drupalSettings']['oeaw']['admin_forms_js']['variable'] = 'value';
+
+    return $form;
+
+} 
