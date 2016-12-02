@@ -257,19 +257,6 @@ class FrontendController extends ControllerBase {
         
         return $datatable;
        
-
-
-
-
-
-        $tableResult = \Drupal\oeaw\oeawFunctions::generateTable($result, $metaKey, true);
-
-        if ($tableResult == false) {
-            $error_msg = drupal_set_message($this->t('Data is not available, please change your searching criteria!! <br> <a href="/oeaw_all">go back</a>'), 'error');
-            return $error_msg;
-        }
-
-        return $tableResult;
     }
     
     /* 
@@ -307,6 +294,57 @@ class FrontendController extends ControllerBase {
         return $form;
         
     }
+    
+    
+    /* 
+     * Get the classes data from the sidebar class block
+     * and display them
+     *     
+    */
+    public function oeaw_classes_result(){
+        
+        $classes = $_SESSION['oeaw_form_result_classes'];
+        
+        $classesArr = explode(":", $classes);
+        
+        $property = $classesArr[0];
+        $value =  $classesArr[1];
+        
+        $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
+        $res = array();
+        for ($i = 0; $i < count($data); $i++) {            
+            foreach($data[$i] as $key => $value){
+                // check that the value is an Url or not
+                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                
+                //create details and editing urls
+                if($decodeUrl !== false){                             
+                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                }
+                $res[$i][$key] = $value; 
+            }
+        }
+        
+        $searchArray = array(
+            "metaKey" => $classesArr[0],
+            "metaValue" => $classesArr[1]
+        );
+        
+        $datatable = array(
+            '#theme' => 'oeaw_search_res_dt',
+            '#result' => $res,  
+            '#searchedValues' => $searchArray,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', 
+                ]
+            ]
+        );
+        
+        return $datatable;
+       
+        } 
     
     
 }

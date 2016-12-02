@@ -228,135 +228,22 @@ class oeawFunctions {
         return false;
     }
     
-    
-    /* THIS WILL BE DELETED */    
-    public static function generateTable(array $data, string $text = null, string $edit = null) {
-
-        /* get the fields from the sparql query */
-        $fields = array_keys($data[0]);
-        $i = 0;
+    public function createUriFromPrefix(string $prefix){
         
-        $finalArray = array();
-        $filename = false;
+        $newValue = explode(':', $prefix);
         
-        // it is a special prefix
-        $describedby = false;
-        $descVal = "";
+        $newPrefix = $newValue[0];
+        $newValue =  $newValue[1];
         
-        //creating the header and the rows part
-        foreach ($data as $r) {
-            
-            // header elements foreach
-            foreach ($fields as $h) {                
-                $header[$h] = t($h);
-                $val = $r[$h];
-                
-                $value = (string)$val;
-                
-                if (substr($value,0,7) == 'http://')
-                {            
-                    $asd = \Drupal\oeaw\oeawFunctions::createPrefixesFromString($val);
-                }
-                    
-                $length = strlen($value);
-
-                if (substr($value, $length - 8, 8) == 'filename') {
-                    $filename = true;
-                }
-                if ($h == 'uri') {
-                    $ResURL = $value;
-                    $details = \Drupal\oeaw\oeawFunctions::createDetailsUrl($value, 'encode');
-                    
-                }
-
-                if (\Drupal\oeaw\oeawFunctions::generateUrl($value) != false) {
-                    $value = \Drupal\oeaw\oeawFunctions::generateUrl($value);
-                }
-                
-                $finalArray[$i][] = $value;
-            }
-
-            if (!empty($details)) {
-                $finalArray[$i][] = t('<a href="/oeaw_detail/' . $details . '">Details</a>');
-            } else {
-                $finalArray[$i][] = t('NO Details');
-            }
-            
-            if($edit != null){
-                $finalArray[$i][] = t('<a href="/oeaw_editing/' . $details . '">edit</a>');
-                $finalArray[$i][] = t('<a href="/oeaw_delete/' . $details . '">delete</a>');
-            }
-
-            $i++;
-        }
-
-        if (($filename == true) && ($describedby == true)) {
-            $current_uri = \Drupal::request()->getRequestUri();
-            $downloadURL = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode', true);
-
-            $value = t('<a href="' . $downloadURL . '">Download content</a>');
-
-            $downText = array(
-                '#type' => 'markup',
-                '#markup' => $value
-            );
-        }
-
-        $header['details'] = t('details');
-        if($edit != null){
-            $header['edit'] = t('edit');
-            $header['delete'] = t('delete');
-        }
+        $prefixes = \Drupal\oeaw\connData::$prefixesToChange;
         
-        $rows = $finalArray;
-
-        $table = array(
-            '#type' => 'table',
-            '#header' => $header,
-            '#rows' => $rows,
-            '#attributes' => array(
-                'id' => 'oeaw-table',
-            ),
-        );
-
-        $current_uri = \Drupal::request()->getRequestUri();
-        $actualMenu = explode('/', $current_uri);
-        
-        // we are checking the actual menupoint, if it is the details then we are showing the title and download url 
-        if ($actualMenu[1] == 'oeaw_detail') {
-
-            if (empty($ResURL)) {
-
-                $current_uri = \Drupal::request()->getRequestUri();
-                                
-                /* url for the resource */
-                $ResURL = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode', true);
-                
-                /* fedora url for the sparql  */
-                $ResURLFedora = \Drupal\oeaw\oeawFunctions::createDetailsUrl($current_uri, 'decode');
-                                
-                $titleProperty = \Drupal\oeaw\oeawStorage::getDefPropByURI($ResURLFedora, 'dc:title');
-                                
-                $title = $titleProperty[0]["value"];
-                
-                $hdrTxt = array(
-                    '#type' => 'markup',
-                    '#markup' => '<div class="tableHeaderTxt"><h2>' . $title . '</h2><br>' . $ResURL . ' <br><br></div>',
-                );
+        foreach ($prefixes as $key => $value){            
+            if($value == $newPrefix){
+                $res = $key.$newValue;
             }
         }
-
-        $ftrTxt = array(
-            '#type' => 'markup',
-            '#markup' => '<div class="tableFooterTxt" ><a href="/oeaw_menu" class="tableBackTxt">Go Back to the menu</a></br></br></div>',
-        );
-
-        return array(
-            $hdrTxt,
-            $downText,
-            $table,
-            $ftrTxt,
-        );
+        
+        return $res;
     }
 
 }

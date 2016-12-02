@@ -84,3 +84,11 @@ oeaw_admin_form:
         _permission: 'access administration pages'
     options:
         _admin_route: TRUE
+
+oeaw_classes_result:    
+    path: '/oeaw_classes_result'
+    defaults:
+        _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_classes_result'
+    requirements:
+        _permission: 'access content'
+        _access: 'TRUE'

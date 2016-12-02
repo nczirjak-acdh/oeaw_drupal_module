@@ -30,6 +30,11 @@ class oeawStorage {
     public function getRootFromDB() {
   
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            drupal_set_message($this->t('Error in the getDigitalResources function!'), 'error');
+        }
+
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
         try {
@@ -148,6 +153,11 @@ class oeawStorage {
     public static function getAllPropertyForSearch() {
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return false;
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
         try {
@@ -186,13 +196,28 @@ class oeawStorage {
         if (empty($property)) {
             throw new Exception('Property empty');
         }
-
+                
+        if(!filter_var($property, FILTER_VALIDATE_URL)){
+            $property = \Drupal\oeaw\oeawFunctions::createUriFromPrefix($property);
+            $property = '<'. $property .'>';
+        }else if(filter_var($property, FILTER_VALIDATE_URL)){            
+            $property = '<'. $property .'>';
+        }
+        
+        
+        if(!filter_var($value, FILTER_VALIDATE_URL)){
+            $value = \Drupal\oeaw\oeawFunctions::createUriFromPrefix($value);
+            $value = '<'. $value .'>';
+        }else if(filter_var($value, FILTER_VALIDATE_URL)){            
+            $value = '<'. $value .'>';
+        }        
+        
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);        
+        
         try {        
             
-            if (empty($value)) {
+            if ($value == null) {
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
@@ -201,12 +226,13 @@ class oeawStorage {
                             . ' ?uri ' . $property . ' ?value . '
                         . '}');
             } else {
+              
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
                             . '?uri '
                         . 'WHERE { '
-                            . '?uri ' . $property . ' <'.$value.'> '
+                            . '?uri ' . $property . ' '.$value.' '
                         . '}'); 
             }    
             
@@ -483,6 +509,30 @@ class oeawStorage {
         }
         
     }
+    
+    
+    public function getClassesForSideBar()
+    {
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
+        
+        try {
+            
+            $result = $sparql->query(
+                    self::$prefixes . ' 
+                        SELECT ?type  
+                        WHERE {[] a ?type} GROUP BY ?type ');
+
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;
+
+        } catch (Exception $ex) {
+            throw new Exception('error durong the sparql query!');
+        }
+        
+    }
             
 
-}
+} 
