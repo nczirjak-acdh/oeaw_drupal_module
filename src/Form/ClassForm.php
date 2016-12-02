@@ -34,7 +34,7 @@ class ClassForm extends FormBase
         
         $form['classes'] = array (
           '#type' => 'select',
-          '#title' => ('Classes1'),
+          '#title' => ('Classes'),
           '#required' => TRUE,
           '#options' => 
               $select
