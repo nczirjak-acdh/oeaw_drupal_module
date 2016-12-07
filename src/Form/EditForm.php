@@ -129,7 +129,7 @@ class EditForm extends FormBase {
        
         
         // temporary fix - Mateusz and Norbert - 25. nov. 2016
-        $editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
+        //$editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
 
         $attributes = array();
         
@@ -243,8 +243,7 @@ class EditForm extends FormBase {
         foreach($editOldForm as $e){            
             $value = $form_state->getValue($e); 
             $key = str_replace(':oldValues', '', $e);
-            if(!empty($value)){
-                echo $key;
+            if(!empty($value)){                
                 $editFormOldValues[$key] = $value;
             }
         }       

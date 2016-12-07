@@ -1,4 +1,5 @@
-$(document).ready(function() {
+jq2 = jQuery.noConflict();
+jq2(function( $ ) {
      
         var max_fields      = 10; //maximum input boxes allowed
         var wrapper         = $(".input_fields_wrap"); //Fields wrapper

@@ -70,34 +70,95 @@ class AdminForm extends ConfigFormBase {
         
         $header = array_keys($propertys[0]);
         $header = $header[0];
-        
+        /*
         foreach($propertys as $p){            
             $select .= "<option value='".$p[$header]."' name='myprefix[]'>".$p[$header]."</option>";
-;        }
-        
-        
-        /*
-         * 
-         * <select>
-            <option value="volvo">Volvo</option>  
-        </select>
-         * 
-         */
-        
-        $form['input_fields'] = [
-            '#markup' => $this->t('
-                <div class="input_fields_wrap">
-                    <button class="add_field_button">Add New Property</button>
-                    <div><select id="myprefix" name="myprefix[]">'.$select.'</select> : <input type="text" name="myprefixvalue[]"></div>
-                </div>'),
-        ];
+            $select2[] = $p[$header];
+        }
        
         
-        
+        $form['fields']['modules'] = array(
+            '#type' => 'details',
+            '#open' => TRUE,
+            '#title' => t('sample field'),
+            '#description' => t('Explaination about sample field is here, Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here. Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.thank you.'),
+            '#prefix' => '<div id="modules-wrapper">',
+            '#suffix' => '</div>',
+        );
+
+        $max = $form_state->get('fields_count');
+        if(is_null($max)) {
+            $max = 0;
+            $form_state->set('fields_count', $max);
+        }
+
+        // Add elements that don't already exist
+        for($delta=0; $delta<=$max; $delta++) {
+            if (!isset($form['fields']['modules'][$delta])) {
+                $element = array(
+                    '#type' => 'textfield',
+                    '#title' => t('field Name'),            
+                );
+                
+                $form['example_select'] = [
+                    '#type' => 'select',
+                    '#title' => $this->t('Select element'),
+                    '#options' => [
+                      '1' => $this->t('One'),
+                      '2' => [
+                        '2.1' => $this->t('Two point one'),
+                        '2.2' => $this->t('Two point two'),
+                      ],
+                      '3' => $this->t('Three'),
+                    ],
+                  ];
+                
+                $form['fields']['modules'][$delta]['prefix'] = $element;
+                $element = array('#type' => 'select', '#options' => [
+                      '1' => $this->t('One'),
+                      '2' => [
+                        '2.1' => $this->t('Two point one'),
+                        '2.2' => $this->t('Two point two'),
+                      ],
+                      '3' => $this->t('Three'),
+                    ],'#required' => TRUE);
+                $form['fields']['modules'][$delta]['value'] = $element;
+                $element = array('#type' => 'textfield','#title' => t('sss'),'#required' => FALSE, '#suffix' => '<hr />');
+                
+            }
+        }
+
+        $form['fields']['modules']['add'] = array(
+          '#type' => 'submit',
+          '#name' => 'addfield',
+          '#value' => t('Add more field'),
+          '#submit' => array(array($this, 'addfieldsubmit')),
+          '#ajax' => array(
+            'callback' => array($this, 'addfieldCallback'),
+            'wrapper' => 'modules-wrapper',
+            'effect' => 'fade',
+          ),
+        );
+     */
+    
         return parent::buildForm($form, $form_state);
     }
 
-    
+     /**
+    * Ajax submit to add new field.
+    */
+  public function addfieldsubmit(array &$form, FormStateInterface &$form_state) {
+    $max = $form_state->get('fields_count') + 1;
+    $form_state->set('fields_count',$max);
+    $form_state->setRebuild(TRUE);
+  }
+
+  /**
+    * Ajax callback to add new field.
+    */
+  public function addfieldCallback(array &$form, FormStateInterface &$form_state) {
+    return $form['fields']['modules'];
+  }
   /**
    * {@inheritdoc}
    */
@@ -111,9 +172,10 @@ class AdminForm extends ConfigFormBase {
     public function submitForm(array &$form, FormStateInterface $form_state) {
         parent::submitForm($form, $form_state);
 
-       
+     
 
-        
+
+
         $this->config('oeaw.settings')->set('fedora_url', $form_state->getValue('fedora_url'))->save();
     
         $this->config('oeaw.settings')->set('sparql_endpoint', $form_state->getValue('sparql_endpoint'))->save();

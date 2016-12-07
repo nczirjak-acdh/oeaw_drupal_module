@@ -57,6 +57,7 @@ class connData
         "http://www.iana.org/assignments/relation/" => "iana",
         "https://vocabs.acdh.oeaw.ac.at/#" => "acdh",
         "http://vocabs.acdh.oeaw.ac.at/#" => "acdh",
+        "http://vocabs.acdh.ac.at/#" => "acdh",
         "http://purl.org/dc/elements/1.1/" => "dc",
         "http://purl.org/dc/terms/" => "dct",
         "http://www.w3.org/2002/07/owl#" => "owl",

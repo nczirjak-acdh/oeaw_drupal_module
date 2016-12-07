@@ -6,10 +6,61 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\user\PrivateTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
 class ClassForm extends FormBase
 {
+    
+    
+   /**
+    * @var \Drupal\user\PrivateTempStoreFactory
+    */
+    protected $tempStoreFactory;
+
+    /**
+    * @var \Drupal\Core\Session\SessionManagerInterface
+    */
+    private $sessionManager;
+
+    /**
+    * @var \Drupal\Core\Session\AccountInterface
+    */
+    private $currentUser;
+
+    /**
+    * @var \Drupal\user\PrivateTempStore
+    */
+    protected $store;    
+    
+    
+    /**
+   * Constructs a Multi step form Base.
+   *
+   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   */
+    
+    public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
+    
+        $this->tempStoreFactory = $temp_store_factory;
+        $this->sessionManager = $session_manager;
+        $this->currentUser = $current_user;
+        
+        $this->store = $this->tempStoreFactory->get('class_search_data');
+    }
+    
+    public static function create(ContainerInterface $container){
+        return new static(
+                $container->get('user.private_tempstore'),
+                $container->get('session_manager'),
+                $container->get('current_user')
+        );
+    }
     
     public function getFormId()
     {
@@ -21,6 +72,7 @@ class ClassForm extends FormBase
     */
     public function buildForm(array $form, FormStateInterface $form_state) 
     {   
+       
         $data = \Drupal\oeaw\oeawStorage::getClassesForSideBar();
         
         /* get the fields from the sparql query */
@@ -65,8 +117,13 @@ class ClassForm extends FormBase
     public function submitForm(array &$form, FormStateInterface $form_state) {
             
         $classes = $form_state->getValue('classes');
-        $_SESSION['oeaw_form_result_classes'] = $classes;
-        $url = Url::fromRoute('oeaw_classes_result');
+        
+        $tempstore = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->set('classes_search', $classes);
+                
+        $class = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->get('classes_search');
+       
+        $url = Url::fromRoute('oeaw_classes_result');        
+        //$form_state->setRedirect('oeaw_classes_result', ["search_classes" => $classes]); 
         $form_state->setRedirectUrl($url);
         
     }

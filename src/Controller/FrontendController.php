@@ -12,12 +12,17 @@ use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\oeawFunctions;
-use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\user\PrivateTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+
+
+
 
 class FrontendController extends ControllerBase {
-    
         
     /* 
      *
@@ -237,8 +242,6 @@ class FrontendController extends ControllerBase {
             }
         }
 
-
-
         $searchArray = array(
             "metaKey" => $metaKey,
             "metaValue" => $metaValue            
@@ -303,13 +306,13 @@ class FrontendController extends ControllerBase {
     */
     public function oeaw_classes_result(){
         
-        $classes = $_SESSION['oeaw_form_result_classes'];
+        $class = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->get('classes_search');
         
-        $classesArr = explode(":", $classes);
+        $classesArr = explode(":", $class);
         
         $property = $classesArr[0];
         $value =  $classesArr[1];
-        
+     
         $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
        
         $res = array();
@@ -342,10 +345,20 @@ class FrontendController extends ControllerBase {
                 ]
             ]
         );
-        
+                
         return $datatable;
        
-        } 
+    } 
+    
+    public function oeaw_add_result(){
+        
+        
+        
+        die("itt");
+        
+        
+        
+    }
     
     
 }

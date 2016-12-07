@@ -92,3 +92,11 @@ oeaw_classes_result:
     requirements:
         _permission: 'access content'
         _access: 'TRUE'
+
+oeaw_add_result:    
+    path: '/oeaw_add_result'
+    defaults:
+        _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_add_result'
+    requirements:
+        _permission: 'access content'
+        _access: 'TRUE'        

@@ -143,8 +143,7 @@ abstract class NewResourceFormBase extends FormBase {
                 $res = $fedora->createResource($meta);
             } else {
                 $res = $fedora->createResource($meta, $fileName);
-            }
-            
+            }            
             
             $fedora->commit();
             //create the new reosurce uri for the user
@@ -152,15 +151,16 @@ abstract class NewResourceFormBase extends FormBase {
             $uri = preg_replace('|/tx:[-a-zA-Z0-9]+/|', '/', $uri);
             $uri = $uri.'/fcr:metadata';
             
-            $this->deleteStore($metadata);            
-             
-            drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a>'));
+            $this->deleteStore($metadata);
+                         
+            drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a> '));
         
             
         } catch (Exception $ex) {
             
             $fedora->rollback();
             $this->deleteStore($metadata);
+            
             drupal_set_message($this->t('Error during the saving process'), 'error');
         }
         

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\oeaw\Plugin\Block\SearchSBBlock.
+ * Contains \Drupal\oeaw\Plugin\Block\ClassBlock.
  */
 
 namespace Drupal\oeaw\Plugin\Block;

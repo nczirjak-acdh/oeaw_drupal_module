@@ -32,7 +32,7 @@ class oeawStorage {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
         if(empty($sparqlConfig)){
-            drupal_set_message($this->t('Error in the getDigitalResources function!'), 'error');
+            drupal_set_message('Error in the getDigitalResources function!', 'error');
         }
 
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
@@ -222,18 +222,25 @@ class oeawStorage {
                         self::$prefixes . ' '
                         . 'SELECT '
                             . '?uri ?value '
-                        . 'WHERE {'
+                        . ' WHERE {'
                             . ' ?uri ' . $property . ' ?value . '
                         . '}');
             } else {
-             
+                      echo 'SELECT '
+                            . '?uri ?title ?label '
+                        . ' WHERE { '
+                            . '?uri ' . $property . ' '.$value.' . '
+                            . 'OPTIONAL { ?uri dc:title ?title } .'
+                            . 'OPTIONAL { ?uri rdfs:label ?label } . '
+                        . '}';
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
-                            . '?uri  '
-                        . 'WHERE { '
+                            . '?uri ?title ?label '
+                        . ' WHERE { '
                             . '?uri ' . $property . ' '.$value.' . '
-                            . 'OPTIONAL { ?uri dc:title ?title }'
+                            . 'OPTIONAL { ?uri dc:title ?title } .'
+                            . 'OPTIONAL { ?uri rdfs:label ?label } . '
                         . '}'); 
             }    
          
