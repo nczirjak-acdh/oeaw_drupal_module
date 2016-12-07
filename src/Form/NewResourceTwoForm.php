@@ -45,7 +45,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
                 $digitalResources[] = $dr["id"];
             }            
         }
-        echo $class;
+        
         // get the actual class dct:identifier to we can compare it with the digResource
         $classValue = \Drupal\oeaw\oeawStorage::getValueByUriProperty($class, "dct:identifier"); 
         

@@ -1,3 +1,4 @@
+
 <div class="vcenter">
     <h2 ><i class="fa fa-search fa-1x"></i> You searched for: <b>{{ searchedValues.metaValue }} in {{ searchedValues.metaKey }}</b> </h2>    
 </div>    
@@ -5,15 +6,22 @@
     <thead>
         <tr>            
             <th>Title</th>
-            <th>Edit</th>
-            <th>Fedora</th>
+            <th width="50px">Edit</th>
+            <th width="50px">Fedora</th>
             
         </tr>
     </thead>
     <tbody>  
             {% for item in result %}
+                
             <tr>
-                <td><a href="{{ item.uri }}" target="_blank">{{ item.value }}</a></td>
+                <td><a href="{{ item.detail }}" >
+                        {% if item.title %}
+                            {{item.title}}
+                        {% else %}
+                            Title is missing - {{item.uri}}
+                        {% endif %}    
+                    </a></td>
                 <td width="50px"><a href="{{ item.edit }}"><center><i class="fa fa-pencil-square-o fa-2x"></i></center></a></td>
                 <td width="50px"><a href="{{ item.uri }}" target="_blank"><center><i class="fa fa-database fa-2x" aria-hidden="true" ></i></center></a></td>
             </tr>

@@ -225,14 +225,7 @@ class oeawStorage {
                         . ' WHERE {'
                             . ' ?uri ' . $property . ' ?value . '
                         . '}');
-            } else {
-                      echo 'SELECT '
-                            . '?uri ?title ?label '
-                        . ' WHERE { '
-                            . '?uri ' . $property . ' '.$value.' . '
-                            . 'OPTIONAL { ?uri dc:title ?title } .'
-                            . 'OPTIONAL { ?uri rdfs:label ?label } . '
-                        . '}';
+            } else {                      
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
@@ -351,7 +344,7 @@ class oeawStorage {
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
-            
+          
             $result = $sparql->query(self::$prefixes . ' 
                     SELECT 
                         ?id ?label 
@@ -497,14 +490,16 @@ class oeawStorage {
             if(!empty(filter_var($resourceProperty, FILTER_VALIDATE_URL))){
                 $resourceProperty = "<". $resourceProperty .">";
             }
-          
+       
             $result = $sparql->query(
-                    self::$prefixes . ' SELECT ?uri ?property ?value '
+                    self::$prefixes . ' SELECT ?uri ?property ?value ?title ?label  '
                     . 'WHERE {'
                         . '?uri '.$property.' ?value . '
                         . ' FILTER (  '
                             . ' regex( str(?value), "' . $value . '", "i")'
-                        . ') '                            
+                        . ') . '
+                        . ' OPTIONAL {?uri dc:title ?title} . '
+                        . ' OPTIONAL {?uri rdfs:label ?label} . '
                     . '} ');
 
             $fields = $result->getFields(); 

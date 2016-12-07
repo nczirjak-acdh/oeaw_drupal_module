@@ -203,13 +203,7 @@ class FrontendController extends ControllerBase {
 
     public function oeaw_search() {
     
-        /*    
-        $config = $this->config('oeaw.settings');    
-        echo "<pre>";
-        var_dump($config->get('bio'));
-        echo "</pre>";
-        */  
-        
+       
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\SearchForm');
         return $form;
     }

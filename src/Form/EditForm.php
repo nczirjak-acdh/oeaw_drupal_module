@@ -100,13 +100,12 @@ class EditForm extends FormBase {
         }
         
         //if the resource does not have any acdh then we add one - WE NEED THIS OVER THE TEST!!!!
-        if(count($classVal) == 0){
+/*        if(count($classVal) == 0){
             $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
         }
-        
+  */      
         if(!empty($classVal)){
-            foreach($classVal as $cval){    
-                echo $cval;
+            foreach($classVal as $cval){                    
                 $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
                 $actualClassUri = $cval;
             }
@@ -126,10 +125,8 @@ class EditForm extends FormBase {
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
         
-       
-        
         // temporary fix - Mateusz and Norbert - 25. nov. 2016
-        //$editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
+        $editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
 
         $attributes = array();
         
@@ -147,15 +144,7 @@ class EditForm extends FormBase {
             
             // if the label is the isPartOf, then we need to disable the editing
             // to the users, they do not have a permission to change it
-            if($label == "isPartOf"){
-                if($value !== null){                                        
-                    $titleProperty = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, 'dc:title');
-                    $titleProperty = $titleProperty[0]["value"];
-                    if(empty($titleProperty)){
-                        $titleProperty = "there is no title for the ispartof";
-                    }                        
-                    $value = $titleProperty;
-                }
+            if($label == "isPartOf"){            
                 $attributes =  array('readonly' => 'readonly');
             }else {
                 $attributes =  array();
