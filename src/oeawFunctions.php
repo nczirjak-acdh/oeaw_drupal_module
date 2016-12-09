@@ -5,7 +5,7 @@ namespace Drupal\oeaw;
 use Drupal\Core\Url;
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\connData;
-
+use Drupal\Component\Render\MarkupInterface;
  
 class oeawFunctions {
        
@@ -22,7 +22,9 @@ class oeawFunctions {
     
     public function createSparqlResult($result, array $fields){
         
-        
+        if(empty($result) && empty($fields)){
+            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+        }
 
         $resCount = count($result)-1;
         for ($x = 0; $x <= $resCount; $x++) {
@@ -70,7 +72,7 @@ class oeawFunctions {
     public function createPrefixesFromString(string $string){
         
         if (empty($string)) {
-            return false;
+           return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
         
         $endValue = explode('/', $string);
@@ -106,9 +108,10 @@ class oeawFunctions {
     */     
     public function createPrefixesFromArray(array $array, array $header){
         
-        if (empty($array)) {
-            return false;
+        if (empty($array) && empty($header)) {
+            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
+        
         $result = array();
         
         for ($index = 0; $index < count($header); $index++) {
@@ -212,6 +215,11 @@ class oeawFunctions {
      */
 
     public function generateUrl($value, $dl = null) {
+        
+        if(empty($value)){
+            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+        }
+        
         if (substr($value, 0, 4) == 'http') {
             if (substr($value, 0, 24) == \Drupal\oeaw\connData::fedoraUrl()) {
                 $value = str_replace(\Drupal\oeaw\connData::fedoraUrl(), \Drupal\oeaw\connData::fedoraDownloadUrl(), $value);
@@ -230,8 +238,11 @@ class oeawFunctions {
     
     public function createUriFromPrefix(string $prefix){
         
-        $newValue = explode(':', $prefix);
+        if(empty($prefix)){
+            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+        }
         
+        $newValue = explode(':', $prefix);        
         $newPrefix = $newValue[0];
         $newValue =  $newValue[1];
         
