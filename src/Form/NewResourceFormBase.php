@@ -104,12 +104,22 @@ abstract class NewResourceFormBase extends FormBase {
         //create an easyrdf_graph instance
         $graph = new \EasyRdf_Graph();            
         $meta = $graph->resource('acdh');
+        //get the root identifier, because we need to use it as the dct:isPartOf
+        $rootIdentifier = \Drupal\oeaw\oeawStorage::getValueByUriProperty($root, 'dct:identifier');
+        
+        if(empty($rootIdentifier)){
+           return drupal_set_message(t('The root has no identifier.'), 'error');         
+        } else {
+            $rootIdentifier = $rootIdentifier[0]["value"];
+        }
         
         
         // creating the resources for the Fedora class
         foreach($uriAndValue as $key => $value){        
             if(!empty($value)){
-        
+                if($key == "http://purl.org/dc/terms/isPartOf"){
+                    $value = $rootIdentifier;
+                }
                 if (strpos($value, 'http') !== false) {
                     //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
                     $meta->addResource($key, $value);
