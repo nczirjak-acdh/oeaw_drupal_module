@@ -39,15 +39,30 @@ class AdminForm extends ConfigFormBase {
     public function buildForm(array $form, FormStateInterface $form_state) {
     
         $config = $this->config('oeaw.settings');        
+        
+        if(empty($config->get('sparql_endpoint'))){
+            $sparqlConf = "http://blazegraph:9999/blazegraph/sparql";
+        }else{
+            $sparqlConf = $config->get('sparql_endpoint');                    
+        }
+        
+        if(empty($config->get('fedora_url'))){
+            $fedoraUrl = "http://fedora.localhost/rest/";
+        }else {
+            $fedoraUrl = $config->get('fedora_url');
+        }
+        
+        
         $prefNum = $this->config('oeaw.settings')->get('prefNum');
         $pref = $this->config('oeaw.settings')->get('prefix_0');
         $val = $this->config('oeaw.settings')->get('value_0');
         $pref2 = $this->config('oeaw.settings')->get('prefix_1');
-      /*  echo "<br>";
+        
+        /*echo "<br>";
         echo "<pre>";
         var_dump($this->config('oeaw.settings')->getRawData());
         echo "</pre>";
-        */
+      */
         $form['intro'] = [
             '#markup' => '<p>' . $this->t('<h2>Oeaw Module Settings</h2><br/>') . '</p>',
         ];
@@ -102,9 +117,11 @@ class AdminForm extends ConfigFormBase {
         );
 
         //$max = $prefNum;
+        $max = $form_state->get('fields_count');
         if(is_null($max)) {
             $max = 0;
-            $form_state->set('prefixes_num', $max);
+            //$form_state->set('prefixes_num', $max);
+            $form_state->set('fields_count', $max);
         }
         
         // Add elements that don't already exist

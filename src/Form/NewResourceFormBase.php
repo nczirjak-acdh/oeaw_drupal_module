@@ -115,17 +115,18 @@ abstract class NewResourceFormBase extends FormBase {
         
         
         // creating the resources for the Fedora class
-        foreach($uriAndValue as $key => $value){
-        
-            if($key == "http://purl.org/dc/terms/isPartOf"){
-                $value = $rootIdentifier;
-            }
-            if (strpos($value, 'http') !== false) {
-                //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
-                $meta->addResource($key, $value);
-            } else {
-                //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
-                $meta->addLiteral($key, $value);
+        foreach($uriAndValue as $key => $value){        
+            if(!empty($value)){
+                if($key == "http://purl.org/dc/terms/isPartOf"){
+                    $value = $rootIdentifier;
+                }
+                if (strpos($value, 'http') !== false) {
+                    //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
+                    $meta->addResource($key, $value);
+                } else {
+                    //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
+                    $meta->addLiteral($key, $value);
+                }            
             }            
         }
         

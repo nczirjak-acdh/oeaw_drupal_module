@@ -71,6 +71,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
         }
         
         $rootTitle = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dc:title");
+        
         if(!empty($rootTitle)){
             $rootTitle = $rootTitle[0]["value"];
         } else {
@@ -103,7 +104,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
             
             $form[$label] = array(
                 '#type' => 'textfield',
-                '#title' => $this->t($label.' *'),                
+                '#title' => $this->t($label),                
                 '#default_value' => $defaultValue,                
                 '#attributes' => $attributes,
             );
