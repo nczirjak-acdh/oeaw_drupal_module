@@ -38,8 +38,16 @@ class AdminForm extends ConfigFormBase {
    */
     public function buildForm(array $form, FormStateInterface $form_state) {
     
-        $config = $this->config('oeaw.settings');
-                
+        $config = $this->config('oeaw.settings');        
+        $prefNum = $this->config('oeaw.settings')->get('prefNum');
+        $pref = $this->config('oeaw.settings')->get('prefix_0');
+        $val = $this->config('oeaw.settings')->get('value_0');
+        $pref2 = $this->config('oeaw.settings')->get('prefix_1');
+      /*  echo "<br>";
+        echo "<pre>";
+        var_dump($this->config('oeaw.settings')->getRawData());
+        echo "</pre>";
+        */
         $form['intro'] = [
             '#markup' => '<p>' . $this->t('<h2>Oeaw Module Settings</h2><br/>') . '</p>',
         ];
@@ -59,7 +67,7 @@ class AdminForm extends ConfigFormBase {
         );
         
         $form['prefixes_intro'] = [
-            '#markup' => '<p>' . $this->t('<br/><h2>Prefixes settings</h2><br/>') . '</p>',
+            '#markup' => '<p>' . $this->t('<br/><h2>Prefix settings</h2><br/>') . '</p>',
         ];
         
         $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
@@ -67,114 +75,138 @@ class AdminForm extends ConfigFormBase {
         if($propertys == false){
             drupal_set_message($this->t('please provide sparql endpoint and fedora url'), 'error');
         }
-        
+
         $header = array_keys($propertys[0]);
         $header = $header[0];
-        /*
-        foreach($propertys as $p){            
-            $select .= "<option value='".$p[$header]."' name='myprefix[]'>".$p[$header]."</option>";
-            $select2[] = $p[$header];
+
+        // get the uris without the property
+        foreach($propertys as $p){                        
+           
+            if (strpos($p[$header], '#') !== false) {
+                $val = explode("#", $p[$header]);
+                $lastVal = $val[count($val)-1];                
+            } else {
+                $val = explode("/", $p[$header]);
+                $lastVal = $val[count($val)-1];                
+            }
+            $val = str_replace($lastVal, "", $p[$header]);
+            $select[urlencode($val)] = t($val);
         }
-       
         
         $form['fields']['modules'] = array(
             '#type' => 'details',
             '#open' => TRUE,
-            '#title' => t('sample field'),
-            '#description' => t('Explaination about sample field is here, Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here. Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.Lorem ipsum dolor sit amet. bla yadda bla yadda. this is a very long description here.thank you.'),
+            '#title' => t('PREFIXES'),            
             '#prefix' => '<div id="modules-wrapper">',
             '#suffix' => '</div>',
         );
 
-        $max = $form_state->get('fields_count');
+        //$max = $prefNum;
         if(is_null($max)) {
             $max = 0;
-            $form_state->set('fields_count', $max);
+            $form_state->set('prefixes_num', $max);
         }
-
+        
         // Add elements that don't already exist
         for($delta=0; $delta<=$max; $delta++) {
             if (!isset($form['fields']['modules'][$delta])) {
+                
                 $element = array(
-                    '#type' => 'textfield',
-                    '#title' => t('field Name'),            
+                    '#type' => 'select',
+                    '#title' => $this->t('Select prefix'),
+                    '#options' => $select, 
+                    '#default_value' => urlencode('http://purl.org/dc/terms/'),
                 );
                 
-                $form['example_select'] = [
-                    '#type' => 'select',
-                    '#title' => $this->t('Select element'),
-                    '#options' => [
-                      '1' => $this->t('One'),
-                      '2' => [
-                        '2.1' => $this->t('Two point one'),
-                        '2.2' => $this->t('Two point two'),
-                      ],
-                      '3' => $this->t('Three'),
-                    ],
-                  ];
-                
-                $form['fields']['modules'][$delta]['prefix'] = $element;
-                $element = array('#type' => 'select', '#options' => [
-                      '1' => $this->t('One'),
-                      '2' => [
-                        '2.1' => $this->t('Two point one'),
-                        '2.2' => $this->t('Two point two'),
-                      ],
-                      '3' => $this->t('Three'),
-                    ],'#required' => TRUE);
-                $form['fields']['modules'][$delta]['value'] = $element;
-                $element = array('#type' => 'textfield','#title' => t('sss'),'#required' => FALSE, '#suffix' => '<hr />');
-                
+                $form['fields']['modules'][$delta]['prefix_'.$delta] = $element;
+                $element = array('#type' => 'textfield','#title' => t('prefix value'),'#required' => FALSE);
+                $form['fields']['modules'][$delta]['value_'.$delta] = $element;
             }
         }
 
         $form['fields']['modules']['add'] = array(
-          '#type' => 'submit',
-          '#name' => 'addfield',
-          '#value' => t('Add more field'),
-          '#submit' => array(array($this, 'addfieldsubmit')),
-          '#ajax' => array(
-            'callback' => array($this, 'addfieldCallback'),
-            'wrapper' => 'modules-wrapper',
-            'effect' => 'fade',
-          ),
+            '#type' => 'submit',
+            '#name' => 'addfield',
+            '#value' => t('Add more field'),
+            '#submit' => array(array($this, 'addfieldsubmit')),
+            '#ajax' => array(
+                'callback' => array($this, 'addfieldCallback'),
+                'wrapper' => 'modules-wrapper',
+                'effect' => 'fade',
+            ),
         );
-     */
-    
+        
+        $form['fields']['modules']['remove'] = array(
+            '#type' => 'submit',
+            '#name' => 'removefield',
+            '#value' => t('Remove field'),
+            '#submit' => array(array($this, 'removefieldsubmit')),
+            '#ajax' => array(
+                'callback' => array($this, 'addfieldCallback'),
+                'wrapper' => 'modules-wrapper',
+                'effect' => 'fade',
+            ),
+        );
+        
+        $form['prefixes_num'] = array('#type' => 'hidden', '#value' => $max);
+        
         return parent::buildForm($form, $form_state);
     }
 
+   
+   
+    
      /**
     * Ajax submit to add new field.
     */
-  public function addfieldsubmit(array &$form, FormStateInterface &$form_state) {
-    $max = $form_state->get('fields_count') + 1;
-    $form_state->set('fields_count',$max);
-    $form_state->setRebuild(TRUE);
-  }
+    public function addfieldsubmit(array &$form, FormStateInterface &$form_state) {
+        $max = $form_state->get('fields_count') + 1;
+        $form_state->set('fields_count',$max);
+        $form_state->setRebuild(TRUE);
+    }
+    
+    /**
+    * Ajax submit to remove field.
+    */
+    public function removefieldsubmit(array &$form, FormStateInterface &$form_state) {
+        $max = $form_state->get('fields_count') -1;
+        $form_state->set('fields_count',$max);
+        $form_state->setRebuild(TRUE);
+    }
 
-  /**
+    /**
     * Ajax callback to add new field.
     */
-  public function addfieldCallback(array &$form, FormStateInterface &$form_state) {
-    return $form['fields']['modules'];
-  }
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-  }
+    public function addfieldCallback(array &$form, FormStateInterface &$form_state) {
+        return $form['fields']['modules'];
+    }
+    
+    /**
+    * {@inheritdoc}
+    */
+    public function validateForm(array &$form, FormStateInterface $form_state) {
+        parent::validateForm($form, $form_state);
+    }
 
-  /**
+    /**
    * {@inheritdoc}
    */
     public function submitForm(array &$form, FormStateInterface $form_state) {
         parent::submitForm($form, $form_state);
 
      
-
-
+        $prefNum = $form_state->getValue('prefixes_num');
+        
+        for ($index = 0; $index < count($prefNum) + 1; $index++) {
+            $val = $form_state->getValue('value_'.$index);
+            $url = urldecode($form_state->getValue('prefix_'.$index)); 
+            //$prefixes[$val] = urldecode($form_state->getValue('prefix_'.$index));            
+            $this->config('oeaw.settings')->set($url, $val )->save();
+            $this->config('oeaw.settings')->set('prefix_'.$index, $url )->save();
+            $this->config('oeaw.settings')->set('value_'.$index, $val )->save();
+        }
+        
+        $this->config('oeaw.settings')->set('prefNum', $prefNum)->save();
 
         $this->config('oeaw.settings')->set('fedora_url', $form_state->getValue('fedora_url'))->save();
     

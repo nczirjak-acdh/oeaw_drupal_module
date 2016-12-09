@@ -13,20 +13,14 @@ use Drupal\Core\Link;
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\oeawFunctions;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\SessionManagerInterface;
-use Drupal\user\PrivateTempStoreFactory;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
-
 
 
 
 class FrontendController extends ControllerBase {
-        
+   
     /* 
      *
-     * Here the oeaw module menu is generating with the availbale menuopints
+     * Here the oeaw module menu is generating with the available menupoints
      *
      * @return array with drupal core table values
     */
@@ -34,15 +28,19 @@ class FrontendController extends ControllerBase {
         
         $header = array('id' => t('MENU'));
         $rows = array();
-
+        
+        $uid = \Drupal::currentUser()->id();
+        
+        if($uid !== 0){
+            $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
+            $rows[2] = array('data' => array($link2));
+        }
+            
         $link = Link::fromTextAndUrl('List All Root Resource', Url::fromRoute('oeaw_roots'));
         $rows[0] = array('data' => array($link));
 
         $link1 = Link::fromTextAndUrl('Search by Meta data And URI', Url::fromRoute('oeaw_search'));
         $rows[1] = array('data' => array($link1));
-
-        $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
-        $rows[2] = array('data' => array($link2));        
         
         $table = array(
             '#type' => 'table',
@@ -69,16 +67,19 @@ class FrontendController extends ControllerBase {
         // get the root resources
         // sparql result fields - uri, title
         $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        $uid = \Drupal::currentUser()->id();
         
-        for ($i = 0; $i < count($result); $i++) {            
+        for ($i = 0; $i < count($result); $i++) {
             foreach($result[$i] as $key => $value){
                 // check that the value is an Url or not
                 $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
                 
                 //create details and editing urls
-                if($decodeUrl !== false){                             
-                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                if($decodeUrl !== false){
+                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                    if($uid !== 0){
+                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    } 
                 }
                 $res[$i][$key] = $value; 
             }
@@ -90,6 +91,7 @@ class FrontendController extends ControllerBase {
             '#theme' => 'oeaw_root_dt',
             '#result' => $res,
             '#header' => $header,
+            '#userid' => $uid,
             '#attached' => [
                 'library' => [
                 'oeaw/oeaw-styles', 
@@ -115,12 +117,14 @@ class FrontendController extends ControllerBase {
     public function oeaw_detail(string $uri, Request $request) {
         
         if (empty($uri)) {
-            return false;
+           return drupal_set_message(t('The uri is missing!'), 'error');
         }
         
         // decode the uri hash
         $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
-
+        
+        $uid = \Drupal::currentUser()->id();
+        
         // get the table data by the details uri from the URL
         $result = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
         
@@ -132,7 +136,9 @@ class FrontendController extends ControllerBase {
                 
                 if($decodeUrl !== false){         
                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                    $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    if($uid !== 0){
+                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    } 
                 }
                 
                 $res[$i][$key] = $value; 
@@ -156,7 +162,9 @@ class FrontendController extends ControllerBase {
 
                     if($decodeUrlC !== false){                             
                          $childResult[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
-                         $childResult[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;
+                        if($uid !== 0){
+                            $childResult[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;                            
+                        } 
                     } 
                     $childResult[$x][$keyC] = $valueC; 
                 }
@@ -179,6 +187,7 @@ class FrontendController extends ControllerBase {
             '#theme' => 'oeaw_detail_dt',
             '#result' => $result,
             '#header' => $header,
+            '#userid' => $uid,
             '#childResult' => $childResult,
             '#childHeader' => $childHeader,
             '#editResData' => $editResData,
@@ -220,6 +229,8 @@ class FrontendController extends ControllerBase {
         $metaKey = $_SESSION['oeaw_form_result_metakey'];
         $metaValue = $_SESSION['oeaw_form_result_metavalue'];
         
+        $uid = \Drupal::currentUser()->id();
+        
         $data = \Drupal\oeaw\oeawStorage::searchForData($metaValue, $metaKey);
         
         for ($i = 0; $i < count($data); $i++) {            
@@ -229,8 +240,10 @@ class FrontendController extends ControllerBase {
                 
                 //create details and editing urls
                 if($decodeUrl !== false){                             
-                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                    if($uid !== 0){
+                       $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    } 
                 }
                 $res[$i][$key] = $value; 
             }
@@ -243,7 +256,8 @@ class FrontendController extends ControllerBase {
         
         $datatable = array(
             '#theme' => 'oeaw_search_res_dt',
-            '#result' => $res,  
+            '#result' => $res,
+            '#userid' => $uid,
             '#searchedValues' => $searchArray,
             '#attached' => [
                 'library' => [
@@ -265,9 +279,16 @@ class FrontendController extends ControllerBase {
     */
 
     public function multi_new_resource() {
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');
         
-        return $form;
+        $uid = \Drupal::currentUser()->id();
+        
+        if($uid !== 0){
+            $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');        
+            return $form;
+        }else {
+            return drupal_set_message(t('You have no rights for this page!'), 'error');    
+        }
+        
     }
 
     /* 
@@ -286,10 +307,14 @@ class FrontendController extends ControllerBase {
         
         $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
         $data = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
-
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
-        return $form;
-        
+        $uid = \Drupal::currentUser()->id();
+        if($uid !== 0){            
+            $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');            
+            return $form;
+            
+        } else {
+            return drupal_set_message(t('You have no rights for this page!'), 'error');    
+        }
     }
     
     
@@ -306,9 +331,10 @@ class FrontendController extends ControllerBase {
         
         $property = $classesArr[0];
         $value =  $classesArr[1];
-     
+        $uid = \Drupal::currentUser()->id();
+        
         $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
-       
+     
         $res = array();
         for ($i = 0; $i < count($data); $i++) {            
             foreach($data[$i] as $key => $value){
@@ -317,8 +343,10 @@ class FrontendController extends ControllerBase {
                 
                 //create details and editing urls
                 if($decodeUrl !== false){                             
-                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                     $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                    if($uid !== 0 ){
+                       $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    }
                 }
                 $res[$i][$key] = $value; 
             }
@@ -332,6 +360,7 @@ class FrontendController extends ControllerBase {
         $datatable = array(
             '#theme' => 'oeaw_search_class_res_dt',
             '#result' => $res,  
+            '#userid' => $uid,
             '#searchedValues' => $searchArray,
             '#attached' => [
                 'library' => [
@@ -343,16 +372,6 @@ class FrontendController extends ControllerBase {
         return $datatable;
        
     } 
-    
-    public function oeaw_add_result(){
-        
-        
-        
-        die("itt");
-        
-        
-        
-    }
     
     
 }

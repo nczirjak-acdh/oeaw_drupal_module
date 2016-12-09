@@ -71,34 +71,25 @@ class ClassForm extends FormBase
     * {@inheritdoc}.
     */
     public function buildForm(array $form, FormStateInterface $form_state) 
-    {   
-       
-        $data = \Drupal\oeaw\oeawStorage::getClassesForSideBar();
+    {          
+        $data = \Drupal\oeaw\oeawStorage::getClassesForSideBar();        
         
         /* get the fields from the sparql query */
         $fields = array_keys($data[0]);
         
         $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromArray($data, $fields);
         
-        foreach($searchTerms["type"] as $terms){
-            $select[$terms] = t($terms);
+        foreach($searchTerms["type"] as $terms){            
+            
+            $form[$terms] = array(
+                '#type' => 'submit',
+                '#name' => 'class',
+                '#value' => $this->t($terms),                
+                '#button_type' => 'primary',
+                '#prefix' => "<br/>",
+            );
         }
-        
-        $form['classes'] = array (
-          '#type' => 'select',
-          '#title' => ('Classes'),
-          '#required' => TRUE,
-          '#options' => 
-              $select
-        );
-               
-        $form['actions']['#type'] = 'actions';
-        $form['actions']['submit'] = array(
-          '#type' => 'submit',
-          '#value' => $this->t('Get Childrens'),
-          '#button_type' => 'primary',
-        );
-        
+       
         return $form;
     }
     
@@ -116,7 +107,7 @@ class ClassForm extends FormBase
   
     public function submitForm(array &$form, FormStateInterface $form_state) {
             
-        $classes = $form_state->getValue('classes');
+        $classes = $form_state->getValue('class');
         
         $tempstore = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->set('classes_search', $classes);
                 

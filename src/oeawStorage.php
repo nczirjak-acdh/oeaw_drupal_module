@@ -8,6 +8,7 @@ use Drupal\oeaw\connData;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\SparqlEndpoint;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Component\Render\MarkupInterface;
 
 class oeawStorage {
 
@@ -32,7 +33,7 @@ class oeawStorage {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
         if(empty($sparqlConfig)){
-            drupal_set_message('Error in the getDigitalResources function!', 'error');
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
         }
 
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
@@ -59,7 +60,7 @@ class oeawStorage {
             return $getResult;
             
         } catch (Exception $ex) {            
-            throw new Exception("Error during the getRootFromDB function");
+            return drupal_set_message(t('There was an error in the function: getRootFromDB'), 'error');
         }
     }
     
@@ -75,12 +76,17 @@ class oeawStorage {
     public static function getAllPropertyByURI(string $uri) {
         
         if (empty($uri)) {
-            throw new Exception('URI empty');
+            throw new \Exception('URI empty');
         }
 
         try {
             
             $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+            
+            if(empty($sparqlConfig)){
+                return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+            }
+            
             $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
             
             $result = $sparql->query(
@@ -99,7 +105,7 @@ class oeawStorage {
             return $getResult;
             
         } catch (Exception $ex) {            
-            throw new Exception("Error during the getAllPropertyByURI function");
+            return drupal_set_message(t('There was an error in the function: getAllPropertyByURI'), 'error');
         }
     }
 
@@ -114,12 +120,17 @@ class oeawStorage {
     public static function getChildrenPropertyByRoot(string $uri) {
         
         if (empty($uri)) {
-            throw new Exception('URI empty');
+            throw new \Exception('URI empty');
         }
         
         try {
             
             $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+            
+            if(empty($sparqlConfig)){
+                return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+            }
+            
             $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
             
             $result = $sparql->query(
@@ -138,7 +149,7 @@ class oeawStorage {
             return $getResult;
             
         } catch (Exception $ex) {            
-            throw new Exception("Error during the getChildrenPropertyByRoot function");
+            return drupal_set_message(t('There was an error in the function: getChildrenPropertyByRoot'), 'error');
         }
     }
     
@@ -155,7 +166,7 @@ class oeawStorage {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
         if(empty($sparqlConfig)){
-            return false;
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
         }
         
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
@@ -178,7 +189,7 @@ class oeawStorage {
             
         } catch (Exception $ex) {
             
-            throw new \Exception('error during the sparql query!');
+            return drupal_set_message(t('There was an error in the function: getAllPropertyForSearch'), 'error');
         }        
     }
     
@@ -194,7 +205,7 @@ class oeawStorage {
     public static function getDataByProp(string $property, string $value = null) {
         
         if (empty($property)) {
-            throw new Exception('Property empty');
+            return drupal_set_message(t('Empty values!'), 'error');
         }
                 
         if(!filter_var($property, FILTER_VALIDATE_URL)){
@@ -213,6 +224,9 @@ class oeawStorage {
         }        
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);        
         
         try {        
@@ -225,7 +239,8 @@ class oeawStorage {
                         . ' WHERE {'
                             . ' ?uri ' . $property . ' ?value . '
                         . '}');
-            } else {                      
+            } else {    
+               
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
@@ -242,9 +257,8 @@ class oeawStorage {
 
             return $getResult;                
         
-        } catch (Exception $ex) {
-            
-            throw new \Exception('error during the sparql query!');
+        } catch (Exception $ex) {            
+            return drupal_set_message(t('There was an error in the function: getDataByProp'), 'error');
         }
     }
     
@@ -257,6 +271,11 @@ class oeawStorage {
     public static function getClass() {
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
@@ -277,7 +296,7 @@ class oeawStorage {
             return $getResult; 
             
         } catch (Exception $ex) {
-            throw new \Exception('error during the sparql query!');
+            return drupal_set_message(t('There was an error in the function: getClass'), 'error');
         }    
         
     }
@@ -292,6 +311,11 @@ class oeawStorage {
     public function getDigitalResources()
     {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
@@ -323,9 +347,8 @@ class oeawStorage {
 
             return $getResult;
             
-        } catch (Exception $ex) {
-            //drupal_set_message($this->t('Error in the getDigitalResources function!'), 'error');
-            throw new Exception('error during the getDigitalResources function!');
+        } catch (Exception $ex) {            
+             return drupal_set_message(t('There was an error in the function: getDigitalResources'), 'error');
         }
     }
     
@@ -341,6 +364,11 @@ class oeawStorage {
     public static function getClassMeta($classURI){
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
@@ -368,8 +396,7 @@ class oeawStorage {
             
             
         } catch (Exception $ex) {
-
-             throw new Exception($ex->getMessage());
+            return drupal_set_message(t('There was an error in the function: getClassMeta'), 'error');
         }
       
     }
@@ -387,6 +414,11 @@ class oeawStorage {
     public function getValueByUriProperty($uri, $resourceProperty){
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
@@ -409,7 +441,7 @@ class oeawStorage {
             return $getResult;
 
         } catch (Exception $ex) {
-            throw new Exception('error durong the sparql query!');
+             return drupal_set_message(t('There was an error in the function: getValueByUriProperty'), 'error');
         }
     }
     
@@ -427,10 +459,15 @@ class oeawStorage {
     public static function getDefPropByURI(string $uri, string $property, string $value=null) {
         
         if (empty($uri) && empty($property)) {
-            throw new Exception('Property or/and uri is empty.');
+             return drupal_set_message(t('Empty values!'), 'error');
         }
 
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         if ($value == null) {
@@ -452,7 +489,7 @@ class oeawStorage {
                 return $getResult;
                 
             } catch (Exception $ex) {
-                throw new \Exception('error durong the sparql query!');
+                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
             }
         } else {
             
@@ -475,7 +512,7 @@ class oeawStorage {
                 return $getResult;                
                 
             } catch (Exception $ex) {
-                throw new \Exception('error during the sparql query!');
+                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
             }
         }        
     }
@@ -483,6 +520,11 @@ class oeawStorage {
     public function searchForData(string $value, string $property){
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
@@ -508,7 +550,7 @@ class oeawStorage {
             return $getResult;
 
         } catch (Exception $ex) {
-            throw new Exception('error durong the sparql query!');
+            return drupal_set_message(t('There was an error in the function: searchForData'), 'error');
         }
         
     }
@@ -517,6 +559,11 @@ class oeawStorage {
     public function getClassesForSideBar()
     {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
@@ -532,7 +579,7 @@ class oeawStorage {
             return $getResult;
 
         } catch (Exception $ex) {
-            throw new Exception('error durong the sparql query!');
+            return drupal_set_message(t('There was an error in the function: getClassesForSideBar'), 'error');
         }
         
     }
