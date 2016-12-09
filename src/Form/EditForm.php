@@ -93,7 +93,7 @@ class EditForm extends FormBase {
         
         foreach($classValue as $cv){
             if(!empty($cv["value"])){
-                if (strpos($cv["value"], 'http://vocabs.acdh.oeaw.ac.at') !== false) {
+                if (strpos($cv["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
                     $classVal[] = $cv["value"];
                 }
             }
@@ -103,9 +103,9 @@ class EditForm extends FormBase {
 /*        if(count($classVal) == 0){
             $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
         }
-  */      
+  */    
         if(!empty($classVal)){
-            foreach($classVal as $cval){                    
+            foreach($classVal as $cval){   
                 $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
                 $actualClassUri = $cval;
             }

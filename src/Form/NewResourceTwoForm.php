@@ -88,11 +88,9 @@ class NewResourceTwoForm extends NewResourceFormBase {
                $expProp = str_replace('#', '', $expProp);
             }
             
-            if($expProp == 'isPartOf'){
-                $defaultValue = $rootTitle;        
+            if($expProp == 'isPartOf'){                
                 $attributes =  array('readonly' => 'readonly');
-            }else{
-                $defaultValue = $this->store->get($m) ? $this->store->get($m) : '';
+            }else{                
                 $attributes = "";
             }
 
