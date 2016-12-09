@@ -69,6 +69,9 @@ class NewResourceTwoForm extends NewResourceFormBase {
         foreach($metadataQuery as $m){            
             $metadata[] = $m["id"];
         }
+        
+        $rootIdentifier = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dct:identifier");
+        $rootIdentifier = $rootIdentifier[0]["value"];
                 
         $fieldsArray = array();
         
@@ -81,7 +84,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
             }
             
             if($expProp == 'isPartOf'){
-                $defaultValue = $root;
+                $defaultValue = $rootIdentifier;
                 $attributes =  array('readonly' => 'readonly');
             }else{
                 $defaultValue = $this->store->get($m) ? $this->store->get($m) : '';
