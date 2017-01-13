@@ -1,4 +1,5 @@
-jq2 = jQuery.noConflict();
+var jq2 = jQuery;
+jQuery.noConflict(true);
 jq2(function( $ ) {
-       $('table.display').DataTable();
+       jq2('table.display').DataTable();
 });

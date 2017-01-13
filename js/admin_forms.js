@@ -1,4 +1,5 @@
-jq2 = jQuery.noConflict();
+var jq2 = jQuery;
+jQuery.noConflict(true);
 jq2(function( $ ) {
      
         var max_fields      = 10; //maximum input boxes allowed

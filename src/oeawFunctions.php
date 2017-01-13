@@ -6,9 +6,28 @@ use Drupal\Core\Url;
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\connData;
 use Drupal\Component\Render\MarkupInterface;
+use acdhOeaw\fedora\Fedora;
+use acdhOeaw\fedora\FedoraResource;
+use zozlak\util\Config;
+use EasyRdf_Graph;
+use EasyRdf_Resource;
+use acdhOeaw\util\EasyRdfUtil;
  
 class oeawFunctions {
        
+    
+    public function makeGraph($uri){
+     
+        // setup fedora
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config);
+        //create and load the data to the graph
+        $res = $fedora->getResourceByUri($uri);
+        $meta = $res->getMetadata();
+        $graph = $meta->getGraph();
+        
+        return $graph;
+    }
     
     /* 
      *

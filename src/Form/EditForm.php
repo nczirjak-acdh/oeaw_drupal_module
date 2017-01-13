@@ -11,6 +11,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use zozlak\util\Config;
+use EasyRdf_Graph;
+use EasyRdf_Resource;
+use acdhOeaw\util\EasyRdfUtil;
 
 
 class EditForm extends FormBase {
@@ -87,23 +90,32 @@ class EditForm extends FormBase {
             }            
         }
         
-        // get the actual class acdh rdf:type to we can compare it with the digResource
-        // if this is a binaryResource then we need to show the file upload possibility
-        $classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
+        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
         
+        //get tge identifier from the graph and convert the easyrdf_resource object to php array
+        $classValue = $classGraph->get($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'))->toRdfPhp();
+        
+        if (strpos($classValue["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
+                    $classVal[] = $classValue["value"];
+                }
+        
+        //old method
+        //$classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
+        /*
         foreach($classValue as $cv){
             if(!empty($cv["value"])){
                 if (strpos($cv["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
                     $classVal[] = $cv["value"];
                 }
             }
-        }
+        }*/
         
         //if the resource does not have any acdh then we add one - WE NEED THIS OVER THE TEST!!!!
 /*        if(count($classVal) == 0){
             $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
         }
   */    
+        
         if(!empty($classVal)){
             foreach($classVal as $cval){   
                 $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
@@ -130,12 +142,16 @@ class EditForm extends FormBase {
 
         $attributes = array();
         
+        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
+        
         for($i=0; $i < count($editUriClassMetaFields); $i++){
             
             // get the field values based on the edituri and the metadata uri
-            $value = \Drupal\oeaw\oeawStorage::getValueByUriProperty($editUri, $editUriClassMetaFields[$i]["id"]);
-           
-            $value = $value[0]["value"];
+            //$value = \Drupal\oeaw\oeawStorage::getValueByUriProperty($editUri, $editUriClassMetaFields[$i]["id"]);
+            $value = $classGraph->get($editUri,EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
+            
+            //$value = $value[0]["value"];
+            $value = $value["value"];
             
             // get the field uri s last part to show it as a label title
             $label = explode("/", $editUriClassMetaFields[$i]["id"]);                

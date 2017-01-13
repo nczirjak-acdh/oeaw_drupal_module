@@ -4,6 +4,16 @@ namespace Drupal\oeaw\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use acdhOeaw\fedora\Fedora;
+use acdhOeaw\fedora\FedoraResource;
+use zozlak\util\Config;
+use EasyRdf_Graph;
+use EasyRdf_Resource;
+use acdhOeaw\util\EasyRdfUtil;
+use InvalidArgumentException;
+use RuntimeException;
+
+
 
 class NewResourceTwoForm extends NewResourceFormBase {
 
@@ -16,6 +26,8 @@ class NewResourceTwoForm extends NewResourceFormBase {
     public function getFormId() {
         return 'multistep_form_two';
     }
+    
+
 
     /* 
      *
@@ -46,15 +58,19 @@ class NewResourceTwoForm extends NewResourceFormBase {
             }            
         }
         
+        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($class);
+        $classID = $classGraph->get($class,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
+        if(!empty($classID)){
+            $classValue = $classID["value"];
+        }
         // get the actual class dct:identifier to we can compare it with the digResource
-        $classValue = \Drupal\oeaw\oeawStorage::getValueByUriProperty($class, "dct:identifier"); 
-        
-        foreach($classValue as $cv){
+        //$classValue = \Drupal\oeaw\oeawStorage::getValueByUriProperty($class, "dct:identifier");
+        /*foreach($classValue as $cv){
             
             if(!empty($cv["value"])){
                 $classValue = $cv["value"];
             }
-        }
+        }*/
         
         //we store the ontology identifier for the saving process
         $this->store->set('ontologyClassIdentifier', $classValue);
@@ -70,11 +86,24 @@ class NewResourceTwoForm extends NewResourceFormBase {
             $metadata[] = $m["id"];
         }
         
-        $rootIdentifier = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dct:identifier");
-        $rootIdentifier = $rootIdentifier[0]["value"];
-                
+        $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($root);
+        //get tge identifier from the graph and convert the easyrdf_resource object to php array
+        $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
+        //get the value of the property
+        $rootIdentifier = $rootID["value"];
+        
+        //old solution
+        //$rootIdentifier = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dct:identifier");
+        //$rootIdentifier = $rootIdentifier[0]["value"];
+        
         $fieldsArray = array();
         
+       $form['input_fields']['nid'] = array(
+            '#type' => 'textfield',
+            '#title' => t('example autocomplete field'),
+            '#autocomplete_route_name' => 'oeaw.autocomplete',            
+        );
+
         foreach ($metadata as $m) {
             
             $expProp = explode("/", $m);            

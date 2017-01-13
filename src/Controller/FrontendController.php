@@ -12,11 +12,49 @@ use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\oeawFunctions;
+use acdhOeaw\fedora\Fedora;
+use acdhOeaw\fedora\FedoraResource;
+use zozlak\util\Config;
+use EasyRdf_Graph;
+use EasyRdf_Resource;
+use acdhOeaw\util\EasyRdfUtil;
+//autocomplete
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 
-
 class FrontendController extends ControllerBase {
+    
+    
+    public function oeaw_ac_form(){
+        
+        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AutoCompleteForm');
+        return $form;        
+    }
+    
+    public function autocomplete(request $request) {
+        
+        $matches = array();
+        $string = $request->query->get('q');
+
+        /*if ($string) {
+          $matches = array();
+          $query = \Drupal::entityQuery('node')
+          ->condition('status', 1)
+          ->condition('title', '%'.db_like($string).'%', 'LIKE');
+          //->condition('field_tags.entity.name', 'node_access');
+          $nids = $query->execute();
+          $result = entity_load_multiple('node', $nids);
+          foreach ($result as $row) {
+            //$matches[$row->nid->value] = $row->title->value;
+
+          }
+        }*/
+        $matches[] = ['label' => $string.'-->this is the result'];
+
+        return new JsonResponse($matches);
+    }
+    
    
     /* 
      *
@@ -102,8 +140,6 @@ class FrontendController extends ControllerBase {
         return $datatable;
     }
     
-    
-    
     /* 
      *
      * this generates the detail view when a user clicked the detail href on a reuslt page
@@ -145,12 +181,15 @@ class FrontendController extends ControllerBase {
             }
         }
         $header = array_keys($res[0]);
-        //get the root identifier to i can get the children elements
-        $rootIdentifier = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dct:identifier');
+        //get the root identifier to i can get the children elements        
+        //$rootIdentifier = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dct:identifier');
+        
+        $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($uri);
+        $rootIdentifier = $rootGraph->get($uri,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
 
         if(!empty($rootIdentifier)){
             //get the childrens data by the root             
-            $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier[0]["value"]);
+            $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier["value"]);
             
             $childHeader = array_keys($childrenData[0]);
             

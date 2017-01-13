@@ -5,10 +5,12 @@ namespace Drupal\oeaw;
 use Drupal\Core\Url;
 use Drupal\oeaw\oeawFunctions;
 use Drupal\oeaw\connData;
-use acdhOeaw\fedora\FedoraResource;
-use acdhOeaw\util\SparqlEndpoint;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Component\Render\MarkupInterface;
+use acdhOeaw\fedora\Fedora;
+use acdhOeaw\fedora\FedoraResource;
+use acdhOeaw\util\SparqlEndpoint;
+use zozlak\util\Config;
 
 class oeawStorage {
 
@@ -35,7 +37,7 @@ class oeawStorage {
         if(empty($sparqlConfig)){
             return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
         }
-
+      
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
         try {
@@ -78,7 +80,7 @@ class oeawStorage {
         if (empty($uri)) {
             throw new \Exception('URI empty');
         }
-
+        
         try {
             
             $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
@@ -444,78 +446,7 @@ class oeawStorage {
              return drupal_set_message(t('There was an error in the function: getValueByUriProperty'), 'error');
         }
     }
-    
-    
-     /*
-     * Get all data by, Uri, Property and value
-     * 
-     * @uri Fedora resource uri
-     * @property property what value is intresting for us
-     * @value optional
-     * 
-     * @return Array
-     * 
-    */
-    public static function getDefPropByURI(string $uri, string $property, string $value=null) {
-        
-        if (empty($uri) && empty($property)) {
-             return drupal_set_message(t('Empty values!'), 'error');
-        }
-
-        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-        
-        if(empty($sparqlConfig)){
-            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
-        }
-        
-        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-        
-        if ($value == null) {
-            // the result will be an EasyRdf_Sparql_Result Object
-            try {                
-                $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?property ?value '
-                        . 'WHERE { '
-                            . '<' . $uri . '> ?property ?value . '
-                            . '<' . $uri . '> ' . $property . ' ?value . '
-                        . '}');
-                
-                $fields = $result->getFields(); 
-
-                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-                return $getResult;
-                
-            } catch (Exception $ex) {
-                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
-            }
-        } else {
-            
-            try {
-                
-                $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?property ? value '
-                        . 'WHERE { '
-                            . '<' . $uri . '> ?property ?value . '
-                            . '<' . $uri . '> ' . $property . ' ?value . '
-                            . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
-                        . '}');
-                
-                $fields = $result->getFields(); 
-
-                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-                return $getResult;                
-                
-            } catch (Exception $ex) {
-                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
-            }
-        }        
-    }
+     
     
     public function searchForData(string $value, string $property){
         
@@ -582,6 +513,79 @@ class oeawStorage {
             return drupal_set_message(t('There was an error in the function: getClassesForSideBar'), 'error');
         }
         
+    }
+    
+    
+    /*
+     * Get all data by, Uri, Property and value
+     * 
+     * @uri Fedora resource uri
+     * @property property what value is intresting for us
+     * @value optional
+     * 
+     * @return Array
+     * 
+    */
+    //////////////////// NOT IN USE \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    public static function getDefPropByURI(string $uri, string $property, string $value=null) {
+        
+        if (empty($uri) && empty($property)) {
+             return drupal_set_message(t('Empty values!'), 'error');
+        }
+
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
+        
+        if ($value == null) {
+            // the result will be an EasyRdf_Sparql_Result Object
+            try {                
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?property ?value '
+                        . 'WHERE { '
+                            . '<' . $uri . '> ?property ?value . '
+                            . '<' . $uri . '> ' . $property . ' ?value . '
+                        . '}');
+                
+                $fields = $result->getFields(); 
+
+                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+                return $getResult;
+                
+            } catch (Exception $ex) {
+                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
+            }
+        } else {
+            
+            try {
+                
+                $result = $sparql->query(
+                        self::$prefixes . ' '
+                        . 'SELECT '
+                            . '?property ? value '
+                        . 'WHERE { '
+                            . '<' . $uri . '> ?property ?value . '
+                            . '<' . $uri . '> ' . $property . ' ?value . '
+                            . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
+                        . '}');
+                
+                $fields = $result->getFields(); 
+
+                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+                return $getResult;                
+                
+            } catch (Exception $ex) {
+                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
+            }
+        }        
     }
             
 

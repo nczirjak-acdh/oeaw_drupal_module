@@ -123,7 +123,7 @@ abstract class NewResourceFormBase extends FormBase {
         // recognize the ontologyclass and required fields to the editing form
         $meta->addResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", $ontologyClassIdentifier);  
         //load the config file
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');                
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         
         $fedora = new Fedora($config);      
         $fedora->begin();        
