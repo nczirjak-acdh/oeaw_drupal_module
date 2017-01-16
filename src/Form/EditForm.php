@@ -6,14 +6,22 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\Core\Url;
 use Drupal\user\PrivateTempStoreFactory;
+
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
+use acdhOeaw\util\EasyRdfUtil;
 use zozlak\util\Config;
+
 use EasyRdf_Graph;
 use EasyRdf_Resource;
-use acdhOeaw\util\EasyRdfUtil;
+
+
 
 
 class EditForm extends FormBase {
@@ -144,6 +152,31 @@ class EditForm extends FormBase {
         
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
         
+        /*
+        $fedora = new Fedora($config);
+        //create and load the data to the graph
+        $prop = $fedora->getResourceById($propUri);
+        $propMeta = $prop->getMetadata();
+        error_log("meta: ");
+        error_log(var_dump($propMeta));
+
+        $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+        
+        if($rangeRes === null){          
+            error_log("errorban");
+            return JsonResponse($matches); // range property is missing - no autocompletion
+        }
+        $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
+        error_log("resources");
+        error_log(print_r($resources));
+        $matches = array();
+        foreach($resources as $i){            
+            $matches[] = $i->getUri();            
+        }
+        */
+        
+        //create and load the data to the graph
+        
         for($i=0; $i < count($editUriClassMetaFields); $i++){
             
             // get the field values based on the edituri and the metadata uri
@@ -172,6 +205,8 @@ class EditForm extends FormBase {
                 '#title' => $this->t($label),
                 '#default_value' => $value,  
                 '#attributes' => $attributes,
+                '#autocomplete_route_name' => 'oeaw.autocomplete',
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'prop2' => strtr(base64_encode($editUri), '+/=', '-_,') ), 
             );
             
             //create the hidden propertys to the saving methods

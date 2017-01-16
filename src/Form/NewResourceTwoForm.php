@@ -82,6 +82,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
         // get the actual class metadata
         $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);
         
+
         foreach($metadataQuery as $m){            
             $metadata[] = $m["id"];
         }
@@ -97,15 +98,9 @@ class NewResourceTwoForm extends NewResourceFormBase {
         //$rootIdentifier = $rootIdentifier[0]["value"];
         
         $fieldsArray = array();
-        
-       $form['input_fields']['nid'] = array(
-            '#type' => 'textfield',
-            '#title' => t('example autocomplete field'),
-            '#autocomplete_route_name' => 'oeaw.autocomplete',            
-        );
+       
+        foreach ($metadata as $m) {            
 
-        foreach ($metadata as $m) {
-            
             $expProp = explode("/", $m);            
             $expProp = end($expProp);
             if (strpos($expProp, '#') !== false) {
@@ -131,6 +126,8 @@ class NewResourceTwoForm extends NewResourceFormBase {
                 '#title' => $this->t($label),                
                 '#default_value' => $defaultValue,                
                 '#attributes' => $attributes,
+                '#autocomplete_route_name' => 'oeaw.autocomplete',
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m), '+/=', '-_,'), 'prop2' => 'prop2_value'), 
             );
 
             $labelVal = str_replace(' ', '+', $label);

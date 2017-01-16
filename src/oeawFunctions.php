@@ -29,6 +29,18 @@ class oeawFunctions {
         return $graph;
     }
     
+    public function getMetaById($uri){
+     
+        // setup fedora
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config);
+        //create and load the data to the graph
+        $res = $fedora->getResourceById($uri);
+        $meta = $res->getMetadata();        
+        
+        return $meta;
+    }
+    
     /* 
      *
      * Simple function to create array from sparql object, to we can pass data to the datatables     

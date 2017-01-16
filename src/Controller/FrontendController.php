@@ -32,30 +32,37 @@ class FrontendController extends ControllerBase {
         return $form;        
     }
     
-    public function autocomplete(request $request) {
+    public function autocomplete(request $request, $prop1, $prop2) {
         
         $matches = array();
         $string = $request->query->get('q');
+        //f.e.: depositor
+        $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
+        // this is the fedora.localhost url
+        $resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
+        
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config);      
+        $prop = $fedora->getResourceById($propUri);
+        $propMeta = $prop->getMetadata();
+        $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
 
-        /*if ($string) {
-          $matches = array();
-          $query = \Drupal::entityQuery('node')
-          ->condition('status', 1)
-          ->condition('title', '%'.db_like($string).'%', 'LIKE');
-          //->condition('field_tags.entity.name', 'node_access');
-          $nids = $query->execute();
-          $result = entity_load_multiple('node', $nids);
-          foreach ($result as $row) {
-            //$matches[$row->nid->value] = $row->title->value;
-
-          }
-        }*/
-        $matches[] = ['label' => $string.'-->this is the result'];
-
+        $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
+        //
+        foreach($resources as $i){
+            //if the user input available in the resource then we 
+            //gives back a filtered array with the results
+            if (strpos($i->getUri(), $string) !== false) {
+                $matches[] = ['label' => $i->getUri()];
+            }
+        }
+        
         return new JsonResponse($matches);
     }
     
-   
+    //http://fedora.localhost/rest/a4/d6/b8/cc/a4d6b8cc-a019-484a-a867-940183f9c49e
+    
+   //http://fedora.localhost/rest/36/87/e1/f6/3687e1f6-a9fa-42ba-b262-1c3b90af14b3
     /* 
      *
      * Here the oeaw module menu is generating with the available menupoints
