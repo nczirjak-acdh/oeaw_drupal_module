@@ -404,38 +404,47 @@ class FrontendController extends ControllerBase {
      *     
     */
     public function oeaw_classes_result(){
-        
-        $class = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->get('classes_search');
-        
-        $classesArr = explode(":", $class);
-        
-        $property = $classesArr[0];
-        $value =  $classesArr[1];
-        $uid = \Drupal::currentUser()->id();
-        
-        $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
-     
-        $res = array();
-        for ($i = 0; $i < count($data); $i++) {            
-            foreach($data[$i] as $key => $value){
-                // check that the value is an Url or not
-                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
                 
-                //create details and editing urls
-                if($decodeUrl !== false){                             
-                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                    if($uid !== 0 ){
-                       $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                    }
-                }
-                $res[$i][$key] = $value; 
-            }
-        }
+        $url = Url::fromRoute('<current>');
+        $internalpath = $url->getInternalPath();
+        $internalpath = explode("/", $internalpath);
         
-        $searchArray = array(
-            "metaKey" => $classesArr[0],
-            "metaValue" => $classesArr[1]
-        );
+        if($internalpath[0] == "oeaw_classes_result"){
+            
+            $searchResult = urldecode($internalpath[1]);
+            $classesArr = explode(":", $searchResult);        
+            $property = $classesArr[0];
+            $value =  $classesArr[1];
+            $uid = \Drupal::currentUser()->id();
+
+            //$data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
+            $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $searchResult);
+
+            $res = array();
+            for ($i = 0; $i < count($data); $i++) {            
+                foreach($data[$i] as $key => $value){
+                    // check that the value is an Url or not
+                    $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+
+                    //create details and editing urls
+                    if($decodeUrl !== false){                             
+                        $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                        if($uid !== 0 ){
+                           $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                        }
+                    }
+                    $res[$i][$key] = $value; 
+                }
+            }
+
+            $searchArray = array(
+                "metaKey" => $classesArr[0],
+                "metaValue" => $classesArr[1]
+            );
+        }else {
+            $searchArray = array();
+            $res = array();
+        }
         
         $datatable = array(
             '#theme' => 'oeaw_search_class_res_dt',

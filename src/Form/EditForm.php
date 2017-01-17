@@ -8,259 +8,246 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Core\Url;
 use Drupal\user\PrivateTempStoreFactory;
-
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\EasyRdfUtil;
 use zozlak\util\Config;
-
 use EasyRdf_Graph;
 use EasyRdf_Resource;
 
-
-
-
 class EditForm extends FormBase {
 
-    
     /**
-    * @var \Drupal\user\PrivateTempStoreFactory
-    */
+     * @var \Drupal\user\PrivateTempStoreFactory
+     */
     protected $tempStoreFactory;
 
     /**
-    * @var \Drupal\Core\Session\SessionManagerInterface
-    */
+     * @var \Drupal\Core\Session\SessionManagerInterface
+     */
     private $sessionManager;
 
     /**
-    * @var \Drupal\Core\Session\AccountInterface
-    */
+     * @var \Drupal\Core\Session\AccountInterface
+     */
     private $currentUser;
 
     /**
-    * @var \Drupal\user\PrivateTempStore
-    */
-    protected $store;    
-    
-    /**   
-   *
-   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
-   * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   */
-    
+     * @var \Drupal\user\PrivateTempStore
+     */
+    protected $store;
+
+    /**
+     *
+     * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+     * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
+     * @param \Drupal\Core\Session\AccountInterface $current_user
+     */
     public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
-    
+
         $this->tempStoreFactory = $temp_store_factory;
         $this->sessionManager = $session_manager;
         $this->currentUser = $current_user;
-        
+
         $this->store = $this->tempStoreFactory->get('edit_form');
     }
-    
-    public static function create(ContainerInterface $container){
+
+    public static function create(ContainerInterface $container) {
         return new static(
-                $container->get('user.private_tempstore'),
-                $container->get('session_manager'),
-                $container->get('current_user')
+                $container->get('user.private_tempstore'), $container->get('session_manager'), $container->get('current_user')
         );
     }
-    
+
     public function getFormId() {
         return "edit_form";
     }
 
-   
     public function buildForm(array $form, FormStateInterface $form_state) {
-        
+
         //get the hash uri from the url, based on the drupal routing file
-        $editHash= \Drupal::request()->get('uri');
-        
-        if (empty($editHash)) {  
+        $editHash = \Drupal::request()->get('uri');
+
+        if (empty($editHash)) {
             drupal_set_message($this->t('the uri is not exists!'), 'error');
         }
-        
-       $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
+
+        $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
 
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
-        
+
         $digitalResources = array();
-        
-        foreach($digitalResQuery as $dr){            
-            if(isset($dr["collection"])){
+
+        foreach ($digitalResQuery as $dr) {
+            if (isset($dr["collection"])) {
                 $digitalResources[] = $dr["id"];
-            }            
-        }
-        
-        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
-        
-        //get tge identifier from the graph and convert the easyrdf_resource object to php array
-        $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
-        
-        foreach($classValue as $v){            
-            if (strpos($v->getUri(), 'vocabs.acdh.oeaw.ac.at') !== false) {
-                    $classVal[] = $v->getUri();
             }
         }
-        
+
+        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
+
+        //get tge identifier from the graph and convert the easyrdf_resource object to php array
+        $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
+
+        foreach ($classValue as $v) {
+            if (strpos($v->getUri(), 'vocabs.acdh.oeaw.ac.at') !== false) {
+                $classVal[] = $v->getUri();
+            }
+        }
+
 
         if (strpos($classValue["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
-                    $classVal[] = $classValue["value"];
+            $classVal[] = $classValue["value"];
         }
-        
+
         //old method
         //$classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
         /*
-        foreach($classValue as $cv){
-            if(!empty($cv["value"])){
-                if (strpos($cv["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
-                    $classVal[] = $cv["value"];
-                }
-            }
-        }*/
-        
-        //if the resource does not have any acdh then we add one - WE NEED THIS OVER THE TEST!!!!
-/*        if(count($classVal) == 0){
-            $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
-        }
-  */    
+          foreach($classValue as $cv){
+          if(!empty($cv["value"])){
+          if (strpos($cv["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
+          $classVal[] = $cv["value"];
+          }
+          }
+          } */
 
-        if(!empty($classVal)){
-            foreach($classVal as $cval){   
-                $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
+        //if the resource does not have any acdh then we add one - WE NEED THIS OVER THE TEST!!!!
+        /*        if(count($classVal) == 0){
+          $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
+          }
+         */
+
+        if (!empty($classVal)) {
+            foreach ($classVal as $cval) {
+                $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);
                 $actualClassUri = $cval;
             }
-        }else {
+        } else {
             drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
         }
-       
-       
-        if(empty($editUriClass)){
+
+
+        if (empty($editUriClass)) {
             drupal_set_message($this->t('URI Class is empty!!'), 'error');
-        }   
-        
+        }
+
         // this will contains the onotology uri, what will helps to use to know
         // which fields we need to show in the editing form
         $editUriClass = $editUriClass[0]["uri"];
-                
+
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
-        
+
         // temporary fix - Mateusz and Norbert - 25. nov. 2016
-        $editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
+        //$editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
 
         $attributes = array();
-        
-        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
-        
-        /*
-        $fedora = new Fedora($config);
-        //create and load the data to the graph
-        $prop = $fedora->getResourceById($propUri);
-        $propMeta = $prop->getMetadata();
-        error_log("meta: ");
-        error_log(var_dump($propMeta));
 
-        $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
-        
-        if($rangeRes === null){          
-            error_log("errorban");
-            return JsonResponse($matches); // range property is missing - no autocompletion
-        }
-        $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
-        error_log("resources");
-        error_log(print_r($resources));
-        $matches = array();
-        foreach($resources as $i){            
-            $matches[] = $i->getUri();            
-        }
-        */
-        
+        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
+
+        /*
+          $fedora = new Fedora($config);
+          //create and load the data to the graph
+          $prop = $fedora->getResourceById($propUri);
+          $propMeta = $prop->getMetadata();
+          error_log("meta: ");
+          error_log(var_dump($propMeta));
+
+          $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+
+          if($rangeRes === null){
+          error_log("errorban");
+          return JsonResponse($matches); // range property is missing - no autocompletion
+          }
+          $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
+          error_log("resources");
+          error_log(print_r($resources));
+          $matches = array();
+          foreach($resources as $i){
+          $matches[] = $i->getUri();
+          }
+         */
+
         //create and load the data to the graph
-        
-        for($i=0; $i < count($editUriClassMetaFields); $i++){
-            
+
+        for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
+
             // get the field values based on the edituri and the metadata uri
             //$value = \Drupal\oeaw\oeawStorage::getValueByUriProperty($editUri, $editUriClassMetaFields[$i]["id"]);
-
             //if the property is not exists then we need to avoid the null error message
-            $value = $classGraph->get($editUri,EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
-            if(!empty($value)){
-                $value = $classGraph->get($editUri,EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
+            $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
+            if (!empty($value)) {
+                $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
                 $value = $value["value"];
-            }else {
+            } else {
                 $value = "";
             }
 
 
-         // get the field uri s last part to show it as a label title
-            $label = explode("/", $editUriClassMetaFields[$i]["id"]);                
+            // get the field uri s last part to show it as a label title
+            $label = explode("/", $editUriClassMetaFields[$i]["id"]);
             $label = end($label);
             $label = str_replace('#', '', $label);
-            
+
             // if the label is the isPartOf, then we need to disable the editing
             // to the users, they do not have a permission to change it
-            if($label == "isPartOf"){            
-                $attributes =  array('readonly' => 'readonly');
-            }else {
-                $attributes =  array();
+            if ($label == "isPartOf") {
+                $attributes = array('readonly' => 'readonly');
+            } else {
+                $attributes = array();
             }
-            
+
             // generate the form fields
             $form[$label] = array(
                 '#type' => 'textfield',
                 '#title' => $this->t($label),
-                '#default_value' => $value,  
+                '#default_value' => $value,
                 '#attributes' => $attributes,
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
-                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'prop2' => strtr(base64_encode($editUri), '+/=', '-_,') ), 
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'prop2' => strtr(base64_encode($editUri), '+/=', '-_,')),
             );
-            
+
             //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
-            $form[$labelVal.':oldValues'] = array(
+            $form[$labelVal . ':oldValues'] = array(
                 '#type' => 'hidden',
                 '#value' => $value,
             );
-            
+
             $property[$label] = $editUriClassMetaFields[$i]["id"];
             $fieldsArray[] = $label;
-            $fieldsArrayOldValues[] = $labelVal.':oldValues';                          
+            $fieldsArrayOldValues[] = $labelVal . ':oldValues';
         }
-                
+
         $this->store->set('formEditFields', $fieldsArray);
         $this->store->set('formEditOldFields', $fieldsArrayOldValues);
         $this->store->set('propertysArray', $property);
         $this->store->set('resourceUri', $editUri);
-        
+
         $checkDigRes = in_array($actualClassUri, $digitalResources);
-       
+
         // if we have a digital resource then the user must upload a binary resource
-        if($checkDigRes == true){
-             $form['file'] = array(
-                '#type' => 'managed_file', 
-                '#title' => t('FILE'),                 
+        if ($checkDigRes == true) {
+            $form['file'] = array(
+                '#type' => 'managed_file',
+                '#title' => t('FILE'),
                 '#upload_validators' => array(
                     'file_validate_extensions' => array('xml doc txt simplified docx'),
-                 ),
+                ),
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
             );
         }
-        
+
         $form['submit'] = array(
             '#type' => 'submit',
             '#value' => t('Submit sample'),
         );
-        
-        return $form;        
+
+        return $form;
     }
-    
 
     public function validateForm(array &$form, FormStateInterface $form_state) {
         
@@ -273,54 +260,54 @@ class EditForm extends FormBase {
         $editOldForm = $this->store->get('formEditOldFields');
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
-        
+
         //get the uploaded files values
         $fileID = $form_state->getValue('file');
         $fileID = $fileID[0];
-        
-        if(!empty($fileID)){
+
+        if (!empty($fileID)) {
             //create the file object
             $fObj = file_load($fileID);
-            if(!empty($fObj) || isset($fObj)) {                
+            if (!empty($fObj) || isset($fObj)) {
                 //get the temp file uri        
                 $fUri = $fObj->getFileUri();
-            }            
+            }
         }
-        
+
         // create array with new form values
-        foreach($editForm as $e){                        
-            $editFormValues[$e] = $form_state->getValue($e);        
+        foreach ($editForm as $e) {
+            $editFormValues[$e] = $form_state->getValue($e);
         }
-    
+
         // create array with old form values
-        foreach($editOldForm as $e){            
-            $value = $form_state->getValue($e); 
+        foreach ($editOldForm as $e) {
+            $value = $form_state->getValue($e);
             $key = str_replace(':oldValues', '', $e);
-            if(!empty($value)){                
+            if (!empty($value)) {
                 $editFormOldValues[$key] = $value;
             }
-        }       
+        }
 
-        foreach($propertysArray as $key => $value){    
+        foreach ($propertysArray as $key => $value) {
             //in the editing we need to skip the ispartof
             // because the user cant overwrite the original
-            if($key !== 'isPartOf'){
+            if ($key !== 'isPartOf') {
                 $uriAndValue[$value] = $editFormValues[$key];
             }
         }
-        
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');                        
-        
+
+        $config = new Config($_SERVER["DOCUMENT_ROOT"] . '/modules/oeaw/config.ini');
+
         $fedora = new Fedora($config);
         $fedora->begin();
         $resourceUri = preg_replace('|^.*/rest/|', '', $resourceUri);
-        
+
         $fr = $fedora->getResourceByUri($resourceUri);
         //get the existing metadata
         $meta = $fr->getMetadata();
 
-        foreach($uriAndValue as $key => $value){
-            if(!empty($value)){
+        foreach ($uriAndValue as $key => $value) {
+            if (!empty($value)) {
                 if (strpos($value, 'http') !== false) {
                     //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
                     //remove the property
@@ -333,43 +320,39 @@ class EditForm extends FormBase {
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addLiteral($key, $value);
-                }            
-            }    
+                }
+            }
         }
-        
+
         try {
-            
+
             $fr->setMetadata($meta);
             $fr->updateMetadata();
-            
-            if(!empty($fUri)){
+
+            if (!empty($fUri)) {
                 $fr->updateContent($fUri);
             }
-            
+
             $fedora->commit();
             $this->deleteStore($editForm);
             drupal_set_message($this->t('The form has been saved and you resource was changed'));
-            
         } catch (Exception $ex) {
-            
+
             $fedora->rollback();
             $this->deleteStore($editForm);
             drupal_set_message($this->t('Error during the saving process'), 'error');
-        }        
+        }
     }
-    
-    
+
     /**
-    * Helper method that removes all the keys from the store collection used for
-    * the multistep form.
-    */
-    
+     * Helper method that removes all the keys from the store collection used for
+     * the multistep form.
+     */
     protected function deleteStore($editForm) {
-        
-        foreach($metadata as $key => $value){
+
+        foreach ($metadata as $key => $value) {
             $this->store->delete($key);
         }
     }
 
 }
-

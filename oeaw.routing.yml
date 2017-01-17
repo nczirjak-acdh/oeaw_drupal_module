@@ -86,11 +86,10 @@ oeaw_admin_form:
         _admin_route: TRUE
 
 oeaw_classes_result:    
-    path: '/oeaw_classes_result'
+    path: '/oeaw_classes_result/{search_classes}'
     defaults:
         _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_classes_result'
-    requirements:
-        _permission: 'access content'
+    requirements:        
         _access: 'TRUE'
 
 oeaw.autocomplete:
