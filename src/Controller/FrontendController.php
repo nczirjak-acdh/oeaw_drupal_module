@@ -48,19 +48,23 @@ class FrontendController extends ControllerBase {
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config); 
         //get the property resources
-        $prop = $fedora->getResourceById($propUri);        
-        //get the property metadata
-        $propMeta = $prop->getMetadata();
-        // check the range property in the res metadata
-        $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+        $rangeRes = null;
+        try {
+            $prop = $fedora->getResourceById($propUri);
+            //get the property metadata
+            $propMeta = $prop->getMetadata();
+            // check the range property in the res metadata
+            $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+        }  catch (\RuntimeException $e){}
+        
         if($rangeRes === null){
-            return JsonResponse(array()); // range property is missing - no autocompletion
+            return new JsonResponse(array()); // range property is missing - no autocompletion
         }
         
         $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
         
         if($resources === null){
-            return JsonResponse(array());
+            return new JsonResponse(array());
         }
         foreach($resources as $i){
             
@@ -79,8 +83,14 @@ class FrontendController extends ControllerBase {
             $filterId = strpos($acdhId, $string) !== false;
             
             if ($filterUri || $filterLabel || $filterId) {
-                $label = empty($i->getMetadata()->label()) ? $acdhId : $i->getMetadata()->label();
-                $matches[] = ['value' => $acdhId ,'label' => $label];                
+                
+                $label = empty($i->getMetadata()->label()) ? $acdhId : $i->getMetadata()->label();                
+                $matches[] = ['value' => $acdhId , 'label' => (string)utf8_decode($label)];
+                
+                if(count($matches) >= 10){
+                    break;
+                }
+                
             }
         }
         
