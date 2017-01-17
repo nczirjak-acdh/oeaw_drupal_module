@@ -101,11 +101,18 @@ class EditForm extends FormBase {
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
         
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
-        $classValue = $classGraph->get($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'))->toRdfPhp();
+        $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
         
+        foreach($classValue as $v){            
+            if (strpos($v->getUri(), 'vocabs.acdh.oeaw.ac.at') !== false) {
+                    $classVal[] = $v->getUri();
+            }
+        }
+        
+
         if (strpos($classValue["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
                     $classVal[] = $classValue["value"];
-                }
+        }
         
         //old method
         //$classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
@@ -123,7 +130,7 @@ class EditForm extends FormBase {
             $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
         }
   */    
-        
+
         if(!empty($classVal)){
             foreach($classVal as $cval){   
                 $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);     
@@ -181,12 +188,18 @@ class EditForm extends FormBase {
             
             // get the field values based on the edituri and the metadata uri
             //$value = \Drupal\oeaw\oeawStorage::getValueByUriProperty($editUri, $editUriClassMetaFields[$i]["id"]);
-            $value = $classGraph->get($editUri,EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
-            
-            //$value = $value[0]["value"];
-            $value = $value["value"];
-            
-            // get the field uri s last part to show it as a label title
+
+            //if the property is not exists then we need to avoid the null error message
+            $value = $classGraph->get($editUri,EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
+            if(!empty($value)){
+                $value = $classGraph->get($editUri,EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
+                $value = $value["value"];
+            }else {
+                $value = "";
+            }
+
+
+         // get the field uri s last part to show it as a label title
             $label = explode("/", $editUriClassMetaFields[$i]["id"]);                
             $label = end($label);
             $label = str_replace('#', '', $label);

@@ -41,19 +41,40 @@ class FrontendController extends ControllerBase {
         // this is the fedora.localhost url
         $resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
         
+        if(empty($propUri) || empty($resourceUri)){
+            return new JsonResponse(array());
+        }
+        
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config);      
-        $prop = $fedora->getResourceById($propUri);
+        $fedora = new Fedora($config); 
+        //get the property resources
+        $prop = $fedora->getResourceById($propUri);        
+        //get the property metadata
         $propMeta = $prop->getMetadata();
+        // check the range property in the res metadata
         $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
-
+        if($rangeRes === null){
+            return JsonResponse(array()); // range property is missing - no autocompletion
+        }
+        
         $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
-        //
+        
+        if($resources === null){
+            return JsonResponse(array()); // range property is missing - no autocompletion
+        }
         foreach($resources as $i){
             //if the user input available in the resource then we 
-            //gives back a filtered array with the results
+            //gives back a filtered array with the results            
             if (strpos($i->getUri(), $string) !== false) {
-                $matches[] = ['label' => $i->getUri()];
+                
+                if(empty($i->getMetadata()->label())){
+                    $matches[] = ['value' => $i->getUri() ,'label' => $i->getUri()];
+                }else {
+                    $matches[] = ['value' => $i->getUri(), 'label' => $i->getUri()];
+                }
+                
+                //$matches[] = ['label' => $i->getMetadata()->dump('text')];
+                //$matches[] = ['label' => $i->getUri()];
             }
         }
         
