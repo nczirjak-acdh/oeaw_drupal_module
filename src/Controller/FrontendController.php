@@ -78,9 +78,9 @@ class FrontendController extends ControllerBase {
             
             //if the user input available in the resource then we 
             //gives back a filtered array with the results
-            $filterUri = strpos($i->getUri(), $string) !== false;
-            $filterLabel = strpos($i->getMetadata()->label(), $string) !== false;
-            $filterId = strpos($acdhId, $string) !== false;
+            $filterUri = strpos(strtolower($i->getUri()), strtolower($string)) !== false;
+            $filterLabel = strpos(strtolower($i->getMetadata()->label()), strtolower($string)) !== false;
+            $filterId = strpos(strtolower($acdhId), strtolower($string)) !== false;
             
             if ($filterUri || $filterLabel || $filterId) {
                 
