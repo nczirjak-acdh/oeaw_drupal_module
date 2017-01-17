@@ -60,30 +60,33 @@ class FrontendController extends ControllerBase {
         $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
         
         if($resources === null){
-            return JsonResponse(array()); // range property is missing - no autocompletion
+            return JsonResponse(array());
         }
         foreach($resources as $i){
+            
+            $acdhId = $i->getMetadata()->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
+            
+            if(empty($acdhId)){
+                continue;
+            }
+            
+            $acdhId = $acdhId->getUri();
+            
             //if the user input available in the resource then we 
-            //gives back a filtered array with the results            
-            if (strpos($i->getUri(), $string) !== false) {
-                
-                if(empty($i->getMetadata()->label())){
-                    $matches[] = ['value' => $i->getUri() ,'label' => $i->getUri()];
-                }else {
-                    $matches[] = ['value' => $i->getUri(), 'label' => $i->getUri()];
-                }
-                
-                //$matches[] = ['label' => $i->getMetadata()->dump('text')];
-                //$matches[] = ['label' => $i->getUri()];
+            //gives back a filtered array with the results
+            $filterUri = strpos($i->getUri(), $string) !== false;
+            $filterLabel = strpos($i->getMetadata()->label(), $string) !== false;
+            $filterId = strpos($acdhId, $string) !== false;
+            
+            if ($filterUri || $filterLabel || $filterId) {
+                $label = empty($i->getMetadata()->label()) ? $acdhId : $i->getMetadata()->label();
+                $matches[] = ['value' => $acdhId ,'label' => $label];                
             }
         }
         
         return new JsonResponse($matches);
-    }
+    }    
     
-    //http://fedora.localhost/rest/a4/d6/b8/cc/a4d6b8cc-a019-484a-a867-940183f9c49e
-    
-   //http://fedora.localhost/rest/36/87/e1/f6/3687e1f6-a9fa-42ba-b262-1c3b90af14b3
     /* 
      *
      * Here the oeaw module menu is generating with the available menupoints
