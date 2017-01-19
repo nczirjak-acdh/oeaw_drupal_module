@@ -21,7 +21,8 @@ class oeawStorage {
             . 'PREFIX fedora: <http://fedora.info/definitions/v4/repository#> '
             . 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> '
             . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>'
-            . 'PREFIX dc: <http://purl.org/dc/elements/1.1/>';
+            . 'PREFIX dc: <http://purl.org/dc/elements/1.1/>'
+            . 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>';
 
     
     /*
@@ -246,11 +247,12 @@ class oeawStorage {
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
-                            . '?uri ?title ?label '
+                            . '?uri ?title ?label ?name '
                         . ' WHERE { '
                             . '?uri ' . $property . ' '.$value.' . '
                             . 'OPTIONAL { ?uri dc:title ?title } .'
                             . 'OPTIONAL { ?uri rdfs:label ?label } . '
+                            . 'OPTIONAL { ?uri foaf:name ?name } . '
                         . '}'); 
             }    
          

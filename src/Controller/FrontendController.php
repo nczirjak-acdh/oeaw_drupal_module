@@ -66,6 +66,7 @@ class FrontendController extends ControllerBase {
         if($resources === null){
             return new JsonResponse(array());
         }
+        
         foreach($resources as $i){
             
             $acdhId = $i->getMetadata()->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));

@@ -7,10 +7,17 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ChangedCommand;
+use Drupal\Core\Ajax\CssCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\user\PrivateTempStoreFactory;
+
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\EasyRdfUtil;
@@ -98,27 +105,9 @@ class EditForm extends FormBase {
             }
         }
 
-
         if (strpos($classValue["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
             $classVal[] = $classValue["value"];
         }
-
-        //old method
-        //$classValue = \Drupal\oeaw\oeawStorage::getDefPropByURI($editUri, "rdf:type");
-        /*
-          foreach($classValue as $cv){
-          if(!empty($cv["value"])){
-          if (strpos($cv["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
-          $classVal[] = $cv["value"];
-          }
-          }
-          } */
-
-        //if the resource does not have any acdh then we add one - WE NEED THIS OVER THE TEST!!!!
-        /*        if(count($classVal) == 0){
-          $classVal[] = "http://vocabs.acdh.oeaw.ac.at/#DigitalResource";
-          }
-         */
 
         if (!empty($classVal)) {
             foreach ($classVal as $cval) {
@@ -129,63 +118,36 @@ class EditForm extends FormBase {
             drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
         }
 
-
         if (empty($editUriClass)) {
             drupal_set_message($this->t('URI Class is empty!!'), 'error');
         }
-
+        
         // this will contains the onotology uri, what will helps to use to know
         // which fields we need to show in the editing form
         $editUriClass = $editUriClass[0]["uri"];
 
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
-
-        // temporary fix - Mateusz and Norbert - 25. nov. 2016
-        //$editUriClassMetaFields[] = array("id"=> "http://purl.org/dc/elements/1.1/title");
-
+        
         $attributes = array();
 
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
 
-        /*
-          $fedora = new Fedora($config);
-          //create and load the data to the graph
-          $prop = $fedora->getResourceById($propUri);
-          $propMeta = $prop->getMetadata();
-          error_log("meta: ");
-          error_log(var_dump($propMeta));
-
-          $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
-
-          if($rangeRes === null){
-          error_log("errorban");
-          return JsonResponse($matches); // range property is missing - no autocompletion
-          }
-          $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
-          error_log("resources");
-          error_log(print_r($resources));
-          $matches = array();
-          foreach($resources as $i){
-          $matches[] = $i->getUri();
-          }
-         */
-
+      
         //create and load the data to the graph
 
         for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
 
             // get the field values based on the edituri and the metadata uri
-            //$value = \Drupal\oeaw\oeawStorage::getValueByUriProperty($editUri, $editUriClassMetaFields[$i]["id"]);
             //if the property is not exists then we need to avoid the null error message
             $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
+            
             if (!empty($value)) {
                 $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
                 $value = $value["value"];
             } else {
                 $value = "";
             }
-
 
             // get the field uri s last part to show it as a label title
             $label = explode("/", $editUriClassMetaFields[$i]["id"]);
@@ -206,9 +168,28 @@ class EditForm extends FormBase {
                 '#title' => $this->t($label),
                 '#default_value' => $value,
                 '#attributes' => $attributes,
+                //description required a space, in other case the ajax callback will not works....
+                '#description' => ' ',
+                //define the autocomplete route and values
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
                 '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'prop2' => strtr(base64_encode($editUri), '+/=', '-_,')),
+                //create the ajax to we can display the selected uri title
+                '#ajax' => [
+                    // Function to call when event on form element triggered.
+                    'callback' => 'Drupal\oeaw\Form\EditForm::fieldValidateCallback',
+                    'effect' => 'fade',
+                    // Javascript event to trigger Ajax. Currently for: 'onchange'.
+                    //we need to wait the end of the autocomplete
+                    'event' => 'autocompleteclose',
+                    'progress' => array(
+                        // Graphic shown to indicate ajax. Options: 'throbber' (default), 'bar'.
+                        'type' => 'throbber',
+                        // Message to show along progress graphic. Default: 'Please wait...'.
+                        'message' => NULL,
+                    ),                    
+                  ],
             );
+            
 
             //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
@@ -245,10 +226,68 @@ class EditForm extends FormBase {
             '#type' => 'submit',
             '#value' => t('Submit sample'),
         );
-
+       
         return $form;
     }
 
+    
+    public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
+        //system variables from the form data, to we can remove them
+        $removeElements = array("file", "op", "form_build_id", "form_token", "form_id");
+        //get the formelements
+        $formElements = $form_state->getUserInput();
+
+        //remove the system attributes from the form elements
+        foreach($formElements as $key => $value){            
+            if(in_array($key, $removeElements)){
+                unset($formElements[$key]);
+            }
+        }  
+        //create the old values and the new values arrays with the user inputs
+        foreach($formElements as $key => $value){
+            if (strpos($key, ':oldValues') !== false) {
+                $newKey = str_replace(':oldValues', "", $key);
+                $oldValues[$newKey] = $value;
+            }else {
+                $newValues[$key] = $value;
+            }            
+        }
+        //get the differences
+        $result = array_diff_assoc($newValues, $oldValues);
+
+        // Instantiate an AjaxResponse Object to return.
+        $ajax_response = new AjaxResponse();
+        
+        $color = 'green';
+
+        foreach($result as $key => $value){            
+            //get the entered uri's fedora URI by the dct:identifier property
+            $res = \Drupal\oeaw\oeawStorage::getDataByProp('dct:identifier', (string)$value);
+        
+            $label = "";
+            //the possible titles
+            if(!empty($res)){
+                for ($i = 0; $i < count($res); $i++) {
+                    if(!empty($res[$i]["title"])){
+                       $label = $res[$i]["title"];
+                    }else if(!empty($res[$i]["label"])){
+                       $label = $res[$i]["label"];
+                    }else if(!empty($res[$i]["name"])){
+                       $label = $res[$i]["name"];
+                    }else{
+                        $label = " ";
+                    }   
+                }
+            }
+           
+            $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', $label));
+            $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));        
+        }
+        
+        // Return the AjaxResponse Object.
+        return $ajax_response;
+    }
+    
     public function validateForm(array &$form, FormStateInterface $form_state) {
         
     }
@@ -273,7 +312,7 @@ class EditForm extends FormBase {
                 $fUri = $fObj->getFileUri();
             }
         }
-
+        
         // create array with new form values
         foreach ($editForm as $e) {
             $editFormValues[$e] = $form_state->getValue($e);
