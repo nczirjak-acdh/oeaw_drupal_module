@@ -74,6 +74,7 @@ class EditForm extends FormBase {
 
     public function buildForm(array $form, FormStateInterface $form_state) {
 
+        $form_state->disableCache();
         //get the hash uri from the url, based on the drupal routing file
         $editHash = \Drupal::request()->get('uri');
 
@@ -130,23 +131,30 @@ class EditForm extends FormBase {
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
         
         $attributes = array();
-
+        
+        //create and load the data to the graph
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
 
-      
-        //create and load the data to the graph
-
+        $page['#attached']['library'][] = 'oeaw/oeaw_edit';       
         for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
 
             // get the field values based on the edituri and the metadata uri
             //if the property is not exists then we need to avoid the null error message
             $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
+            $oldLabel = "";
             
             if (!empty($value)) {
+                //get the input fields values
                 $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
                 $value = $value["value"];
+                // if the input field value contains the id.acdh... then we check the labels
+                // and shows the old Label to the user
+                if (strpos($value, 'https://id.acdh.oeaw.ac.at') !== false) {
+                    $oldLabel = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
+                    $oldLabel = "Old Value: ".$oldLabel;
+                }
             } else {
-                $value = "";
+                $value = "";                
             }
 
             // get the field uri s last part to show it as a label title
@@ -161,23 +169,25 @@ class EditForm extends FormBase {
             } else {
                 $attributes = array();
             }
-
+            
+            
             // generate the form fields
             $form[$label] = array(
                 '#type' => 'textfield',
                 '#title' => $this->t($label),
                 '#default_value' => $value,
                 '#attributes' => $attributes,
+                '#field_suffix' => $oldLabel,                    
                 //description required a space, in other case the ajax callback will not works....
                 '#description' => ' ',
                 //define the autocomplete route and values
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
-                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'prop2' => strtr(base64_encode($editUri), '+/=', '-_,')),
-                //create the ajax to we can display the selected uri title
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'fieldName' => $label),
+                //create the ajax to we can display the selected uri title                
                 '#ajax' => [
                     // Function to call when event on form element triggered.
                     'callback' => 'Drupal\oeaw\Form\EditForm::fieldValidateCallback',
-                    'effect' => 'fade',
+                    'effect' => 'fade',                    
                     // Javascript event to trigger Ajax. Currently for: 'onchange'.
                     //we need to wait the end of the autocomplete
                     'event' => 'autocompleteclose',
@@ -189,7 +199,10 @@ class EditForm extends FormBase {
                     ),                    
                   ],
             );
-            
+           
+
+
+
 
             //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
@@ -214,7 +227,7 @@ class EditForm extends FormBase {
         if ($checkDigRes == true) {
             $form['file'] = array(
                 '#type' => 'managed_file',
-                '#title' => t('FILE'),
+                '#title' => t('FILE'),                
                 '#upload_validators' => array(
                     'file_validate_extensions' => array('xml doc txt simplified docx'),
                 ),
@@ -232,60 +245,13 @@ class EditForm extends FormBase {
 
     
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
-        //system variables from the form data, to we can remove them
-        $removeElements = array("file", "op", "form_build_id", "form_token", "form_id");
+               
+         
         //get the formelements
-        $formElements = $form_state->getUserInput();
-
-        //remove the system attributes from the form elements
-        foreach($formElements as $key => $value){            
-            if(in_array($key, $removeElements)){
-                unset($formElements[$key]);
-            }
-        }  
-        //create the old values and the new values arrays with the user inputs
-        foreach($formElements as $key => $value){
-            if (strpos($key, ':oldValues') !== false) {
-                $newKey = str_replace(':oldValues', "", $key);
-                $oldValues[$newKey] = $value;
-            }else {
-                $newValues[$key] = $value;
-            }            
-        }
-        //get the differences
-        $result = array_diff_assoc($newValues, $oldValues);
-
-        // Instantiate an AjaxResponse Object to return.
-        $ajax_response = new AjaxResponse();
+        $formElements = $form_state->getUserInput();        
+        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "edit");        
         
-        $color = 'green';
-
-        foreach($result as $key => $value){            
-            //get the entered uri's fedora URI by the dct:identifier property
-            $res = \Drupal\oeaw\oeawStorage::getDataByProp('dct:identifier', (string)$value);
-        
-            $label = "";
-            //the possible titles
-            if(!empty($res)){
-                for ($i = 0; $i < count($res); $i++) {
-                    if(!empty($res[$i]["title"])){
-                       $label = $res[$i]["title"];
-                    }else if(!empty($res[$i]["label"])){
-                       $label = $res[$i]["label"];
-                    }else if(!empty($res[$i]["name"])){
-                       $label = $res[$i]["name"];
-                    }else{
-                        $label = " ";
-                    }   
-                }
-            }
-           
-            $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', $label));
-            $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));        
-        }
-        
-        // Return the AjaxResponse Object.
-        return $ajax_response;
+        return $result;        
     }
     
     public function validateForm(array &$form, FormStateInterface $form_state) {

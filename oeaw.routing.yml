@@ -93,7 +93,7 @@ oeaw_classes_result:
         _access: 'TRUE'
 
 oeaw.autocomplete:
-    path: '/oeaw/autocomplete/{prop1}/{prop2}'
+    path: '/oeaw/autocomplete/{prop1}/{fieldName}'
     defaults:
         _controller: '\Drupal\oeaw\Controller\FrontendController::autocomplete'
     requirements:

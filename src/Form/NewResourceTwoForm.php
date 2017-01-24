@@ -15,7 +15,7 @@ use RuntimeException;
 
 
 
-class NewResourceTwoForm extends NewResourceFormBase {
+class NewResourceTwoForm extends NewResourceFormBase  {
 
     /* 
      *
@@ -41,7 +41,7 @@ class NewResourceTwoForm extends NewResourceFormBase {
     public function buildForm(array $form, FormStateInterface $form_state) {
 
         $form = parent::buildForm($form, $form_state);
-        
+        $form_state->disableCache();
         // get form page 1 stored values
         $formVal = $this->store->get('form1Elements');
         $class = $formVal['class'];
@@ -126,8 +126,24 @@ class NewResourceTwoForm extends NewResourceFormBase {
                 '#title' => $this->t($label),                
                 '#default_value' => $defaultValue,                
                 '#attributes' => $attributes,
+                '#description' => ' ',
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
-                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m), '+/=', '-_,'), 'prop2' => 'prop2_value'), 
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m), '+/=', '-_,')),
+                //create the ajax to we can display the selected uri title
+                '#ajax' => [
+                    // Function to call when event on form element triggered.
+                    'callback' => 'Drupal\oeaw\Form\NewResourceTwoForm::fieldValidateCallback',
+                    'effect' => 'fade',
+                    // Javascript event to trigger Ajax. Currently for: 'onchange'.
+                    //we need to wait the end of the autocomplete
+                    'event' => 'autocompleteclose',
+                    'progress' => array(
+                        // Graphic shown to indicate ajax. Options: 'throbber' (default), 'bar'.
+                        'type' => 'throbber',
+                        // Message to show along progress graphic. Default: 'Please wait...'.
+                        'message' => NULL,
+                    ),                    
+                  ],
             );
 
             $labelVal = str_replace(' ', '+', $label);
@@ -166,6 +182,17 @@ class NewResourceTwoForm extends NewResourceFormBase {
         );
 
         return $form;
+    }
+    
+    public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
+
+        
+        //get the formelements
+        $formElements = $form_state->getUserInput();        
+        
+        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
+       
+        return $result;        
     }
     
     public function validateForm(array &$form, FormStateInterface $form_state) 

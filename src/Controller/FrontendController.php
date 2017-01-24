@@ -12,6 +12,11 @@ use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\oeawFunctions;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ChangedCommand;
+use Drupal\Core\Ajax\CssCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\InvokeCommand;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use zozlak\util\Config;
@@ -32,70 +37,76 @@ class FrontendController extends ControllerBase {
         return $form;        
     }
     
-    public function autocomplete(request $request, $prop1, $prop2) {
+    public function autocomplete(request $request, $prop1, $fieldName) {
         
         $matches = array();
         $string = $request->query->get('q');
-        //f.e.: depositor
-        $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
-        // this is the fedora.localhost url
-        $resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
         
-        if(empty($propUri) || empty($resourceUri)){
-            return new JsonResponse(array());
-        }
+        //check the user entered char's
+        if(strlen($string) >= 3) {            
         
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config); 
-        //get the property resources
-        $rangeRes = null;
-        try {
-            $prop = $fedora->getResourceById($propUri);
-            //get the property metadata
-            $propMeta = $prop->getMetadata();
-            // check the range property in the res metadata
-            $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
-        }  catch (\RuntimeException $e){}
-        
-        if($rangeRes === null){
-            return new JsonResponse(array()); // range property is missing - no autocompletion
-        }
-        
-        $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
-        
-        if($resources === null){
-            return new JsonResponse(array());
-        }
-        
-        foreach($resources as $i){
-            
-            $acdhId = $i->getMetadata()->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
-            
-            if(empty($acdhId)){
-                continue;
+            //f.e.: depositor
+            $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
+
+            // this is the fedora.localhost url
+            //$resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
+
+            if(empty($propUri)){
+                return new JsonResponse(array());
             }
-            
-            $acdhId = $acdhId->getUri();
-            
-            //if the user input available in the resource then we 
-            //gives back a filtered array with the results
-            $filterUri = strpos(strtolower($i->getUri()), strtolower($string)) !== false;
-            $filterLabel = strpos(strtolower($i->getMetadata()->label()), strtolower($string)) !== false;
-            $filterId = strpos(strtolower($acdhId), strtolower($string)) !== false;
-            
-            if ($filterUri || $filterLabel || $filterId) {
-                
-                $label = empty($i->getMetadata()->label()) ? $acdhId : $i->getMetadata()->label();                
-                $matches[] = ['value' => $acdhId , 'label' => (string)utf8_decode($label)];
-                
-                if(count($matches) >= 10){
-                    break;
+
+            $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+            $fedora = new Fedora($config); 
+            //get the property resources
+            $rangeRes = null;
+            try {
+                $prop = $fedora->getResourceById($propUri);
+                //get the property metadata
+                $propMeta = $prop->getMetadata();
+                // check the range property in the res metadata
+                $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+            }  catch (\RuntimeException $e){}
+
+            if($rangeRes === null){
+                return new JsonResponse(array()); // range property is missing - no autocompletion
+            }
+
+            $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
+
+            if($resources === null){
+                return new JsonResponse(array());
+            }
+
+            foreach($resources as $i){
+
+                $acdhId = $i->getMetadata()->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
+
+                if(empty($acdhId)){ continue; }
+
+                $acdhId = $acdhId->getUri();
+
+                //if the user input available in the resource then we 
+                //gives back a filtered array with the results
+                $filterUri = strpos(strtolower($i->getUri()), strtolower($string)) !== false;
+                $filterLabel = strpos(strtolower($i->getMetadata()->label()), strtolower($string)) !== false;
+                $filterId = strpos(strtolower($acdhId), strtolower($string)) !== false;
+
+                if ($filterUri || $filterLabel || $filterId) {
+
+                    $label = empty($i->getMetadata()->label()) ? $acdhId : $i->getMetadata()->label();
+                    $label = (string)utf8_decode($label);
+                    $matches[] = ['value' => $acdhId , 'label' => $label];
+                    
+                    if(count($matches) >= 10){
+                        break;
+                    }
                 }
-                
             }
+            
+            return new JsonResponse($matches);
+        }else {
+            return new JsonResponse(array());
         }
-        
-        return new JsonResponse($matches);
     }    
     
     /* 

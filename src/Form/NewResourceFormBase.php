@@ -68,7 +68,7 @@ abstract class NewResourceFormBase extends FormBase {
     }
     
     public function buildForm(array $form, FormStateInterface $form_state)
-    {
+    {        
         //start a manual session for anonymus user
         if($this->currentUser->isAnonymous() && !isset($_SESSION['multistep_form_holds_session'])) {
             $_SESSION['multistep_form_holds_session'] = true;

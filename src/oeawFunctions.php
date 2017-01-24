@@ -3,15 +3,24 @@
 namespace Drupal\oeaw;
 
 use Drupal\Core\Url;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ChangedCommand;
+use Drupal\Core\Ajax\CssCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Component\Render\MarkupInterface;
+
 use Drupal\oeaw\oeawStorage;
 use Drupal\oeaw\connData;
-use Drupal\Component\Render\MarkupInterface;
+
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
+use acdhOeaw\util\EasyRdfUtil;
 use zozlak\util\Config;
 use EasyRdf_Graph;
 use EasyRdf_Resource;
-use acdhOeaw\util\EasyRdfUtil;
+
+
  
 class oeawFunctions {
        
@@ -28,7 +37,97 @@ class oeawFunctions {
         
         return $graph;
     }
+    /*
+     * 
+     * $mode = edit/new
+     * 
+     */
     
+    public function getFieldNewTitle($formElements, $mode = 'edit'){
+        
+        if($mode == "edit"){
+            //create the old values and the new values arrays with the user inputs
+            foreach($formElements as $key => $value){
+                if (strpos($key, ':oldValues') !== false) {
+                    $newKey = str_replace(':oldValues', "", $key);
+                    $oldValues[$newKey] = $value;
+                }else {
+                    $newValues[$key] = $value;
+                }            
+            }
+            //get the differences
+            $result = array_diff_assoc($newValues, $oldValues);
+            
+        }else if($mode == "new"){
+                                   
+            foreach($formElements as $key => $value){
+                if(strpos($key, ':prop') !== false) {
+                    unset($formElements[$key]);
+                }elseif (strpos($value, 'http') !== false) {
+                    $result[$key] = $value;
+                }
+            }
+        }
+        
+       
+
+        if(!empty($result)){
+            // Instantiate an AjaxResponse Object to return.
+            $ajax_response = new AjaxResponse();
+
+            $color = 'green';
+            
+            foreach($result as $key => $value){            
+
+                $label = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
+                
+                if(!empty($label)){
+                    $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', "New Value: ".(string)$label));
+                    $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));        
+                }
+            }
+
+            // Return the AjaxResponse Object.
+            return $ajax_response;
+            
+        }else {
+            $ajax_response = new AjaxResponse();
+            
+            return $ajax_response;
+        }
+
+        
+    }
+    
+    /*
+     * This functions checks the given identifier label/name/title
+     * This used for the editForm title generating
+     *  
+     */
+    
+    public function getLabelByIdentifier(string $value){
+        
+        $res = \Drupal\oeaw\oeawStorage::getDataByProp('dct:identifier', (string)$value);
+        
+        $label = "";
+        //the possible titles
+        if(!empty($res)){
+            for ($i = 0; $i < count($res); $i++) {
+                if(!empty($res[$i]["title"])){
+                   $label = $res[$i]["title"];
+                }else if(!empty($res[$i]["label"])){
+                   $label = $res[$i]["label"];
+                }else if(!empty($res[$i]["name"])){
+                   $label = $res[$i]["name"];
+                }else{
+                    $label = " ";
+                }   
+            }
+        }
+
+        return $label;
+        
+    }
     
     /* 
      *

@@ -333,13 +333,13 @@ class oeawStorage {
                             ?class dct:identifier ?id .
                             OPTIONAL {
                               {
-                                {?class rdfs:subClassOf* <http://vocabs.acdh.oeaw.ac.at/#Collection>}
+                                {?class rdfs:subClassOf* <https://vocabs.acdh.oeaw.ac.at/#Collection>}
                                 UNION
-                                {?class rdfs:subClassOf* <http://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
+                                {?class rdfs:subClassOf* <https://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
                                 UNION
-                                {?class dct:identifier <http://vocabs.acdh.oeaw.ac.at/#Collection>}
+                                {?class dct:identifier <https://vocabs.acdh.oeaw.ac.at/#Collection>}
                                 UNION
-                                {?class dct:identifier <http://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
+                                {?class dct:identifier <https://vocabs.acdh.oeaw.ac.at/#DigitalCollection>}
                               }
                               VALUES ?collection {true}
                             }

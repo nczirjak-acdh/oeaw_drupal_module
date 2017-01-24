@@ -9,4 +9,8 @@ oeaw-styles:
         https://code.jquery.com/jquery-1.12.3.js: {type: external, minified: false}
         https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }    
         js/datatable_init.js: {}
-        
+oeaw_edit        :
+    version: 1.0.0
+    js:
+        commands.js; {}
+       
