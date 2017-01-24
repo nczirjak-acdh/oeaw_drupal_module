@@ -84,6 +84,7 @@ class EditForm extends FormBase {
 
         $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
 
+        
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
 
@@ -134,8 +135,14 @@ class EditForm extends FormBase {
         
         //create and load the data to the graph
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
+        $resTitle = $classGraph->label($editUri);        
+        
+        $form['resource_title'] = array(
+            '#markup' => '<h2><b><a href="'.$editUri.'" target="_blank">'.$resTitle.'</a></b></h2>',
+        );
 
-        $page['#attached']['library'][] = 'oeaw/oeaw_edit';       
+
+        
         for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
 
             // get the field values based on the edituri and the metadata uri
@@ -177,17 +184,17 @@ class EditForm extends FormBase {
                 '#title' => $this->t($label),
                 '#default_value' => $value,
                 '#attributes' => $attributes,
-                '#field_suffix' => $oldLabel,                    
+                '#field_suffix' => $oldLabel,
                 //description required a space, in other case the ajax callback will not works....
                 '#description' => ' ',
                 //define the autocomplete route and values
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
                 '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'fieldName' => $label),
-                //create the ajax to we can display the selected uri title                
+                //create the ajax to we can display the selected uri title
                 '#ajax' => [
                     // Function to call when event on form element triggered.
                     'callback' => 'Drupal\oeaw\Form\EditForm::fieldValidateCallback',
-                    'effect' => 'fade',                    
+                    'effect' => 'fade',
                     // Javascript event to trigger Ajax. Currently for: 'onchange'.
                     //we need to wait the end of the autocomplete
                     'event' => 'autocompleteclose',
@@ -200,8 +207,7 @@ class EditForm extends FormBase {
                   ],
             );
            
-
-
+            
 
 
             //create the hidden propertys to the saving methods

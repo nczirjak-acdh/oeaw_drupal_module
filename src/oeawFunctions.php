@@ -69,33 +69,25 @@ class oeawFunctions {
             }
         }
         
-       
-
-        if(!empty($result)){
-            // Instantiate an AjaxResponse Object to return.
-            $ajax_response = new AjaxResponse();
-
-            $color = 'green';
-            
-            foreach($result as $key => $value){            
-
-                $label = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
-                
-                if(!empty($label)){
-                    $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', "New Value: ".(string)$label));
-                    $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));        
-                }
-            }
-
-            // Return the AjaxResponse Object.
-            return $ajax_response;
-            
-        }else {
-            $ajax_response = new AjaxResponse();
-            
+        $ajax_response = new AjaxResponse();        
+        
+        if(empty($result)){
             return $ajax_response;
         }
+       
+        $color = 'green';
 
+        foreach($result as $key => $value){            
+
+            $label = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
+
+            if(!empty($label)){
+                $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', "New Value: <a href='".(string)$value."' target='_blank'>".(string)$label."</a>"));
+                $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));        
+            }
+        }
+        // Return the AjaxResponse Object.
+        return $ajax_response;
         
     }
     

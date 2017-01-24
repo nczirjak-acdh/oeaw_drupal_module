@@ -80,8 +80,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $checkDigRes = in_array($classValue, $digitalResources);
       
         // get the actual class metadata
-        $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);
-        
+        $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);        
 
         foreach($metadataQuery as $m){            
             $metadata[] = $m["id"];
@@ -128,7 +127,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                 '#attributes' => $attributes,
                 '#description' => ' ',
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
-                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m), '+/=', '-_,')),
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m), '+/=', '-_,'), 'fieldName' => $label),
                 //create the ajax to we can display the selected uri title
                 '#ajax' => [
                     // Function to call when event on form element triggered.
