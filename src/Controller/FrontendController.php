@@ -43,70 +43,81 @@ class FrontendController extends ControllerBase {
         $string = $request->query->get('q');
         
         //check the user entered char's
-        if(strlen($string) >= 3) {            
-        
-            //f.e.: depositor
-            $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
-
-            // this is the fedora.localhost url
-            //$resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
-
-            if(empty($propUri)){
-                return new JsonResponse(array());
-            }
-
-            $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-            $fedora = new Fedora($config); 
-            //get the property resources
-            $rangeRes = null;
-            try {
-                $prop = $fedora->getResourceById($propUri);
-                //get the property metadata
-                $propMeta = $prop->getMetadata();
-                // check the range property in the res metadata
-                $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
-            }  catch (\RuntimeException $e){}
-
-            if($rangeRes === null){
-                return new JsonResponse(array()); // range property is missing - no autocompletion
-            }
-
-            $resources = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
-
-            if($resources === null){
-                return new JsonResponse(array());
-            }
-
-            foreach($resources as $i){
-
-                $acdhId = $i->getMetadata()->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
-
-                if(empty($acdhId)){ continue; }
-
-                $acdhId = $acdhId->getUri();
-
-                //if the user input available in the resource then we 
-                //gives back a filtered array with the results
-                $filterUri = strpos(strtolower($i->getUri()), strtolower($string)) !== false;
-                $filterLabel = strpos(strtolower($i->getMetadata()->label()), strtolower($string)) !== false;
-                $filterId = strpos(strtolower($acdhId), strtolower($string)) !== false;
-
-                if ($filterUri || $filterLabel || $filterId) {
-
-                    $label = empty($i->getMetadata()->label()) ? $acdhId : $i->getMetadata()->label();
-                    $label = (string)utf8_decode($label);
-                    $matches[] = ['value' => $acdhId , 'label' => $label];
-                    
-                    if(count($matches) >= 10){
-                        break;
-                    }
-                }
-            }
-            
-            return new JsonResponse($matches);
-        }else {
+        if(strlen($string) < 3) {            
             return new JsonResponse(array());
         }
+        
+        //f.e.: depositor
+        $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
+
+        // this is the fedora.localhost url
+        //$resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
+
+        if(empty($propUri)){
+            return new JsonResponse(array());
+        }
+
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config); 
+        //get the property resources
+        $rangeRes = null;
+        try {
+            $prop = $fedora->getResourceById($propUri);
+            //get the property metadata
+            $propMeta = $prop->getMetadata();
+            // check the range property in the res metadata
+            $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+        }  catch (\RuntimeException $e){}
+
+        if($rangeRes === null){
+            return new JsonResponse(array()); // range property is missing - no autocompletion
+        }
+
+        $matchClass = $fedora->getResourcesByProperty('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $rangeRes->getUri());
+
+        // if we want additional properties to be searched, we should add them here:
+        $match = array(
+            'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $string),
+            'name'   => $fedora->getResourcesByPropertyRegEx('http://xmlns.com/foaf/0.1/name', $string),
+            'acdhId' => $fedora->getResourcesByPropertyRegEx($config->get('fedoraIdProp'), $string),
+        );
+
+        $matchResource = $matchValue = array();
+        foreach ($matchClass as $i) {
+            $matchResource[] = $i->getUri();
+            if (stripos($i->getUri(), $string) !== false) {
+                $matchValue[] = $i->getUri();
+            }
+        }
+        foreach ($match as $i) {
+            foreach ($i as $j) {
+                $matchValue[] = $j->getUri();
+            }
+        }
+        $matchValue = array_unique($matchValue);
+        $matchBoth = array_intersect($matchResource, $matchValue);
+
+        foreach ($matchClass as $i) {
+            if (!in_array($i->getUri(), $matchBoth)) {
+                continue;
+            }
+
+            $meta = $i->getMetadata();
+            $acdhId = $meta->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
+            if(empty($acdhId)){
+                continue;
+            }
+            $acdhId = $acdhId->getUri();
+
+            $label = empty($meta->label()) ? $acdhId : $meta->label();
+            $matches[] = ['value' => $acdhId , 'label' => (string)utf8_decode($label)];
+
+            if(count($matches) >= 10){
+                 break;
+            }
+        }
+
+        return new JsonResponse($matches);
     }    
     
     /* 
