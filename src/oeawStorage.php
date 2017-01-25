@@ -29,7 +29,7 @@ class oeawStorage {
      * Get the root elements from fedora
      * 
      * @return Array
-     * 
+     * +
      */
     public function getRootFromDB() {
   
@@ -449,6 +449,38 @@ class oeawStorage {
         }
     }
      
+    public function searchForValue(string $value){
+        
+        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
+        
+        if(empty($sparqlConfig)){
+            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
+        }
+        
+        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
+        
+        try {
+            //if the property is url then
+            if(!empty(filter_var($value, FILTER_VALIDATE_URL))){
+                $value = "<". $value .">";
+            }
+      
+            $result = $sparql->query(
+                    self::$prefixes . ' SELECT ?uri ?property ?value  '
+                    . 'WHERE {'
+                        . '?uri ?property '.$value.' . '                        
+                    . '} ');
+
+            $fields = $result->getFields(); 
+            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
+
+            return $getResult;
+
+        } catch (Exception $ex) {
+            return drupal_set_message(t('There was an error in the function: searchForValue'), 'error');
+        }
+        
+    }
     
     public function searchForData(string $value, string $property){
         
@@ -462,8 +494,8 @@ class oeawStorage {
         
         try {
             //if the property is url then
-            if(!empty(filter_var($resourceProperty, FILTER_VALIDATE_URL))){
-                $resourceProperty = "<". $resourceProperty .">";
+            if(!empty(filter_var($property, FILTER_VALIDATE_URL))){
+                $property = "<". $property .">";
             }
        
             $result = $sparql->query(

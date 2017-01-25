@@ -123,7 +123,7 @@ class oeawFunctions {
     
     /* 
      *
-     * Simple function to create array from sparql object, to we can pass data to the datatables     
+     * Create array from  EasyRdf_Sparql_Result object
      *
      * @param EasyRdf_Sparql_Result object $result  
      * @param array $fields

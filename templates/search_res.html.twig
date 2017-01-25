@@ -21,6 +21,8 @@
                             {{item.title}}
                         {% elseif  item.label %}
                             {{item.label}}
+                        {% elseif  item.value %}
+                            {{item.value}}
                         {% else %}
                             Title is missing - {{item.uri}}
                         {% endif %}    

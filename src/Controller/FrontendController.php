@@ -132,7 +132,7 @@ class FrontendController extends ControllerBase {
         $rows = array();
         
         $uid = \Drupal::currentUser()->id();
-        
+        //if the user is anonymus then we hide the add resource menu
         if($uid !== 0){
             $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
             $rows[2] = array('data' => array($link2));
@@ -225,36 +225,45 @@ class FrontendController extends ControllerBase {
         
         $uid = \Drupal::currentUser()->id();
         
+        $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($uri);
         // get the table data by the details uri from the URL
-        $result = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
         
-        for ($i = 0; $i < count($result); $i++) {
+        //init an empty array to the table result
+        $result = array();
+        $resC = 0;
+        foreach($rootGraph->propertyUris($uri) as $v){
             
-            foreach($result[$i] as $key => $value)
-            {                
-                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+            $element = $rootGraph->get($uri,EasyRdfUtil::fixPropName($v))->toRdfPhp();
+            
+            if(!empty($element["value"])){
+                //add new row to the results
+                $result[$resC]["property"] = $v; 
+                $result[$resC]["value"] = $element["value"];
                 
-                if($decodeUrl !== false){         
+                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($element["value"], "decode");
+                
+                if($decodeUrl !== false){
+                    
                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                     if($uid !== 0){
                         $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
                     } 
                 }
-                
-                $res[$i][$key] = $value; 
-            }
+            }            
+            $resC++;
         }
-        $header = array_keys($res[0]);
-        //get the root identifier to i can get the children elements        
-        //$rootIdentifier = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dct:identifier');
         
-        $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($uri);
-        $rootIdentifier = $rootGraph->get($uri,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
-
+        $header = array_keys($result[0]);       
+        
+        //get the root identifier to i can get the children elements
+        $rootIdentifier = $rootGraph->get($uri,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'));
+        
+        
         if(!empty($rootIdentifier)){
-            //get the childrens data by the root             
-            $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier["value"]);
-            
+            $rootIdentifier->toRdfPhp();
+            //get the childrens data by the root                         
+            $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier["value"]);            
+
             $childHeader = array_keys($childrenData[0]);
             
             for ($x = 0; $x < count($childrenData); $x++) {
@@ -277,14 +286,18 @@ class FrontendController extends ControllerBase {
             $childHeader = "";
         }
         $resEditUrl = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'encode');
-        $resTitle = \Drupal\oeaw\oeawStorage::getValueByUriProperty($uri, 'dc:title');
         
+        $resTitle = $rootGraph->label($uri);
+        if($resTitle){
+            $resTitle->dumpValue('text');
+        }else {
+            $resTitle = "title is missing";
+        }
         
         $editResData = array(
             "editUrl" => $resEditUrl, 
-            "title" => $resTitle[0]["value"]
-            );
-        
+            "title" => $resTitle
+            );        
         
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
@@ -299,10 +312,8 @@ class FrontendController extends ControllerBase {
                 'oeaw/oeaw-styles', //include our custom library for this response
                 ]
             ]
-        );
-                
-        return $datatable;
-        
+        );                
+        return $datatable;        
     }
     
     
@@ -313,8 +324,7 @@ class FrontendController extends ControllerBase {
      * @return Drupal Form 
     */
 
-    public function oeaw_search() {
-    
+    public function oeaw_search() {    
        
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\SearchForm');
         return $form;
@@ -333,8 +343,63 @@ class FrontendController extends ControllerBase {
         $metaValue = $_SESSION['oeaw_form_result_metavalue'];
         
         $uid = \Drupal::currentUser()->id();
+        //normal string seacrh
+        $stringSearch = \Drupal\oeaw\oeawStorage::searchForData($metaValue, $metaKey);
         
-        $data = \Drupal\oeaw\oeawStorage::searchForData($metaValue, $metaKey);
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config);
+        //we will search in the title, name, fedoraid
+        $idSearch = array(            
+            'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $metaValue),
+            'name'   => $fedora->getResourcesByPropertyRegEx('http://xmlns.com/foaf/0.1/name', $metaValue),
+            'acdhId' => $fedora->getResourcesByPropertyRegEx($config->get('fedoraIdProp'), $metaValue),
+        );        
+
+        $x = 0;
+        $data = array();
+ 
+        foreach ($idSearch as $i) {
+            
+            foreach ($i as $j) {
+                //if there is any property which contains the searched value then
+                // we get the uri and 
+                if(!empty($j->getUri())){
+                    //get the resource identifier f.e.: id.acdh.oeaw.ac.at.....
+                    $identifier = $fedora->getResourceByUri($j->getUri())->getMetadata()->getResource(EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->getUri();
+                    
+                    if(!empty($identifier)){
+                        //get the resources which is part of this identifier
+                        
+                        $ids = \Drupal\oeaw\oeawStorage::searchForData($identifier, $metaKey);
+                        //$ids = \Drupal\oeaw\oeawStorage::searchForValue($identifier);
+                        
+                        foreach($ids as $v){
+                            $data[$x]["uri"] = $v["uri"];
+                            ;
+                            if(empty($v["title"])){                                
+                                $v["title"] = "";
+                            }
+                            $data[$x]["title"] = $v["title"];
+                            $x++;
+                        }
+                    }else {
+                        $data[$x]["uri"] = $j->getUri();
+                        $data[$x]["value"] = $metaValue;
+                        $data[$x]["title"] = $j->getMetadata()->label()->__toString();
+                        $x++;
+                    }                    
+                }                
+            }
+        }        
+
+        if(!empty($data) && !empty($stringSearch)){
+            //we need to remove the double uri#'s!!!!!!!!!!!!!!!!!!!!
+            $data = array_merge($data, $stringSearch);            
+            
+        }elseif (empty($data)) {
+            
+            $data = $stringSearch;
+        }        
         
         for ($i = 0; $i < count($data); $i++) {            
             foreach($data[$i] as $key => $value){
