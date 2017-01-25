@@ -158,7 +158,8 @@ class EditForm extends FormBase {
                 // and shows the old Label to the user
                 if (strpos($value, 'https://id.acdh.oeaw.ac.at') !== false) {
                     $oldLabel = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
-                    $oldLabel = "Old Value: ".$oldLabel;
+                    $labelURL = (string)$value;
+                    $oldLabel = "Old Value: <a href='$labelURL' target='_blank'>".$oldLabel."</a>";
                 }
             } else {
                 $value = "";                
