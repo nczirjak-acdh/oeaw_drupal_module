@@ -260,7 +260,8 @@ class FrontendController extends ControllerBase {
         
         
         if(!empty($rootIdentifier)){
-            $rootIdentifier->toRdfPhp();
+            $rootIdentifier = $rootIdentifier->toRdfPhp();
+           
             //get the childrens data by the root                         
             $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier["value"]);            
 
@@ -348,6 +349,7 @@ class FrontendController extends ControllerBase {
         
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
+        
         //we will search in the title, name, fedoraid
         $idSearch = array(            
             'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $metaValue),
@@ -371,8 +373,9 @@ class FrontendController extends ControllerBase {
                         //get the resources which is part of this identifier
                         
                         $ids = \Drupal\oeaw\oeawStorage::searchForData($identifier, $metaKey);
+                        // if we want to search in everything
                         //$ids = \Drupal\oeaw\oeawStorage::searchForValue($identifier);
-                        
+                        //generate the result array
                         foreach($ids as $v){
                             $data[$x]["uri"] = $v["uri"];
                             ;
@@ -392,12 +395,9 @@ class FrontendController extends ControllerBase {
             }
         }        
 
-        if(!empty($data) && !empty($stringSearch)){
-            //we need to remove the double uri#'s!!!!!!!!!!!!!!!!!!!!
-            $data = array_merge($data, $stringSearch);            
-            
-        }elseif (empty($data)) {
-            
+        if(!empty($data) && !empty($stringSearch)){            
+            $data = array_merge($data, $stringSearch);                        
+        }elseif (empty($data)) {            
             $data = $stringSearch;
         }        
         
@@ -472,9 +472,7 @@ class FrontendController extends ControllerBase {
     */
     
     public function oeaw_editing($uri, Request $request) {
-        
-        $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
-        $data = \Drupal\oeaw\oeawStorage::getAllPropertyByURI($uri);
+     
         $uid = \Drupal::currentUser()->id();
         if($uid !== 0){            
             $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');            

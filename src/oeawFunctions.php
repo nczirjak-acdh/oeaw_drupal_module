@@ -24,6 +24,13 @@ use EasyRdf_Resource;
  
 class oeawFunctions {
        
+    public function initFedora(){
+        // setup fedora
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config);
+        
+        return $fedora;
+    }
     
     public function makeGraph($uri){
      
@@ -76,25 +83,34 @@ class oeawFunctions {
         }
        
         $color = 'green';
-
-        foreach($result as $key => $value){            
-
-            $label = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
+        
+        $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        
+        foreach($result as $key => $value){
+            
+            $resNL = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", (string)$value);            
+       
+            foreach($resNL as $nl){
+                if(!empty($nl->getMetadata()->label())){
+                    $label = (string)utf8_decode($nl->getMetadata()->label());                    
+                }else {
+                    $label = "";
+                }
+            }            
 
             if(!empty($label)){
                 $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', "New Value: <a href='".(string)$value."' target='_blank'>".(string)$label."</a>"));
-                $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));        
+                $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));
             }
         }
         // Return the AjaxResponse Object.
-        return $ajax_response;
-        
+        return $ajax_response;        
     }
     
     /*
      * This functions checks the given identifier label/name/title
      * This used for the editForm title generating
-     *  
+     *  ----
      */
     
     public function getLabelByIdentifier(string $value){

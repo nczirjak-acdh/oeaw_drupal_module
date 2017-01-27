@@ -84,8 +84,7 @@ abstract class NewResourceFormBase extends FormBase {
             '#weight' => 10,
         );
 
-        return $form;
-        
+        return $form;        
     }
     
     /*

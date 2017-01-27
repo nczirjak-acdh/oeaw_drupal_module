@@ -243,7 +243,7 @@ class oeawStorage {
                             . ' ?uri ' . $property . ' ?value . '
                         . '}');
             } else {    
-               
+                             
                 $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
@@ -311,6 +311,7 @@ class oeawStorage {
      *     
      *
      * @return Array
+     * +
     */    
     public function getDigitalResources()
     {

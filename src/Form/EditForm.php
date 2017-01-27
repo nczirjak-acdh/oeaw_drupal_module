@@ -83,19 +83,19 @@ class EditForm extends FormBase {
         }
 
         $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
-
         
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
-
+     
         $digitalResources = array();
 
+        //we need that ones where the collection is true
         foreach ($digitalResQuery as $dr) {
             if (isset($dr["collection"])) {
                 $digitalResources[] = $dr["id"];
             }
         }
-
+        //create and load the data to the graph
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
 
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
@@ -111,10 +111,19 @@ class EditForm extends FormBase {
             $classVal[] = $classValue["value"];
         }
 
+        $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        
         if (!empty($classVal)) {
-            foreach ($classVal as $cval) {
-                $editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);
-                $actualClassUri = $cval;
+            foreach ($classVal as $cval) {                
+                //$editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);                
+                $res = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $cval);
+                // this will contains the onotology uri, what will helps to use to know
+                // which fields we need to show in the editing form
+                $editUriClass = $res[0]->getUri();
+                
+                if($editUriClass){
+                    $actualClassUri = $cval;
+                }
             }
         } else {
             drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
@@ -123,25 +132,17 @@ class EditForm extends FormBase {
         if (empty($editUriClass)) {
             drupal_set_message($this->t('URI Class is empty!!'), 'error');
         }
-        
-        // this will contains the onotology uri, what will helps to use to know
-        // which fields we need to show in the editing form
-        $editUriClass = $editUriClass[0]["uri"];
-
+       
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
         
-        $attributes = array();
-        
-        //create and load the data to the graph
-        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
+        $attributes = array();        
+                
         $resTitle = $classGraph->label($editUri);        
         
         $form['resource_title'] = array(
             '#markup' => '<h2><b><a href="'.$editUri.'" target="_blank">'.$resTitle.'</a></b></h2>',
         );
-
-
         
         for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
 
@@ -157,12 +158,20 @@ class EditForm extends FormBase {
                 // if the input field value contains the id.acdh... then we check the labels
                 // and shows the old Label to the user
                 if (strpos($value, 'https://id.acdh.oeaw.ac.at') !== false) {
-                    $oldLabel = \Drupal\oeaw\oeawFunctions::getLabelByIdentifier((string)$value);
-                    $labelURL = (string)$value;
-                    $oldLabel = "Old Value: <a href='$labelURL' target='_blank'>".$oldLabel."</a>";
+                    
+                    $resOT = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $value);
+                    foreach($resOT as $ot){
+                        if(!empty($ot->getMetadata()->label())){
+                            $labelURL = (string)$value;
+                            $labelTxt = (string)utf8_decode($ot->getMetadata()->label());
+                            $oldLabel = "Old Value: <a href='$labelURL' target='_blank'>".$labelTxt."</a>";
+                        }else {
+                            $oldLabel = "";
+                        }
+                    }
                 }
             } else {
-                $value = "";                
+                $value = "";
             }
 
             // get the field uri s last part to show it as a label title
@@ -208,9 +217,6 @@ class EditForm extends FormBase {
                   ],
             );
            
-            
-
-
             //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
             $form[$labelVal . ':oldValues'] = array(
