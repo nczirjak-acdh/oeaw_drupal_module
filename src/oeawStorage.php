@@ -182,7 +182,7 @@ class oeawStorage {
                         . 'distinct ?p '
                     . 'WHERE {'
                         . ' ?s ?p ?o '
-                    . '}');
+                    . '} order by (?p)');
 
             $fields = $result->getFields(); 
 
