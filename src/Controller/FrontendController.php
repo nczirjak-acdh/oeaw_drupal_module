@@ -367,11 +367,12 @@ class FrontendController extends ControllerBase {
                 // we get the uri and 
                 if(!empty($j->getUri())){
                     //get the resource identifier f.e.: id.acdh.oeaw.ac.at.....
-                    $identifier = $fedora->getResourceByUri($j->getUri())->getMetadata()->getResource(EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->getUri();
+                    
+                    $identifier = $fedora->getResourceByUri($j->getUri())->getMetadata()->getResource(EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'));
                     
                     if(!empty($identifier)){
                         //get the resources which is part of this identifier
-                        
+                        $identifier = $identifier->getUri();
                         $ids = \Drupal\oeaw\oeawStorage::searchForData($identifier, $metaKey);
                         // if we want to search in everything
                         //$ids = \Drupal\oeaw\oeawStorage::searchForValue($identifier);
