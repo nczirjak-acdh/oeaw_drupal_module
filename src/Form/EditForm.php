@@ -119,7 +119,9 @@ class EditForm extends FormBase {
                 $res = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $cval);
                 // this will contains the onotology uri, what will helps to use to know
                 // which fields we need to show in the editing form
-                $editUriClass = $res[0]->getUri();
+                if($res){
+                    $editUriClass = $res[0]->getUri();
+                }
                 
                 if($editUriClass){
                     $actualClassUri = $cval;
@@ -258,7 +260,6 @@ class EditForm extends FormBase {
 
     
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
-               
          
         //get the formelements
         $formElements = $form_state->getUserInput();        
