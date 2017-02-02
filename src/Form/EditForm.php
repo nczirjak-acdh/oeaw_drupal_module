@@ -181,14 +181,13 @@ class EditForm extends FormBase {
             $label = end($label);
             $label = str_replace('#', '', $label);
 
-            // if the label is the isPartOf, then we need to disable the editing
+            // if the label is the isPartOf or identifier, then we need to disable the editing
             // to the users, they do not have a permission to change it
-            if ($label == "isPartOf") {
+            if($editUriClassMetaFields[$i]["id"] === "http://purl.org/dc/terms/isPartOf" || $editUriClassMetaFields[$i]["id"] ==="http://purl.org/dc/terms/identifier"){
                 $attributes = array('readonly' => 'readonly');
             } else {
                 $attributes = array();
             }
-            
             
             // generate the form fields
             $form[$label] = array(

@@ -63,15 +63,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         if(!empty($classID)){
             $classValue = $classID["value"];
         }
-        // get the actual class dct:identifier to we can compare it with the digResource
-        //$classValue = \Drupal\oeaw\oeawStorage::getValueByUriProperty($class, "dct:identifier");
-        /*foreach($classValue as $cv){
-            
-            if(!empty($cv["value"])){
-                $classValue = $cv["value"];
-            }
-        }*/
-        
+           
         //we store the ontology identifier for the saving process
         $this->store->set('ontologyClassIdentifier', $classValue);
         
@@ -100,19 +92,25 @@ class NewResourceTwoForm extends NewResourceFormBase  {
        
         foreach ($metadata as $m) {            
 
+            //we dont need the identifier, because doorkeeper will generate it automatically
+            if($m === "http://purl.org/dc/terms/identifier"){
+               continue; 
+            }
+            
             $expProp = explode("/", $m);            
             $expProp = end($expProp);
             if (strpos($expProp, '#') !== false) {
                $expProp = str_replace('#', '', $expProp);
             }
             
-            if($expProp == 'isPartOf'){
+            //|| $editUriClassMetaFields[$i]["id"] ===
+            if($m === "http://purl.org/dc/terms/isPartOf" ){
                 $defaultValue = $rootIdentifier;
-                $attributes =  array('readonly' => 'readonly');
-            }else{
+                $attributes = array('readonly' => 'readonly');
+            } else {
                 $defaultValue = $this->store->get($m) ? $this->store->get($m) : '';
-                $attributes = "";
-            }
+                $attributes = array();
+            }            
 
             if(empty($m['label']) || !isset($m['label'])){          
                 $label = $expProp;
