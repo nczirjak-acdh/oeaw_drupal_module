@@ -1,1 +1,9 @@
-sparql_endpoint: http://blazegraph:9999/blazegraph/sparql2
+id: demo_resource
+plugin_id: oeaw
+granularity: method
+configuration:
+  GET:
+    supported_formats:
+      - json
+    supported_auth:
+      - basic_auth
