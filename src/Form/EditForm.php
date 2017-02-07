@@ -243,7 +243,7 @@ class EditForm extends FormBase {
                 '#type' => 'managed_file',
                 '#title' => t('FILE'),                
                 '#upload_validators' => array(
-                    'file_validate_extensions' => array('xml doc txt simplified docx'),
+                    'file_validate_extensions' => array('xml doc txt simplified docx pdf'),
                 ),
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
             );
