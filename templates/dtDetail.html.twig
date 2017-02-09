@@ -1,6 +1,9 @@
 
 <div class="vcenter">
-    <h2 class="title">{{ editResData.title }} |  <a href="/oeaw_editing/{{ editResData.editUrl }}"><i class="fa fa-pencil-square-o fa-1x"></i></a>  </h2>    
+    <h2 class="title">
+        {{ editResData.title }} |  <a href="/oeaw_editing/{{ editResData.editUrl }}"><i class="fa fa-pencil-square-o fa-1x"></i></a> 
+         {% if hasBinary %} | <a href="{{ hasBinary }}"><i class="fa fa-download" aria-hidden="true"></i></a>  {% endif %}
+    </h2>    
 </div>    
 
 <table id="" class="display" cellspacing="0" width="100%">
@@ -14,16 +17,26 @@
             {% for item in result %}
             <tr>                
                 <td>{{ item.property }}</td>
-                <td>{{ item.value }}</td>                
+                <td>
+                    {% if item.value is iterable %}
+                        {% for value in item.value %}
+                            {{ value }}
+                            <br>
+                       {% endfor %}     
+                    {% else %}
+                        {{ item.value }}
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}                                          
     </tbody>        
 </table>
 
+        
 {% if childResult %}    
 <br/><br/>
 <div class="title">
-    <h2>Child Resource  |  <a href=""><i class="fa fa-plus-circle fa-1x" aria-hidden="true"></i></a></h2>
+    <h2>Child Resource <!--<a href=""><i class="fa fa-plus-circle fa-1x" aria-hidden="true"></i></a>--></h2>
     <br/>
 </div>    
 <table id="" class="display" cellspacing="0" width="100%">

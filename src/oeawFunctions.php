@@ -32,6 +32,17 @@ class oeawFunctions {
         return $fedora;
     }
     
+    public function makeMetaData($uri){
+       // setup fedora
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($config);
+        //create and load the data to the graph
+        $res = $fedora->getResourceByUri($uri);
+        $meta = $res->getMetadata();
+        
+        return $meta;
+    }
+    
     public function makeGraph($uri){
      
         // setup fedora

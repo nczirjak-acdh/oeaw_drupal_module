@@ -227,69 +227,58 @@ class FrontendController extends ControllerBase {
         $uid = \Drupal::currentUser()->id();
         
         $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($uri);
+        $rootMetaAll =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri)->all(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+        $rootMeta =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri);
         // get the table data by the details uri from the URL
-        
-        //init an empty array to the table result
-        $result = array();
-        $resC = 0;
-        foreach($rootGraph->propertyUris($uri) as $v){
+        $i = 0;
+        $results = array();
+        $hasBinary = "";
+        foreach($rootMeta->propertyUris($uri) as $v){
             
-            $element = $rootGraph->get($uri,EasyRdfUtil::fixPropName($v))->toRdfPhp();
-            
-            if(!empty($element["value"])){
-                //add new row to the results
-                $result[$resC]["property"] = $v; 
-                $result[$resC]["value"] = $element["value"];
-                
-                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($element["value"], "decode");
-                
-                if($decodeUrl !== false){
-                    
-                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                    if($uid !== 0){
-                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                    } 
-                }
-            }            
-            $resC++;
-        }
-        
-        $header = array_keys($result[0]);       
-        
-        //get the root identifier to i can get the children elements
-        $rootIdentifier = $rootGraph->get($uri,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'));
-        
-        
-        if(!empty($rootIdentifier)){
-            $rootIdentifier = $rootIdentifier->toRdfPhp();
-           
-            //get the childrens data by the root                         
-            $childrenData = \Drupal\oeaw\oeawStorage::getChildrenPropertyByRoot($rootIdentifier["value"]);            
-
-            $childHeader = array_keys($childrenData[0]);
-            
-            for ($x = 0; $x < count($childrenData); $x++) {
-
-                foreach($childrenData[$x] as $keyC => $valueC)
-                {
-                    $decodeUrlC = \Drupal\oeaw\oeawFunctions::isURL($valueC, "decode");
-
-                    if($decodeUrlC !== false){                             
-                         $childResult[$x]['detail'] = "/oeaw_detail/".$decodeUrlC;
-                        if($uid !== 0){
-                            $childResult[$x]['edit'] = "/oeaw_editing/".$decodeUrlC;                            
-                        } 
-                    } 
-                    $childResult[$x][$keyC] = $valueC; 
+            foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
+                if(get_class($item) == "EasyRdf_Resource"){                
+                    $results[$i]["property"] = $v;
+                    $results[$i]["value"][] = $item->getUri();
+                    if($item->getUri() == "http://fedora.info/definitions/v4/repository#Binary"){ $hasBinary = $uri;}
+                }else {
+                    $results[$i]["property"] = $v;                    
+                    $results[$i]["value"] = $item->__toString();
                 }
             }
-        } else {
+            $i++;
+        }
+
+        $header = array_keys($results[0]);     
+        
+        //get the childrens
+        $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        $childF = $fedora->getResourceByUri($uri);
+        $childF = $childF->getChildren();
+        
+        $i = 0;
+        if($childF){
+            foreach($childF as $r){
+                
+                $childResult[$i]['uri']= $r->getUri();
+                $childResult[$i]['title']= $r->getMetadata()->label();
+                $decUrlChild = \Drupal\oeaw\oeawFunctions::isURL($r->getUri(), "decode");
+                
+                $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;
+                if($uid !== 0){
+                    $childResult[$i]['edit'] = "/oeaw_editing/".$decUrlChild;                            
+                } 
+                $i++;
+            }
+        }else {
             $childResult = "";
             $childHeader = "";
         }
+        
+        
         $resEditUrl = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'encode');
         
         $resTitle = $rootGraph->label($uri);
+        
         if($resTitle){
             $resTitle->dumpValue('text');
         }else {
@@ -299,13 +288,15 @@ class FrontendController extends ControllerBase {
         $editResData = array(
             "editUrl" => $resEditUrl, 
             "title" => $resTitle
-            );        
-        
+        );        
+      
+
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
-            '#result' => $result,
+            '#result' => $results,
             '#header' => $header,
             '#userid' => $uid,
+            '#hasBinary' => $hasBinary,
             '#childResult' => $childResult,
             '#childHeader' => $childHeader,
             '#editResData' => $editResData,
@@ -334,7 +325,7 @@ class FrontendController extends ControllerBase {
     
     /* 
      *
-     * This will contains the search page results
+     * This contains the search page results
      *
      * @return array with drupal core table generating
     */
