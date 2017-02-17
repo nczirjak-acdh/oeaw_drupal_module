@@ -24,27 +24,34 @@ use EasyRdf_Resource;
  
 class oeawFunctions {
        
-    public function initFedora(){
+    public function initFedora(): Fedora{
         // setup fedora
+        $fedora = array();
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
         
         return $fedora;
     }
     
-    public function makeMetaData($uri){
+    public function makeMetaData($uri): EasyRdf_Resource{
+        
+        if(empty($uri)){
+            return drupal_set_message(t('The uri is missing!'), 'error');
+        }
+        
+        $fedora = array();
+        $meta = array();
        // setup fedora
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
-        //create and load the data to the graph
         $res = $fedora->getResourceByUri($uri);
         $meta = $res->getMetadata();
-        
         return $meta;
     }
     
-    public function makeGraph($uri){
+    public function makeGraph($uri): EasyRdf_Graph{
      
+        $graph = array();
         // setup fedora
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
@@ -61,7 +68,12 @@ class oeawFunctions {
      * 
      */
     
-    public function getFieldNewTitle($formElements, $mode = 'edit'){
+    public function getFieldNewTitle($formElements, $mode = 'edit'): AjaxResponse{
+        
+        $result = array();
+        $newKey = array();
+        $oldValues = array();
+        $fedora = array();
         
         if($mode == "edit"){
             //create the old values and the new values arrays with the user inputs
@@ -97,6 +109,9 @@ class oeawFunctions {
         
         $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
         
+        $resNL = array();
+        $label = "";
+        
         foreach($result as $key => $value){
             
             $resNL = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", (string)$value);            
@@ -124,7 +139,7 @@ class oeawFunctions {
      *  ----
      */
     
-    public function getLabelByIdentifier(string $value){
+    public function getLabelByIdentifier(string $value): string{
         
         $res = \Drupal\oeaw\oeawStorage::getDataByProp('dct:identifier', (string)$value);
         
@@ -158,13 +173,16 @@ class oeawFunctions {
      * @return array
     */
     
-    public function createSparqlResult($result, array $fields){
+    public function createSparqlResult(\EasyRdf_Sparql_Result $result, array $fields): array{
         
         if(empty($result) && empty($fields)){
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
-
+        $res = array();
         $resCount = count($result)-1;
+        $objClass = array();
+        $val = "";
+        
         for ($x = 0; $x <= $resCount; $x++) {
         
             foreach($fields as $f){                
@@ -201,25 +219,28 @@ class oeawFunctions {
     
     /* 
      *
-     * create prefix from string based on the connData.php prefixes
-     *
+     * create prefix from string based on the connData.php prefixes     
      * @param string $string : url     
-     *
      * @return string
     */     
-    public function createPrefixesFromString(string $string){
+    public function createPrefixesFromString(string $string): string{
         
         if (empty($string)) {
            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
         
+        $result = array();
+        $endValue = array();
+        
         $endValue = explode('/', $string);
         $endValue = end($endValue);
+        
         if (strpos($endValue, '#') !== false) {
             $endValue = explode('#', $string);
             $endValue = end($endValue);
         }
         
+        $newString = array();
         $newString = explode($endValue, $string);
         $newString = $newString[0];
         
@@ -236,21 +257,21 @@ class oeawFunctions {
         
     }
     
-    /* 
-     *
-     * create prefix from string based on the connData.php prefixes
-     *
+    /*      
+     * create prefix from string based on the connData.php prefixes     
      * @param string $string : url     
-     *
      * @return string
     */     
-    public function createPrefixesFromArray(array $array, array $header){
+    public function createPrefixesFromArray(array $array, array $header): array{
         
         if (empty($array) && empty($header)) {
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
         
         $result = array();
+        $endValue= array();
+        $newString = array();
+        
         
         for ($index = 0; $index < count($header); $index++) {
             
@@ -267,7 +288,6 @@ class oeawFunctions {
                 
                 $newString = explode($endValue, $value);
                 $newString = $newString[0];
-                
                  
                 if(!empty(\Drupal\oeaw\connData::$prefixesToChange[$newString])){            
                     $result[$key][] = \Drupal\oeaw\connData::$prefixesToChange[$newString].':'.$endValue;
@@ -275,7 +295,6 @@ class oeawFunctions {
                     $result[$key][] = $value;
                 }
             }
-            
         }
        
         return $result;
@@ -287,18 +306,19 @@ class oeawFunctions {
      * details button url generating to pass the uri value to the next page     
      *
      * @param string $data :  this is the url
-     * @param string $way : encode/decode
-     * 
+     * @param string $way : encode/decode     
      * 
      * @return string
     */
     
-    public static function createDetailsUrl($data, $way = 'encode', $dl = null) {
+    public static function createDetailsUrl(string $data, string $way = 'encode', string$dl = null): string {
       
+        $returnData = "";
+        
         if ($way == 'encode') {
             $data = str_replace(\Drupal\oeaw\connData::fedoraUrl(), '', $data);
             $data = base64_encode($data);
-            $data = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
+            $returnData = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
         }
 
         if ($way == 'decode') {
@@ -307,31 +327,24 @@ class oeawFunctions {
             $data = str_replace(array('-', '_'), array('+', '/'), $data);
             $mod4 = strlen($data) % 4;
             
-            if ($mod4) {
-                $data .= substr('====', $mod4);
-            }
+            if ($mod4) { $data .= substr('====', $mod4); }
             
             $data = base64_decode($data);
             
             if ($dl == null) {
-                $data = \Drupal\oeaw\connData::fedoraUrl() . $data;
+                $returnData = \Drupal\oeaw\connData::fedoraUrl() . $data;
             } else {
-                $data = \Drupal\oeaw\connData::fedoraDownloadUrl() . $data;
+                $returnData = \Drupal\oeaw\connData::fedoraDownloadUrl() . $data;
             }
         }
-        return $data;
+        return $returnData;
     }
     
-    /* 
-     *
-     * create detail or edit url from array
-     *
-     * @param string $string : the url 
-     *
-     * @return void
-    */
+   
         
-    public function isURL(string $string){
+    public function isURL(string $string): string{
+        
+        $res = "";
         
         if (filter_var($string, FILTER_VALIDATE_URL)) { 
             
@@ -352,33 +365,40 @@ class oeawFunctions {
      * http://fedora.localhost/rest/
      */
 
-    public function generateUrl($value, $dl = null) {
+    public function generateUrl($value, $dl = null): string {
         
         if(empty($value)){
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
+        $result = "";
         
         if (substr($value, 0, 4) == 'http') {
             if (substr($value, 0, 24) == \Drupal\oeaw\connData::fedoraUrl()) {
                 $value = str_replace(\Drupal\oeaw\connData::fedoraUrl(), \Drupal\oeaw\connData::fedoraDownloadUrl(), $value);
                 if ($dl == true) {
-                    return $value;
+                    $result = $value;
+                    return $result;
                 }
-                $value = t('<a href="' . $value . '">' . $value . '</a>');
-                return $value;
+                $result = t('<a href="' . $value . '">' . $value . '</a>');
+                return $result;
             }
-            $value = t('<a href="' . $value . '">' . $value . '</a>');
-            return $value;
+            $result = t('<a href="' . $value . '">' . $value . '</a>');
+            return $result;
         }
 
         return false;
     }
     
-    public function createUriFromPrefix(string $prefix){
+    public function createUriFromPrefix(string $prefix): string{
         
         if(empty($prefix)){
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
+        
+        $res = "";
+        $newValue = array();
+        $newPrefix = array();
+        $prefixes = array();
         
         $newValue = explode(':', $prefix);        
         $newPrefix = $newValue[0];

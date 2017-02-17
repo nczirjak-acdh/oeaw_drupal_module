@@ -100,6 +100,8 @@ abstract class NewResourceFormBase extends FormBase {
         $uriAndValue = $this->store->get('uriAndValue');
         $ontologyClassIdentifier = $this->store->get('ontologyClassIdentifier');
   
+        $graph = array();
+        $meta = array();
         //create an easyrdf_graph instance
         $graph = new \EasyRdf_Graph();            
         $meta = $graph->resource('acdh');

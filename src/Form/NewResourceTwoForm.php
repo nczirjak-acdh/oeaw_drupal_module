@@ -71,25 +71,42 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
       
+        
         // get the actual class metadata
-        $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);        
-
-        foreach($metadataQuery as $m){            
-            $metadata[] = $m["id"];
+        $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);  
+       $metadata = array();
+        if(count($metadataQuery) > 0){
+            foreach($metadataQuery as $m){            
+                $metadata[] = $m["id"];
+            }
+        }else {
+            return drupal_set_message($this->t('There is no metadata for this class'), 'error');
         }
+        
         
         $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
+        $rootID = array();
         $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
+        
         //get the value of the property
-        $rootIdentifier = $rootID["value"];
+        if(count($rootID) > 0 ){
+            $rootIdentifier = $rootID["value"];
+        }else {
+            return drupal_set_message($this->t('Your root element is missing! YOu cant add new resource without a root element!'), 'error');
+        }
+        
         
         //old solution
         //$rootIdentifier = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dct:identifier");
         //$rootIdentifier = $rootIdentifier[0]["value"];
         
-        $fieldsArray = array();
-       
+        $fieldsArray = array();       
+        $expProp = "";
+        $defaultValue = "";
+        $label = "";
+        $attributes = array();
+        $labelVal = "";
         foreach ($metadata as $m) {            
 
             //we dont need the identifier, because doorkeeper will generate it automatically
@@ -186,7 +203,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         //get the formelements
         $formElements = $form_state->getUserInput();        
-        
+        $result = array();
         $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
        
         return $result;        

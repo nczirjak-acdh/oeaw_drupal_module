@@ -73,7 +73,10 @@ class ClassForm extends FormBase
     public function buildForm(array $form, FormStateInterface $form_state) 
     {          
         $data = \Drupal\oeaw\oeawStorage::getClassesForSideBar();        
-        
+        if(empty($data)){
+             drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
+             return;
+        }
         /* get the fields from the sparql query */
         $fields = array_keys($data[0]);
         

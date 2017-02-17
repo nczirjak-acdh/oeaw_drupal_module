@@ -20,39 +20,50 @@ class SearchForm extends FormBase
     */
     public function buildForm(array $form, FormStateInterface $form_state) 
     {   
+        $propertys = array();
         $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
         
-        /* get the fields from the sparql query */
+        if(empty($propertys)){
+             drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys -> SearchForm '), 'error');
+             return;
+        }
+        $fields = array();
+        // get the fields from the sparql query 
         $fields = array_keys($propertys[0]);
-        
+        $searchTerms = array();
         $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromArray($propertys, $fields);
         
-        foreach($searchTerms["p"] as $terms){
-            $select[$terms] = t($terms);
+        if(count($searchTerms) > 0) {
+        
+            foreach($searchTerms["p"] as $terms){
+                $select[$terms] = t($terms);
+            }
+
+            $form['metakey'] = array (
+              '#type' => 'select',
+              '#title' => ('MetaKey'),
+              '#required' => TRUE,
+              '#options' => 
+                  $select
+            );
+
+            $form['metavalue'] = array(
+              '#type' => 'textfield',
+              '#title' => ('MetaValue'),          
+              '#required' => TRUE,
+            );
+
+            $form['actions']['#type'] = 'actions';
+            $form['actions']['submit'] = array(
+              '#type' => 'submit',
+              '#value' => $this->t('Search'),
+              '#button_type' => 'primary',
+            );
+
+            return $form;
+        } else {
+            drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys -> SearchForm'), 'error');
         }
-        
-        $form['metakey'] = array (
-          '#type' => 'select',
-          '#title' => ('MetaKey'),
-          '#required' => TRUE,
-          '#options' => 
-              $select
-        );
-       
-        $form['metavalue'] = array(
-          '#type' => 'textfield',
-          '#title' => ('MetaValue'),          
-          '#required' => TRUE,
-        );
-     
-        $form['actions']['#type'] = 'actions';
-        $form['actions']['submit'] = array(
-          '#type' => 'submit',
-          '#value' => $this->t('Search'),
-          '#button_type' => 'primary',
-        );
-        
-        return $form;
     }
     
     

@@ -38,7 +38,68 @@ class FrontendController extends ControllerBase {
         return $form;        
     }
     
-    public function autocomplete(request $request, $prop1, $fieldName) {
+    
+    /* 
+     *
+     * The root Resources list     
+     *
+     * @return array with datatable values and template name
+    */
+
+    public function roots_list(): array {
+        
+        // get the root resources
+        // sparql result fields - uri, title
+        $result = array();
+        $datatable = array();
+        $res = array();
+        $decodeUrl = "";
+        $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        $uid = \Drupal::currentUser()->id();
+        
+        if(count($result) > 0){
+            for ($i = 0; $i < count($result); $i++) {
+                foreach($result[$i] as $key => $value){
+                    // check that the value is an Url or not
+                    
+                    $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                    
+                    //create details and editing urls
+                    if($decodeUrl){ 
+                        
+                        $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                        if($uid !== 0){
+                            $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                        } 
+                    }
+                    $res[$i][$key] = $value; 
+                }
+                $decodeUrl = "";
+            }
+        }else {
+            return drupal_set_message(t('You have no root elements!'), 'error');    
+        }
+        
+     
+
+        $header = array_keys($res[0]);
+        //create the datatable values and pass the twig template name what we want to use
+        $datatable = array(
+            '#theme' => 'oeaw_root_dt',
+            '#result' => $res,
+            '#header' => $header,
+            '#userid' => $uid,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', 
+                ]
+            ]
+        );
+        
+        return $datatable;
+    }
+    
+    public function autocomplete(request $request, string $prop1, string $fieldName): JsonResponse {
         
         $matches = array();
         $string = $request->query->get('q');
@@ -62,6 +123,7 @@ class FrontendController extends ControllerBase {
         $fedora = new Fedora($config); 
         //get the property resources
         $rangeRes = null;
+        
         try {
             $prop = $fedora->getResourceById($propUri);
             //get the property metadata
@@ -127,23 +189,25 @@ class FrontendController extends ControllerBase {
      *
      * @return array with drupal core table values
     */
-    public function oeaw_menu() {
+    public function oeaw_menu(): array {
         
+        $table = array();
         $header = array('id' => t('MENU'));
         $rows = array();
         
         $uid = \Drupal::currentUser()->id();
-        //if the user is anonymus then we hide the add resource menu
-        if($uid !== 0){
-            $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
-            $rows[2] = array('data' => array($link2));
-        }
             
         $link = Link::fromTextAndUrl('List All Root Resource', Url::fromRoute('oeaw_roots'));
         $rows[0] = array('data' => array($link));
 
         $link1 = Link::fromTextAndUrl('Search by Meta data And URI', Url::fromRoute('oeaw_search'));
         $rows[1] = array('data' => array($link1));
+        
+        //if the user is anonymus then we hide the add resource menu
+        if($uid !== 0){
+            $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
+            $rows[2] = array('data' => array($link2));
+        }
         
         $table = array(
             '#type' => 'table',
@@ -160,53 +224,6 @@ class FrontendController extends ControllerBase {
     
     /* 
      *
-     * The root Resources list     
-     *
-     * @return array with datatable values and template name
-    */
-
-    public function roots_list() {
-        
-        // get the root resources
-        // sparql result fields - uri, title
-        $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
-        $uid = \Drupal::currentUser()->id();
-        
-        for ($i = 0; $i < count($result); $i++) {
-            foreach($result[$i] as $key => $value){
-                // check that the value is an Url or not
-                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
-                
-                //create details and editing urls
-                if($decodeUrl !== false){
-                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                    if($uid !== 0){
-                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                    } 
-                }
-                $res[$i][$key] = $value; 
-            }
-        }
-        
-        $header = array_keys($res[0]);
-        //create the datatable values and pass the twig template name what we want to use
-        $datatable = array(
-            '#theme' => 'oeaw_root_dt',
-            '#result' => $res,
-            '#header' => $header,
-            '#userid' => $uid,
-            '#attached' => [
-                'library' => [
-                'oeaw/oeaw-styles', 
-                ]
-            ]
-        );
-        
-        return $datatable;
-    }
-    
-    /* 
-     *
      * this generates the detail view when a user clicked the detail href on a reuslt page
      *
      * @param string $uri : the encoded uri from the url, to we can identify the selected resource
@@ -215,7 +232,7 @@ class FrontendController extends ControllerBase {
      *
      * @return array with datatable values and template name
     */
-    public function oeaw_detail(string $uri, Request $request) {
+    public function oeaw_detail(string $uri, Request $request): array {
         
         if (empty($uri)) {
            return drupal_set_message(t('The uri is missing!'), 'error');
@@ -227,27 +244,34 @@ class FrontendController extends ControllerBase {
         $uid = \Drupal::currentUser()->id();
         
         $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($uri);
-        $rootMetaAll =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri)->all(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+        
+        //$rootMetaAll =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri)->all(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+        
         $rootMeta =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri);
-        // get the table data by the details uri from the URL
-        $i = 0;
-        $results = array();
-        $hasBinary = "";
-        foreach($rootMeta->propertyUris($uri) as $v){
-            
-            foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
-                if(get_class($item) == "EasyRdf_Resource"){                
-                    $results[$i]["property"] = $v;
-                    $results[$i]["value"][] = $item->getUri();
-                    if($item->getUri() == "http://fedora.info/definitions/v4/repository#Binary"){ $hasBinary = $uri;}
-                }else {
-                    $results[$i]["property"] = $v;                    
-                    $results[$i]["value"] = $item->__toString();
-                }
-            }
-            $i++;
-        }
+        
+        if(count($rootMeta) > 0){
+            // get the table data by the details uri from the URL
+            $i = 0;
+            $results = array();
+            $hasBinary = "";
+            foreach($rootMeta->propertyUris($uri) as $v){
 
+                foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
+                    if(get_class($item) == "EasyRdf_Resource"){                
+                        $results[$i]["property"] = $v;
+                        $results[$i]["value"][] = $item->getUri();
+                        if($item->getUri() == "http://fedora.info/definitions/v4/repository#Binary"){ $hasBinary = $uri;}
+                    }else {
+                        $results[$i]["property"] = $v;                    
+                        $results[$i]["value"] = $item->__toString();
+                    }
+                }
+                $i++;
+            }
+        } else {
+            return drupal_set_message(t('The resource has no metadata!'), 'error');
+        }
+        
         $header = array_keys($results[0]);     
         
         //get the childrens
@@ -330,7 +354,7 @@ class FrontendController extends ControllerBase {
      * @return array with drupal core table generating
     */
 
-    public function oeaw_resources() {
+    public function oeaw_resources():array {
         
         $metaKey = $_SESSION['oeaw_form_result_metakey'];
         $metaValue = $_SESSION['oeaw_form_result_metavalue'];
@@ -351,7 +375,8 @@ class FrontendController extends ControllerBase {
 
         $x = 0;
         $data = array();
- 
+        $datatable = array();
+        
         foreach ($idSearch as $i) {
             
             foreach ($i as $j) {
@@ -365,9 +390,9 @@ class FrontendController extends ControllerBase {
                     if(!empty($identifier)){
                         //get the resources which is part of this identifier
                         $identifier = $identifier->getUri();
+                        
                         $ids = \Drupal\oeaw\oeawStorage::searchForData($identifier, $metaKey);
-                        // if we want to search in everything
-                        //$ids = \Drupal\oeaw\oeawStorage::searchForValue($identifier);
+                        
                         //generate the result array
                         foreach($ids as $v){
                             $data[$x]["uri"] = $v["uri"];
@@ -478,15 +503,19 @@ class FrontendController extends ControllerBase {
     
     
     /* 
-     * Get the classes data from the sidebar class block
+     * Get the classes data from the sidebar class list block
      * and display them
      *     
     */
-    public function oeaw_classes_result(){
-                
+    public function oeaw_classes_result(): array{
+        
+
         $url = Url::fromRoute('<current>');
         $internalpath = $url->getInternalPath();
         $internalpath = explode("/", $internalpath);
+        
+        $datatable = array();
+        $data = array();
         
         if($internalpath[0] == "oeaw_classes_result"){
             
@@ -495,31 +524,35 @@ class FrontendController extends ControllerBase {
             $property = $classesArr[0];
             $value =  $classesArr[1];
             $uid = \Drupal::currentUser()->id();
-
-            //$data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $property.':'.$value);
+            
             $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $searchResult);
+            
+            if(count($data) > 0){
+                $res = array();
+                for ($i = 0; $i < count($data); $i++) {            
+                    foreach($data[$i] as $key => $value){
+                        // check that the value is an Url or not
+                        $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
 
-            $res = array();
-            for ($i = 0; $i < count($data); $i++) {            
-                foreach($data[$i] as $key => $value){
-                    // check that the value is an Url or not
-                    $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
-
-                    //create details and editing urls
-                    if($decodeUrl !== false){                             
-                        $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                        if($uid !== 0 ){
-                           $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                        //create details and editing urls
+                        if($decodeUrl !== false){                             
+                            $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                            if($uid !== 0 ){
+                               $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                            }
                         }
+                        $res[$i][$key] = $value; 
                     }
-                    $res[$i][$key] = $value; 
                 }
-            }
 
-            $searchArray = array(
-                "metaKey" => $classesArr[0],
-                "metaValue" => $classesArr[1]
-            );
+                $searchArray = array(
+                    "metaKey" => $classesArr[0],
+                    "metaValue" => $classesArr[1]
+                );
+            }else {
+                return drupal_set_message(t('There is no data -> Class List Search'), 'error');      
+            }
+            
         }else {
             $searchArray = array();
             $res = array();

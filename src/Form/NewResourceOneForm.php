@@ -30,15 +30,19 @@ class NewResourceOneForm extends NewResourceFormBase {
         $form = parent::buildForm($form, $form_state);
         // we need to add this attribute because of the file uploading
         $form['#attributes']['enctype'] = "multipart/form-data";
-        
+        $roots = array();
         // get the root resources to we can show it on the select element
         $roots = \Drupal\oeaw\oeawStorage::getRootFromDB();
-        
-        //create the root option values
-        foreach($roots as $r){
-           $rootSelect[$r["uri"]] = t($r["title"]);
-        }
        
+        if(count($roots) > 0 ){
+            //create the root option values
+            foreach($roots as $r){
+                $rootSelect[$r["uri"]] = t($r["title"]);
+            }
+        }else{
+            return drupal_set_message($this->t('There is no root element!'), 'error');    
+        }       
+        
         // create the root form element with the values        
         $form["roots"] = array(
             "#type" => "select",
@@ -48,13 +52,19 @@ class NewResourceOneForm extends NewResourceFormBase {
             $rootSelect,
             '#default_value' => $this->store->get('roots') ? $this->store->get('roots') : '',
         );
-
+        
+        $classes = array();
         //get the class resources to we can show it on the select element
         $classes = \Drupal\oeaw\oeawStorage::getClass();
         
-        foreach($classes as $c){
-           $classesSelect[$c["uri"]] = t($c["title"]);
+        if(count($classes) > 0){
+            foreach($classes as $c){
+                $classesSelect[$c["uri"]] = t($c["title"]);
+            }
+        }else {
+            return drupal_set_message($this->t('There is no class element!'), 'error');    
         }
+        
         //create the class form element with the values
         $form['class'] = array(
             '#type' => 'select',
@@ -71,7 +81,7 @@ class NewResourceOneForm extends NewResourceFormBase {
     }
 
     public function submitForm(array &$form, FormStateInterface $form_state) {
-
+        $form1Elements = array();
         //get the class and root values from the form
         $form1Elements['root'] = $form_state->getValue('roots');
         $form1Elements['class'] = $form_state->getValue('class');

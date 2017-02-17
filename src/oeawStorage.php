@@ -9,8 +9,16 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Component\Render\MarkupInterface;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
+use acdhOeaw\fedora\metadataQuery\Query;
+use acdhOeaw\fedora\metadataQuery\HasTriple;
+use acdhOeaw\fedora\metadataQuery\HasValue;
+use acdhOeaw\fedora\metadataQuery\HasProperty;
+use acdhOeaw\fedora\metadataQuery\QueryParameter;
+use acdhOeaw\fedora\metadataQuery\MatchesRegEx;
+
 use acdhOeaw\util\SparqlEndpoint;
 use zozlak\util\Config;
+
 
 class oeawStorage {
 
@@ -23,16 +31,25 @@ class oeawStorage {
             . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>'
             . 'PREFIX dc: <http://purl.org/dc/elements/1.1/>'
             . 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>';
-
     
+    public static $sparqlPref = array(
+        'rdfType' => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+        'rdfsLabel' => 'http://www.w3.org/2000/01/rdf-schema#label',
+        'foafName' => 'http://xmlns.com/foaf/0.1/name'
+    );
+
     /*
      * Get the root elements from fedora
      * 
      * @return Array
      * +
      */
-    public function getRootFromDB() {
+    public function getRootFromDB(): array {
   
+        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');        
+        $dcTitle = $config->get('fedoraTitleProp');
+        $isPartOf = $config->get('fedoraRelProp');
+        
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
         if(empty($sparqlConfig)){
@@ -41,23 +58,22 @@ class oeawStorage {
       
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
 
+        
         try {
+          
+            $q = new Query();
+            $q->addParameter(new HasTriple('?uri', $dcTitle, '?title'));    
+            $q2 = new Query();
+            $q2->addParameter(new HasTriple('?uri', $isPartOf, '?y'));
+            $q2->setJoinClause('filter not exists');
+            $q->addSubquery($q2);            
+            $q->setSelect(array('?uri', '?title'));
+        
+            $query= $q->getQuery();
             
-            $result = $sparql->query(self::$prefixes . ' '
-                . 'SELECT '
-                    . '?uri ?title '
-                    . 'WHERE {  '
-                        . '?uri dc:title ?title .'
-                            . 'FILTER ('
-                                . '!EXISTS {'
-                                    . '?uri dct:isPartOf ?y .'
-                                    . '}'
-                                . ')'
-                    . '}'                
-            );
-        
+            $result = $sparql->query($query);        
             $fields = $result->getFields(); 
-        
+            
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
         
             return $getResult;
@@ -66,97 +82,7 @@ class oeawStorage {
             return drupal_set_message(t('There was an error in the function: getRootFromDB'), 'error');
         }
     }
-    
-    /*
-     * Get all property based on the provided uri
-     * 
-     * @uri Fedora resource uri
-     * 
-     * @return Array
-     * 
-    */
-    
-    public static function getAllPropertyByURI(string $uri) {
-        
-        if (empty($uri)) {
-            throw new \Exception('URI empty');
-        }
-        
-        try {
-            
-            $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-            
-            if(empty($sparqlConfig)){
-                return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
-            }
-            
-            $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-            
-            $result = $sparql->query(
-                    self::$prefixes . ' '
-                    . 'SELECT '
-                        . '?property ?value  '
-                    . 'WHERE { '
-                        . '<' . $uri . '> ?property ?value'
-                    . '}');
 
-            $fields = $result->getFields(); 
-
-            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-            
-            return $getResult;
-            
-        } catch (Exception $ex) {            
-            return drupal_set_message(t('There was an error in the function: getAllPropertyByURI'), 'error');
-        }
-    }
-
-    /*
-     * Get all uri from the uri child resources
-     * 
-     * @uri Fedora resource uri
-     * 
-     * @return Array
-     * 
-    */
-    public static function getChildrenPropertyByRoot(string $uri) {
-        
-        if (empty($uri)) {
-            throw new \Exception('URI empty');
-        }
-        
-        try {
-            
-            $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-            
-            if(empty($sparqlConfig)){
-                return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
-            }
-            
-            $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-            
-            $result = $sparql->query(
-                    self::$prefixes . ' '
-                    . 'SELECT '
-                        . '?uri ?title '
-                    . 'WHERE { '
-                        . '?uri dct:isPartOf <' . $uri . '> . '
-                        . 'OPTIONAL { ?uri dc:title ?title . } '
-                    . '}');
-        
-            $fields = $result->getFields(); 
-          
-            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-  
-            return $getResult;
-            
-        } catch (Exception $ex) {            
-            return drupal_set_message(t('There was an error in the function: getChildrenPropertyByRoot'), 'error');
-        }
-    }
-    
-    
    
     /* 
      *
@@ -164,7 +90,7 @@ class oeawStorage {
      *     
      * @return Array
     */
-    public static function getAllPropertyForSearch() {
+    public static function getAllPropertyForSearch():array {
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
@@ -176,14 +102,14 @@ class oeawStorage {
 
         try {
             
-            $result = $sparql->query(
-                    self::$prefixes . ' '
-                    . 'SELECT '
-                        . 'distinct ?p '
-                    . 'WHERE {'
-                        . ' ?s ?p ?o '
-                    . '} order by (?p)');
-
+            $q = new Query();
+            $q->addParameter(new HasTriple('?s', '?p', '?o'));    
+            $q->setDistinct(true);            
+            $q->setSelect(array('?p'));
+        
+            $query= $q->getQuery();
+            $result = $sparql->query($query);            
+            
             $fields = $result->getFields(); 
 
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
@@ -205,27 +131,27 @@ class oeawStorage {
      *
      * @return Array
     */
-    public static function getDataByProp(string $property, string $value = null) {
+    public static function getDataByProp(string $property, string $value): array {
         
         if (empty($property)) {
             return drupal_set_message(t('Empty values!'), 'error');
         }
-                
+      
         if(!filter_var($property, FILTER_VALIDATE_URL)){
             $property = \Drupal\oeaw\oeawFunctions::createUriFromPrefix($property);
-            $property = '<'. $property .'>';
+           
         }else if(filter_var($property, FILTER_VALIDATE_URL)){            
             $property = '<'. $property .'>';
         }
-        
-        
+
+
         if(!filter_var($value, FILTER_VALIDATE_URL)){
             $value = \Drupal\oeaw\oeawFunctions::createUriFromPrefix($value);
-            $value = '<'. $value .'>';
+           
         }else if(filter_var($value, FILTER_VALIDATE_URL)){            
             $value = '<'. $value .'>';
         }        
-        
+
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         if(empty($sparqlConfig)){
             return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
@@ -234,17 +160,33 @@ class oeawStorage {
         
         try {        
             
-            if ($value == null) {                
-                $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?uri ?value '
-                        . ' WHERE {'
-                            . ' ?uri ' . $property . ' ?value . '
-                        . '}');
-            } else {    
-                             
-                $result = $sparql->query(
+            $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+            $dcTitle = $config->get('fedoraTitleProp');
+            $foafName = self::$sparqlPref["foafName"];
+            $rdfsLabel = self::$sparqlPref["rdfsLabel"];
+            
+            
+            $q = new Query();
+            $q->addParameter((new HasValue($property, $value))->setSubVar('?uri'));
+            $q2 = new Query();
+            $q2->addParameter((new HasTriple('?uri', $dcTitle, '?title')));
+            $q2->setJoinClause('optional');
+            $q->addSubquery($q2);
+            $q3 = new Query();
+            $q3->addParameter((new HasTriple('?uri', $rdfsLabel, '?label')));
+            $q3->setJoinClause('optional');
+            $q->addSubquery($q3);
+            $q4 = new Query();
+            $q4->addParameter((new HasTriple('?uri', $foafName, '?name')));
+            $q4->setJoinClause('optional');
+            $q->addSubquery($q4);
+            
+            $q->setSelect(array('?uri', '?title', '?label', '?name'));
+            $query = $q->getQuery();
+           
+            $result = $sparql->query($query);        
+   
+/*               $result = $sparql->query(
                         self::$prefixes . ' '
                         . 'SELECT '
                             . '?uri ?title ?label ?name '
@@ -254,8 +196,8 @@ class oeawStorage {
                             . 'OPTIONAL { ?uri rdfs:label ?label } . '
                             . 'OPTIONAL { ?uri foaf:name ?name } . '
                         . '}'); 
-            }    
-         
+          
+  */       
             $fields = $result->getFields(); 
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
 
@@ -272,7 +214,7 @@ class oeawStorage {
      *     
      * @return Array
     */
-    public static function getClass() {
+    public static function getClass(): array {
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
@@ -284,16 +226,30 @@ class oeawStorage {
         
         try {
             
-            $result = $sparql->query(
-                    self::$prefixes . ' 
-                        SELECT 
+            $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+            $rdfType = self::$sparqlPref["rdfType"];
+            $dcTitle = $config->get('fedoraTitleProp');
+
+            $rdfsLabel = self::$sparqlPref["rdfsLabel"];
+            
+            /*
+             * 
+             * SELECT 
                             ?uri ?title 
                         WHERE {
                             ?uri a owl:Class .
                             ?uri rdfs:label ?title .
                           }
-            ');
-            
+             * 
+             */
+            $q = new Query();
+            $q->addParameter((new HasValue($rdfType, 'http://www.w3.org/2002/07/owl#Class'))->setSubVar('?uri'));
+            $q->addParameter(new HasTriple('?uri', $rdfsLabel, '?title'));
+            $q->setSelect(array('?uri', '?title'));
+            $query = $q->getQuery();
+           
+            $result = $sparql->query($query);   
+                        
             $fields = $result->getFields(); 
             $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
 
@@ -313,7 +269,7 @@ class oeawStorage {
      * @return Array
      * +
     */    
-    public function getDigitalResources()
+    public function getDigitalResources(): array
     {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
@@ -325,6 +281,11 @@ class oeawStorage {
         
         try {
             
+            $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+            $rdfType = self::$sparqlPref["rdfType"];
+            $dcTitle = $config->get('fedoraTitleProp');
+            $isPartOf = $config->get('fedoraRelProp');
+          
             $result = $sparql->query(
                 self::$prefixes . ' 
                     SELECT 
@@ -366,7 +327,7 @@ class oeawStorage {
      *
      * @return Array
     */
-    public static function getClassMeta($classURI){
+    public static function getClassMeta(string $classURI): array{
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
@@ -377,7 +338,10 @@ class oeawStorage {
         $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
         
         try {
-          
+            
+            
+            $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+            
             $result = $sparql->query(self::$prefixes . ' 
                     SELECT 
                         ?id ?label 
@@ -391,7 +355,7 @@ class oeawStorage {
                         OPTIONAL {
                             ?property dct:label ?label .
                         }
-                    }            
+                    } Order BY (?id)           
                 ');
             
             $fields = $result->getFields(); 
@@ -406,84 +370,7 @@ class oeawStorage {
       
     }
     
-    /* 
-     *
-     * Get the field values to the editing form
-     *
-     * @param string $uri
-     * @param string $resourceProperty
-     *
-     * @return array
-    */
-    
-    public function getValueByUriProperty($uri, $resourceProperty){
-        
-        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-        
-        if(empty($sparqlConfig)){
-            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
-        }
-        
-        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-        
-        try {
-            //if the property is url then
-            if(!empty(filter_var($resourceProperty, FILTER_VALIDATE_URL))){
-                $resourceProperty = "<". $resourceProperty .">";
-            }
-
-            $result = $sparql->query(
-                    self::$prefixes . ' '
-                    . 'SELECT '
-                        . '?value '
-                    . 'WHERE {  '
-                        . '<' . $uri . '> '.$resourceProperty.' ?value . '
-                    . '} ');
-
-            $fields = $result->getFields(); 
-            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-            return $getResult;
-
-        } catch (Exception $ex) {
-             return drupal_set_message(t('There was an error in the function: getValueByUriProperty'), 'error');
-        }
-    }
-     
-    public function searchForValue(string $value){
-        
-        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-        
-        if(empty($sparqlConfig)){
-            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
-        }
-        
-        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-        
-        try {
-            //if the property is url then
-            if(!empty(filter_var($value, FILTER_VALIDATE_URL))){
-                $value = "<". $value .">";
-            }
-      
-            $result = $sparql->query(
-                    self::$prefixes . ' SELECT ?uri ?property ?value  '
-                    . 'WHERE {'
-                        . '?uri ?property '.$value.' . '                        
-                    . '} ');
-
-            $fields = $result->getFields(); 
-            $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-            return $getResult;
-
-        } catch (Exception $ex) {
-            return drupal_set_message(t('There was an error in the function: searchForValue'), 'error');
-        }
-        
-    }
-    
-    public function searchForData(string $value, string $property){
+    public function searchForData(string $value, string $property): array{
         
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
@@ -522,7 +409,7 @@ class oeawStorage {
     }
     
     
-    public function getClassesForSideBar()
+    public function getClassesForSideBar():array
     {
         $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
         
@@ -551,77 +438,5 @@ class oeawStorage {
     }
     
     
-    /*
-     * Get all data by, Uri, Property and value
-     * 
-     * @uri Fedora resource uri
-     * @property property what value is intresting for us
-     * @value optional
-     * 
-     * @return Array
-     * 
-    */
-    //////////////////// NOT IN USE \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    public static function getDefPropByURI(string $uri, string $property, string $value=null) {
-        
-        if (empty($uri) && empty($property)) {
-             return drupal_set_message(t('Empty values!'), 'error');
-        }
-
-        $sparqlConfig = \Drupal::config('oeaw.settings')->get('sparql_endpoint');
-        
-        if(empty($sparqlConfig)){
-            return drupal_set_message(t('Please set up the fedora values in the Admin!'), 'error');            
-        }
-        
-        $sparql = new \EasyRdf_Sparql_Client($sparqlConfig);
-        
-        if ($value == null) {
-            // the result will be an EasyRdf_Sparql_Result Object
-            try {                
-                $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?property ?value '
-                        . 'WHERE { '
-                            . '<' . $uri . '> ?property ?value . '
-                            . '<' . $uri . '> ' . $property . ' ?value . '
-                        . '}');
-                
-                $fields = $result->getFields(); 
-
-                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-                return $getResult;
-                
-            } catch (Exception $ex) {
-                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
-            }
-        } else {
-            
-            try {
-                
-                $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?property ? value '
-                        . 'WHERE { '
-                            . '<' . $uri . '> ?property ?value . '
-                            . '<' . $uri . '> ' . $property . ' ?value . '
-                            . 'FILTER (CONTAINS(LCASE(?value), LCASE("' . $value . '"))) . '
-                        . '}');
-                
-                $fields = $result->getFields(); 
-
-                $getResult = \Drupal\oeaw\oeawFunctions::createSparqlResult($result, $fields);
-
-                return $getResult;                
-                
-            } catch (Exception $ex) {
-                return drupal_set_message(t('There was an error in the function: getDefPropByURI'), 'error');
-            }
-        }        
-    }
-            
 
 } 

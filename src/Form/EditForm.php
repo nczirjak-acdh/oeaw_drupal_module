@@ -79,14 +79,14 @@ class EditForm extends FormBase {
         $editHash = \Drupal::request()->get('uri');
 
         if (empty($editHash)) {
-            drupal_set_message($this->t('the uri is not exists!'), 'error');
+            return drupal_set_message($this->t('the uri is not exists!'), 'error');
         }
 
         $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
-        
+      
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
-     
+        
         $digitalResources = array();
 
         //we need that ones where the collection is true
@@ -98,28 +98,30 @@ class EditForm extends FormBase {
         //create and load the data to the graph
         $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
 
+        $classVal = array();
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
-
-        foreach ($classValue as $v) {
-            if (strpos($v->getUri(), 'vocabs.acdh.oeaw.ac.at') !== false) {
-                $classVal[] = $v->getUri();
+        if(count($classValue) > 0){
+            foreach ($classValue as $v) {
+                if (strpos($v->getUri(), 'vocabs.acdh.oeaw.ac.at') !== false) {
+                    $classVal[] = $v->getUri();                    
+                }
             }
-        }
-
-        if (strpos($classValue["value"], 'vocabs.acdh.oeaw.ac.at') !== false) {
-            $classVal[] = $classValue["value"];
+        } else {
+            return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');
         }
 
         $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        $editUriClass = "";
         
         if (!empty($classVal)) {
-            foreach ($classVal as $cval) {                
-                //$editUriClass = \Drupal\oeaw\oeawStorage::getDataByProp("dct:identifier", $cval);                
+            foreach ($classVal as $cval) {
                 $res = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $cval);
                 // this will contains the onotology uri, what will helps to use to know
                 // which fields we need to show in the editing form
-                if($res){
+                
+
+                if(count($res) > 0){
                     $editUriClass = $res[0]->getUri();
                 }
                 
@@ -128,16 +130,20 @@ class EditForm extends FormBase {
                 }
             }
         } else {
-            drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
+            return drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
         }
 
         if (empty($editUriClass)) {
-            drupal_set_message($this->t('URI Class is empty!!'), 'error');
+            
+            return drupal_set_message($this->t('URI Class is empty!!'), 'error');
         }
-       
+        
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
-        
+        if(empty($editUriClassMetaFields)){
+            drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
+        }        
+ 
         $attributes = array();        
                 
         $resTitle = $classGraph->label($editUri);        
