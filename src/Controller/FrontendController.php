@@ -31,6 +31,14 @@ use Symfony\Component\HttpFoundation\Request;
 
 class FrontendController extends ControllerBase {
     
+    private $oeawStorage;
+    private $oeawFunctions;
+    
+    public function __construct() {
+        $this->oeawStorage = new oeawStorage();
+        $this->oeawFunctions = new oeawFunctions();
+    }
+    
     
     public function oeaw_ac_form(){
         
@@ -54,7 +62,9 @@ class FrontendController extends ControllerBase {
         $datatable = array();
         $res = array();
         $decodeUrl = "";
-        $result = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        
+        $result = $this->oeawStorage->getRootFromDB();
+        
         $uid = \Drupal::currentUser()->id();
         
         if(count($result) > 0){
@@ -62,7 +72,7 @@ class FrontendController extends ControllerBase {
                 foreach($result[$i] as $key => $value){
                     // check that the value is an Url or not
                     
-                    $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                    $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
                     
                     //create details and editing urls
                     if($decodeUrl){ 
@@ -237,17 +247,17 @@ class FrontendController extends ControllerBase {
         if (empty($uri)) {
            return drupal_set_message(t('The uri is missing!'), 'error');
         }
-        
+       
         // decode the uri hash
-        $uri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'decode');
+        $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
         
         $uid = \Drupal::currentUser()->id();
         
-        $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($uri);
+        $rootGraph = $this->oeawFunctions->makeGraph($uri);
         
         //$rootMetaAll =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri)->all(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
         
-        $rootMeta =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri);
+        $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
         
         if(count($rootMeta) > 0){
             // get the table data by the details uri from the URL
@@ -275,7 +285,7 @@ class FrontendController extends ControllerBase {
         $header = array_keys($results[0]);     
         
         //get the childrens
-        $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        $fedora = $this->oeawFunctions->initFedora();
         $childF = $fedora->getResourceByUri($uri);
         $childF = $childF->getChildren();
         
@@ -285,7 +295,7 @@ class FrontendController extends ControllerBase {
                 
                 $childResult[$i]['uri']= $r->getUri();
                 $childResult[$i]['title']= $r->getMetadata()->label();
-                $decUrlChild = \Drupal\oeaw\oeawFunctions::isURL($r->getUri(), "decode");
+                $decUrlChild = $this->oeawFunctions->isURL($r->getUri(), "decode");
                 
                 $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;
                 if($uid !== 0){
@@ -299,7 +309,7 @@ class FrontendController extends ControllerBase {
         }
         
         
-        $resEditUrl = \Drupal\oeaw\oeawFunctions::createDetailsUrl($uri, 'encode');
+        $resEditUrl = $this->oeawFunctions->createDetailsUrl($uri, 'encode');
         
         $resTitle = $rootGraph->label($uri);
         
@@ -361,7 +371,8 @@ class FrontendController extends ControllerBase {
         
         $uid = \Drupal::currentUser()->id();
         //normal string seacrh
-        $stringSearch = \Drupal\oeaw\oeawStorage::searchForData($metaValue, $metaKey);
+       
+        $stringSearch = $this->oeawStorage->searchForData($metaValue, $metaKey);
         
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
@@ -391,7 +402,7 @@ class FrontendController extends ControllerBase {
                         //get the resources which is part of this identifier
                         $identifier = $identifier->getUri();
                         
-                        $ids = \Drupal\oeaw\oeawStorage::searchForData($identifier, $metaKey);
+                        $ids = $this->oeawStorage->searchForData($identifier, $metaKey);
                         
                         //generate the result array
                         foreach($ids as $v){
@@ -422,7 +433,7 @@ class FrontendController extends ControllerBase {
         for ($i = 0; $i < count($data); $i++) {            
             foreach($data[$i] as $key => $value){
                 // check that the value is an Url or not
-                $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
                 
                 //create details and editing urls
                 if($decodeUrl !== false){                             
@@ -489,7 +500,7 @@ class FrontendController extends ControllerBase {
      * @return Drupal Form 
     */
     
-    public function oeaw_editing($uri, Request $request) {
+    public function oeaw_editing(string $uri, Request $request) {
      
         $uid = \Drupal::currentUser()->id();
         if($uid !== 0){            
@@ -525,14 +536,14 @@ class FrontendController extends ControllerBase {
             $value =  $classesArr[1];
             $uid = \Drupal::currentUser()->id();
             
-            $data = \Drupal\oeaw\oeawStorage::getDataByProp("rdf:type", $searchResult);
+            $data = $this->oeawStorage->getDataByProp("rdf:type", $searchResult);
             
             if(count($data) > 0){
                 $res = array();
                 for ($i = 0; $i < count($data); $i++) {            
                     foreach($data[$i] as $key => $value){
                         // check that the value is an Url or not
-                        $decodeUrl = \Drupal\oeaw\oeawFunctions::isURL($value, "decode");
+                        $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
 
                         //create details and editing urls
                         if($decodeUrl !== false){                             

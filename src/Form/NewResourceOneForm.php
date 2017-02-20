@@ -31,8 +31,8 @@ class NewResourceOneForm extends NewResourceFormBase {
         // we need to add this attribute because of the file uploading
         $form['#attributes']['enctype'] = "multipart/form-data";
         $roots = array();
-        // get the root resources to we can show it on the select element
-        $roots = \Drupal\oeaw\oeawStorage::getRootFromDB();
+        // get the root resources to we can show it on the select element        
+        $roots = $this->oeawStorage->getRootFromDB();
        
         if(count($roots) > 0 ){
             //create the root option values
@@ -55,7 +55,7 @@ class NewResourceOneForm extends NewResourceFormBase {
         
         $classes = array();
         //get the class resources to we can show it on the select element
-        $classes = \Drupal\oeaw\oeawStorage::getClass();
+        $classes = $this->oeawStorage->getClass();
         
         if(count($classes) > 0){
             foreach($classes as $c){

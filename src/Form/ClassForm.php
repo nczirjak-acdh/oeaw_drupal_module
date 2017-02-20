@@ -10,7 +10,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
+use Drupal\oeaw\oeawStorage;
+use Drupal\oeaw\oeawFunctions;
 
 class ClassForm extends FormBase
 {
@@ -36,6 +37,8 @@ class ClassForm extends FormBase
     */
     protected $store;    
     
+    private $oeawStorage;    
+    private $oeawFunctions;
     
     /**
    * Constructs a Multi step form Base.
@@ -52,6 +55,9 @@ class ClassForm extends FormBase
         $this->currentUser = $current_user;
         
         $this->store = $this->tempStoreFactory->get('class_search_data');
+        
+        $this->oeawStorage = new oeawStorage();
+        $this->oeawFunctions = new oeawFunctions();
     }
     
     public static function create(ContainerInterface $container){
@@ -72,7 +78,7 @@ class ClassForm extends FormBase
     */
     public function buildForm(array $form, FormStateInterface $form_state) 
     {          
-        $data = \Drupal\oeaw\oeawStorage::getClassesForSideBar();        
+        $data = $this->oeawStorage->getClassesForSideBar();        
         if(empty($data)){
              drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
              return;
@@ -80,7 +86,7 @@ class ClassForm extends FormBase
         /* get the fields from the sparql query */
         $fields = array_keys($data[0]);
         
-        $searchTerms = \Drupal\oeaw\oeawFunctions::createPrefixesFromArray($data, $fields);
+        $searchTerms = $this->oeawFunctions->createPrefixesFromArray($data, $fields);
         
         foreach($searchTerms["type"] as $terms){            
             

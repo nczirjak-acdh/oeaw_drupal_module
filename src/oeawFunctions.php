@@ -33,7 +33,7 @@ class oeawFunctions {
         return $fedora;
     }
     
-    public function makeMetaData($uri): EasyRdf_Resource{
+    public function makeMetaData(string $uri): EasyRdf_Resource{
         
         if(empty($uri)){
             return drupal_set_message(t('The uri is missing!'), 'error');
@@ -49,7 +49,7 @@ class oeawFunctions {
         return $meta;
     }
     
-    public function makeGraph($uri): EasyRdf_Graph{
+    public function makeGraph(string $uri): EasyRdf_Graph{
      
         $graph = array();
         // setup fedora
@@ -68,7 +68,7 @@ class oeawFunctions {
      * 
      */
     
-    public function getFieldNewTitle($formElements, $mode = 'edit'): AjaxResponse{
+    public function getFieldNewTitle(array $formElements, string $mode = 'edit'): AjaxResponse{
         
         $result = array();
         $newKey = array();
@@ -107,7 +107,7 @@ class oeawFunctions {
        
         $color = 'green';
         
-        $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        $fedora = $this->initFedora();         
         
         $resNL = array();
         $label = "";
@@ -141,7 +141,7 @@ class oeawFunctions {
     
     public function getLabelByIdentifier(string $value): string{
         
-        $res = \Drupal\oeaw\oeawStorage::getDataByProp('dct:identifier', (string)$value);
+        $res = $this->oeawStorage->getDataByProp('dct:identifier', (string)$value);
         
         $label = "";
         //the possible titles
@@ -223,7 +223,7 @@ class oeawFunctions {
      * @param string $string : url     
      * @return string
     */     
-    public function createPrefixesFromString(string $string): string{
+    public static function createPrefixesFromString(string $string): string{
         
         if (empty($string)) {
            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
@@ -349,7 +349,7 @@ class oeawFunctions {
         if (filter_var($string, FILTER_VALIDATE_URL)) { 
             
             if (strpos($string, \Drupal\oeaw\connData::fedoraUrl()) !== false) {
-                $res = \Drupal\oeaw\oeawFunctions::createDetailsUrl($string, 'encode');                
+                $res = $this->createDetailsUrl($string, 'encode');                
             }
             return $res;
         } else {
@@ -365,7 +365,7 @@ class oeawFunctions {
      * http://fedora.localhost/rest/
      */
 
-    public function generateUrl($value, $dl = null): string {
+    public static function generateUrl(string $value, string $dl = null): string {
         
         if(empty($value)){
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');

@@ -48,7 +48,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $root =  $formVal['root'];
         
         // get the digital resource classes where the user must upload binary file
-        $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
+        $digitalResQuery = $this->oeawStorage->getDigitalResources();
 
         //create the digitalResources array
         $digitalResources = array();
@@ -58,7 +58,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }            
         }
         
-        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($class);
+        $classGraph = $this->oeawFunctions->makeGraph($class);
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
         if(!empty($classID)){
             $classValue = $classID["value"];
@@ -73,7 +73,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
       
         
         // get the actual class metadata
-        $metadataQuery = \Drupal\oeaw\oeawStorage::getClassMeta($class);  
+        $metadataQuery = $this->oeawStorage->getClassMeta($class);  
        $metadata = array();
         if(count($metadataQuery) > 0){
             foreach($metadataQuery as $m){            
@@ -84,7 +84,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         }
         
         
-        $rootGraph = \Drupal\oeaw\oeawFunctions::makeGraph($root);
+        $rootGraph = $this->oeawFunctions->makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $rootID = array();
         $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
@@ -204,7 +204,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
-        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
+        $result = $this->oeawFunctions->getFieldNewTitle($formElements, "new");
        
         return $result;        
     }

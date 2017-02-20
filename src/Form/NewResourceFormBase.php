@@ -16,7 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use zozlak\util\Config;
-
+use Drupal\oeaw\oeawStorage;
+use Drupal\oeaw\oeawFunctions;
 
 
 abstract class NewResourceFormBase extends FormBase {
@@ -41,6 +42,8 @@ abstract class NewResourceFormBase extends FormBase {
     */
     protected $store;    
     
+    protected $oeawStorage;
+    protected $oeawFunctions;
     
     /**
    * Constructs a Multi step form Base.
@@ -57,6 +60,9 @@ abstract class NewResourceFormBase extends FormBase {
         $this->currentUser = $current_user;
         
         $this->store = $this->tempStoreFactory->get('multistep_data');
+        $this->oeawStorage = new oeawStorage();
+        $this->oeawFunctions = new oeawFunctions();
+        
     }
     
     public static function create(ContainerInterface $container){

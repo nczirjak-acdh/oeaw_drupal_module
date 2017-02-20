@@ -24,6 +24,8 @@ use acdhOeaw\util\EasyRdfUtil;
 use zozlak\util\Config;
 use EasyRdf_Graph;
 use EasyRdf_Resource;
+use Drupal\oeaw\oeawStorage;
+use Drupal\oeaw\oeawFunctions;
 
 class EditForm extends FormBase {
 
@@ -47,6 +49,9 @@ class EditForm extends FormBase {
      */
     protected $store;
 
+    private $oeawFunctions;
+    private $oeawStorage;
+    
     /**
      *
      * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
@@ -60,6 +65,9 @@ class EditForm extends FormBase {
         $this->currentUser = $current_user;
 
         $this->store = $this->tempStoreFactory->get('edit_form');
+        
+        $this->oeawStorage = new oeawStorage();
+        $this->oeawFunctions = new oeawFunctions();
     }
 
     public static function create(ContainerInterface $container) {
@@ -82,10 +90,10 @@ class EditForm extends FormBase {
             return drupal_set_message($this->t('the uri is not exists!'), 'error');
         }
 
-        $editUri = \Drupal\oeaw\oeawFunctions::createDetailsUrl($editHash, 'decode');
+        $editUri = $this->oeawFunctions->createDetailsUrl($editHash, 'decode');
       
         // get the digital resource classes where the user must upload binary file
-        $digitalResQuery = \Drupal\oeaw\oeawStorage::getDigitalResources();
+        $digitalResQuery = $this->oeawStorage->getDigitalResources();
         
         $digitalResources = array();
 
@@ -96,7 +104,7 @@ class EditForm extends FormBase {
             }
         }
         //create and load the data to the graph
-        $classGraph = \Drupal\oeaw\oeawFunctions::makeGraph($editUri);
+        $classGraph = $this->oeawFunctions->makeGraph($editUri);
 
         $classVal = array();
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
@@ -111,7 +119,7 @@ class EditForm extends FormBase {
             return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');
         }
 
-        $fedora = \Drupal\oeaw\oeawFunctions::initFedora();
+        $fedora = $this->oeawFunctions->initFedora();
         $editUriClass = "";
         
         if (!empty($classVal)) {
@@ -139,7 +147,7 @@ class EditForm extends FormBase {
         }
         
         //the actual fields for the editing form based on the editUriClass variable
-        $editUriClassMetaFields = \Drupal\oeaw\oeawStorage::getClassMeta($editUriClass);
+        $editUriClassMetaFields = $this->oeawStorage->getClassMeta($editUriClass);
         if(empty($editUriClassMetaFields)){
             drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
         }        
@@ -268,7 +276,8 @@ class EditForm extends FormBase {
          
         //get the formelements
         $formElements = $form_state->getUserInput();        
-        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "edit");        
+        $result = $this->oeawFunctions->getFieldNewTitle($formElements, "edit");        
+        //$result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "edit");
         
         return $result;        
     }
