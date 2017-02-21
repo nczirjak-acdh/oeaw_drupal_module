@@ -273,12 +273,12 @@ class EditForm extends FormBase {
 
     
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
-         
+
         //get the formelements
         $formElements = $form_state->getUserInput();        
-        $result = $this->oeawFunctions->getFieldNewTitle($formElements, "edit");        
-        //$result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "edit");
-        
+        $result = array();
+        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
+       
         return $result;        
     }
     

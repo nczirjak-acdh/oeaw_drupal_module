@@ -1,13 +1,16 @@
-.acme-hello-text {
-    background-color: #dedede;
+.search-form .contextual-region .block .block-oeaw .block-searchsb-block {
+    background-color: red;
+    
 }
-a:link{
-    text-decoration: none;
+
+.search-form, 
+.class-form {   
+    -webkit-box-shadow: 0px 5px 8px 2px rgba(0,0,0,0.86)!important;
+    -moz-box-shadow: 0px 5px 8px 2px rgba(0,0,0,0.86)!important;
+    box-shadow: 0px 5px 8px 2px rgba(0,0,0,0.86)!important;
+
 }
-.title {
-    font-weight: bold;
-}
-.vcenter{     
-    height:70px;
- 
+
+.search-form input {
+    max-width: 200px!important;
 }

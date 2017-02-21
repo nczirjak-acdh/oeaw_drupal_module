@@ -12,11 +12,13 @@ use EasyRdf_Resource;
 use acdhOeaw\util\EasyRdfUtil;
 use InvalidArgumentException;
 use RuntimeException;
-
+use Drupal\oeaw\oeawFunctions;
 
 
 class NewResourceTwoForm extends NewResourceFormBase  {
 
+    
+    
     /* 
      *
      * drupal core formid
@@ -27,8 +29,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         return 'multistep_form_two';
     }
     
-
-
+   
     /* 
      *
      * drupal core buildForm function, to create the form what the user will see
@@ -58,6 +59,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }            
         }
         
+
         $classGraph = $this->oeawFunctions->makeGraph($class);
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
         if(!empty($classID)){
@@ -93,7 +95,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         if(count($rootID) > 0 ){
             $rootIdentifier = $rootID["value"];
         }else {
-            return drupal_set_message($this->t('Your root element is missing! YOu cant add new resource without a root element!'), 'error');
+            return drupal_set_message($this->t('Your root element is missing! You cant add new resource without a root element!'), 'error');
         }
         
         
@@ -200,11 +202,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
     
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
 
-        
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
-        $result = $this->oeawFunctions->getFieldNewTitle($formElements, "new");
+        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
        
         return $result;        
     }

@@ -217,8 +217,7 @@ class oeawStorage {
         try {
         
             $rdfType = self::$sparqlPref["rdfType"];
-            $dcTitle = $this->titleProp;
-        
+            $dcTitle = $this->titleProp;        
             $rdfsLabel = self::$sparqlPref["rdfsLabel"];
             
             /*
@@ -339,12 +338,22 @@ class oeawStorage {
     
     public function searchForData(string $value, string $property): array{
         
+        $rdfType = self::$sparqlPref["rdfType"];
+        
         try {
             //if the property is url then
             if(!empty(filter_var($property, FILTER_VALIDATE_URL))){
                 $property = "<". $property .">";
             }
-       
+            
+            /*
+            $q = new Query();            
+            $q->addParameter(new HasTriple('?aaa', $rdfType, '?type'));
+            $q->setSelect(array('?type'));
+            $q->setOrderBy(array('?aaa'));
+            $q->setGroupBy(array('?type'));
+            $query = $q->getQuery();
+       */
             $query =
                     self::$prefixes . ' SELECT ?uri ?property ?value ?title ?label  '
                     . 'WHERE {'
@@ -367,17 +376,32 @@ class oeawStorage {
         }
         
     }
-    
+    /*
+     * 
+     * Get the actual classes for the SideBar block
+     * 
+     * @return array
+     * 
+     */
     
     public function getClassesForSideBar():array
-    {
+    {        
+        $rdfType = self::$sparqlPref["rdfType"];
+        
         try {
             
-            $query =
+            $q = new Query();            
+            $q->addParameter(new HasTriple('?aaa', $rdfType, '?type'));
+            $q->setSelect(array('?type'));
+            $q->setOrderBy(array('?aaa'));
+            $q->setGroupBy(array('?type'));
+            $query = $q->getQuery();
+         
+         /*   $query =
                     self::$prefixes . ' 
                         SELECT ?type  
                         WHERE {[] a ?type} GROUP BY ?type ';
-
+*/
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);

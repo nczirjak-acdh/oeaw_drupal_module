@@ -23,15 +23,35 @@ use EasyRdf_Resource;
 
  
 class oeawFunctions {
+    
+    private $config;
+        
+    public function __construct(){
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+    }
+    
+    /*
+     * 
+     * Creates the Fedora instance
+     *           
+     * @return Fedora
+     */
        
     public function initFedora(): Fedora{
         // setup fedora
-        $fedora = array();
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config);
+        $fedora = array();        
+        $fedora = new Fedora($this->config);
         
         return $fedora;
     }
+    
+    /*
+     * 
+     * Creates the EasyRdf_Resource by uri
+     *      
+     * @param string $uri  - resource uri
+     * @return EasyRdf_Resource
+     */
     
     public function makeMetaData(string $uri): EasyRdf_Resource{
         
@@ -41,20 +61,25 @@ class oeawFunctions {
         
         $fedora = array();
         $meta = array();
-       // setup fedora
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config);
+       // setup fedora        
+        $fedora = new Fedora($this->config);
         $res = $fedora->getResourceByUri($uri);
         $meta = $res->getMetadata();
         return $meta;
     }
     
+    /*
+     * Creates the EasyRdf_Graph by uri
+     * 
+     * @param string $uri - resource uri
+     * @return EasyRdf_Graph
+     * 
+     */
     public function makeGraph(string $uri): EasyRdf_Graph{
      
         $graph = array();
-        // setup fedora
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config);
+        // setup fedora        
+        $fedora = new Fedora($this->config);
         //create and load the data to the graph
         $res = $fedora->getResourceByUri($uri);
         $meta = $res->getMetadata();
@@ -62,18 +87,27 @@ class oeawFunctions {
         
         return $graph;
     }
-    /*
+    
+    
+     /**
+     * Get the title by the property
+     * This is a static method because the Edit/Add form will use it
+     * over their callback method.
+     *     
      * 
-     * $mode = edit/new
+     * @param array $formElements -> the actual form input
+     * @param string $mode -> edit/new form.
+     * @return AjaxResponse
      * 
      */
     
-    public function getFieldNewTitle(array $formElements, string $mode = 'edit'): AjaxResponse{
+    public static function getFieldNewTitle(array $formElements, string $mode = 'edit'): AjaxResponse {
         
-        $result = array();
-        $newKey = array();
-        $oldValues = array();
+        $ajax_response = array();
         $fedora = array();
+        
+        $cfg = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        $fedora = new Fedora($cfg);
         
         if($mode == "edit"){
             //create the old values and the new values arrays with the user inputs
@@ -107,8 +141,7 @@ class oeawFunctions {
        
         $color = 'green';
         
-        $fedora = $this->initFedora();         
-        
+                
         $resNL = array();
         $label = "";
         
@@ -136,7 +169,9 @@ class oeawFunctions {
     /*
      * This functions checks the given identifier label/name/title
      * This used for the editForm title generating
-     *  ----
+     * 
+     * @param string $value
+     * @return string 
      */
     
     public function getLabelByIdentifier(string $value): string{
@@ -258,9 +293,12 @@ class oeawFunctions {
     }
     
     /*      
-     * create prefix from string based on the connData.php prefixes     
-     * @param string $string : url     
-     * @return string
+     * create prefix from array based on the connData.php prefixes     
+     * 
+     * @param array $array
+     * @param array $header
+     * 
+     * @return array
     */     
     public function createPrefixesFromArray(array $array, array $header): array{
         
@@ -341,7 +379,13 @@ class oeawFunctions {
     }
     
    
-        
+    /*
+     *           
+     * @param string $string
+     * 
+     * @return string
+     * 
+     */    
     public function isURL(string $string): string{
         
         $res = "";
@@ -363,6 +407,14 @@ class oeawFunctions {
      * case 2: if it is starting with http://fedora:8080/rest/, then we need
      * to change it because users cant reach http://fedora:8080/rest/, only the 
      * http://fedora.localhost/rest/
+      * 
+      * 
+      * @param string $value
+      * @param string $dl
+      * 
+      * @return string
+      * 
+      * 
      */
 
     public static function generateUrl(string $value, string $dl = null): string {
@@ -388,6 +440,16 @@ class oeawFunctions {
 
         return false;
     }
+    
+    /*
+     * 
+     * Creates a property uri based on the prefix
+     * 
+     * @param string $prefix
+     *      
+     * @return string     
+     * 
+     */
     
     public function createUriFromPrefix(string $prefix): string{
         
