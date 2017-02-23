@@ -426,6 +426,42 @@ class oeawStorage {
       
     }
     
+    public function getImage(string $value): string
+    {
+        
+        $idProp = $this->idProp;
+        
+        $result = "";
+        
+        try{
+            
+            $q = new Query();            
+            $q->setSelect(array('?res'));
+            $q->addParameter((new HasValue($idProp, $value)));
+            $query = $q->getQuery();
+            $result = $this->fedora->runSparql($query);
+            
+            $fields = $result->getFields(); 
+            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            
+            if(count($getResult) > 0){
+                
+                $result = $getResult[0]["res"];
+                
+                return $result;
+            }else {
+                return drupal_set_message(t('There was an error in the function: getImage'), 'error');
+            }
+         
+        } catch (Exception $ex) {
+            return drupal_set_message(t('There was an error in the function: getImage'), 'error');
+        }
+        
+        
+        
+    }
+    
+    
     public function searchForData(string $value, string $property): array{
         
         $rdfType = self::$sparqlPref["rdfType"];
@@ -450,7 +486,7 @@ class oeawStorage {
             $q->addSubquery($q3);
             
             $query = $q->getQuery();
-
+            
             /*
             $query =
                     self::$prefixes . ' SELECT ?uri ?property ?value ?title ?label  '

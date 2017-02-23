@@ -312,9 +312,9 @@ class FrontendController extends ControllerBase {
                     // if there is a thumbnail
                     if($v == "http://xmlns.com/foaf/spec/thumbnail"){ 
                         if($item){
-                            $imgData = $this->oeawStorage->searchForData($item, $v);
+                            $imgData = $this->oeawStorage->getImage($item);                            
                             if(count($imgData) > 0){
-                                $hasImage = $imgData[0]["res"];
+                                $hasImage = $imgData;
                             }
                         }                        
                     }
