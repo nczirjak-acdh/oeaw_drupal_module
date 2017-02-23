@@ -1,9 +1,15 @@
 
-<div class="vcenter">
-    <h2 class="title">
-        {{ editResData.title }} |  <a href="/oeaw_editing/{{ editResData.editUrl }}"><i class="fa fa-pencil-square-o fa-1x"></i></a> 
-         {% if hasBinary %} | <a href="{{ hasBinary }}"><i class="fa fa-download" aria-hidden="true"></i></a>  {% endif %}
-    </h2>    
+<div class="vcenter" style="height:100px;">
+    <div style="float:left; width: 50%; font-size: 20px; font-weight: bold;">
+        
+            {{ editResData.title }} |  <a href="/oeaw_editing/{{ editResData.editUrl }}"><i class="fa fa-pencil-square-o fa-1x"></i></a> 
+             {% if hasBinary %} | <a href="{{ hasBinary }}"><i class="fa fa-download" aria-hidden="true"></i></a>  {% endif %}
+        
+    </div>    
+    <div style="float:right; width: 50%; max-height:100px; ">
+        {% if hasImage %} <img src="{{ hasImage }}" class="img-response" style="border: 1px solid #333;">  {% endif %}
+    </div>    
+    
 </div>    
 
 <table id="" class="display" cellspacing="0" width="100%">
@@ -23,8 +29,8 @@
                             {{ value }}
                             <br>
                        {% endfor %}     
-                    {% else %}
-                        {{ item.value }}
+                    {% else %}                        
+                        {{ item.value }}                        
                     {% endif %}
                 </td>
             </tr>
@@ -67,3 +73,131 @@
 <div>
     <input type="button" value="<< Back" onclick="history.back(-1)" />
 </div>
+
+
+<!--
+<script language="javascript" type="text/javascript" src="https://drupal.localhost/modules/oeaw/js/jit.js"></script>
+
+
+<script language="javascript" type="text/javascript" src="https://drupal.localhost/modules/oeaw/js/example1.js"></script>
+
+
+<script>
+    
+</script>
+
+<script>
+     window.onload = function() {       
+         
+          var test = {{ jsonGraph|json_encode|raw }};
+        console.log(test);
+           var json = [
+      
+       
+      {
+        "adjacencies": [
+            {
+              "nodeTo": "graphnode2",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#557EAA"
+              }
+            }, {
+              "nodeTo": "graphnode4",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode5",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode6",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode7",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode8",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode10",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#557EAA"
+              }
+            }, {
+              "nodeTo": "graphnode11",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode12",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode13",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#557EAA"
+              }
+            }, {
+              "nodeTo": "graphnode14",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#557EAA"
+              }
+            }, {
+              "nodeTo": "graphnode15",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#557EAA"
+              }
+            }, {
+              "nodeTo": "graphnode16",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#909291"
+              }
+            }, {
+              "nodeTo": "graphnode17",
+              "nodeFrom": "graphnode1",
+              "data": {
+                "$color": "#557EAA"
+              }
+            }
+        ],
+        "data": {
+          "$color": "#EBB056",
+          "$type": "circle",
+          "$dim": 11
+        },
+        "id": "graphnode1",
+        "name": "graphnode1"
+      }
+  ];
+         console.log(json);
+         init(test);
+     };
+</script>
+<link rel="stylesheet" href="https://drupal.localhost/modules/oeaw/css/graph_base.css">
+<link rel="stylesheet" href="https://drupal.localhost/modules/oeaw/css/ForceDirected.css">
+<div id="infovis" style="background-color: #666;"></div>    
+
+<div id="log"></div>
+-->

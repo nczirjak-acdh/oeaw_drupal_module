@@ -182,9 +182,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                 '#title' => t('FILE'), 
                 '#required' => TRUE,
                 '#upload_validators' => array(
-                    'file_validate_extensions' => array('xml doc txt simplified docx pdf'),
+                    'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
                  ),
-                '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
+                '#description' => t('Upload a file, allowed extensions: XML, CSV, and images etc....'),
             );
         }
         $form['actions']['previous'] = array(

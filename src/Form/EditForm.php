@@ -255,14 +255,15 @@ class EditForm extends FormBase {
         if ($checkDigRes == true) {
             $form['file'] = array(
                 '#type' => 'managed_file',
-                '#title' => t('FILE'),                
+                '#title' => t('Binary Resource'),                
                 '#upload_validators' => array(
                     'file_validate_extensions' => array('xml doc txt simplified docx pdf'),
                 ),
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
             );
+            
         }
-
+     
         $form['submit'] = array(
             '#type' => 'submit',
             '#value' => t('Submit sample'),
@@ -297,7 +298,7 @@ class EditForm extends FormBase {
         //get the uploaded files values
         $fileID = $form_state->getValue('file');
         $fileID = $fileID[0];
-
+      
         if (!empty($fileID)) {
             //create the file object
             $fObj = file_load($fileID);

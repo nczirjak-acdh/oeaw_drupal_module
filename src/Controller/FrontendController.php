@@ -250,11 +250,51 @@ class FrontendController extends ControllerBase {
        
         // decode the uri hash
         $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
-        
+
         $uid = \Drupal::currentUser()->id();
         
         $rootGraph = $this->oeawFunctions->makeGraph($uri);
         
+        /*
+        $graphSerial = $rootGraph->serialise('json');
+        $decodedGraph = json_decode($graphSerial);
+        $jGraph = $decodedGraph->{$uri};
+        $jsonArray = array();
+        $i = 1;
+        $jsonArray[0] = array(
+                "id" => $uri,
+                "name" => $uri);
+        
+        foreach($jGraph as $key => $value){
+            
+            $jsonArray[$i] = array("id" => $key,
+            "name" => $key);
+
+            if(is_array($value)){
+
+                foreach($value as $v){
+                    $jsonArray[$i]["adjacencies"][] = 
+                            array(
+                                "nodeTo" => $v->value,
+                                "nodeFrom" => $key,
+                                "data" => array(
+                                    '$color' => "#557EAA"
+                                )
+                            );
+                }
+                
+                $jsonArray[0]["adjacencies"][] = 
+                    array(
+                        "nodeTo" => $key,
+                        "nodeFrom" => $uri,
+                        "data" => array(
+                            '$color' => "#557EAA"
+                        )
+                    );
+            }
+            $i++;
+        }
+        */
         //$rootMetaAll =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri)->all(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
         
         $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
@@ -264,16 +304,32 @@ class FrontendController extends ControllerBase {
             $i = 0;
             $results = array();
             $hasBinary = "";
+            $hasImage = "";
             foreach($rootMeta->propertyUris($uri) as $v){
 
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
-                    if(get_class($item) == "EasyRdf_Resource"){                
+                    
+                    // if there is a thumbnail
+                    if($v == "http://xmlns.com/foaf/spec/thumbnail"){ 
+                        if($item){
+                            $imgData = $this->oeawStorage->searchForData($item, $v);
+                            if(count($imgData) > 0){
+                                $hasImage = $imgData[0]["res"];
+                            }
+                        }                        
+                    }
+                    
+                    if(get_class($item) == "EasyRdf_Resource"){
                         $results[$i]["property"] = $v;
                         $results[$i]["value"][] = $item->getUri();
                         if($item->getUri() == "http://fedora.info/definitions/v4/repository#Binary"){ $hasBinary = $uri;}
-                    }else {
-                        $results[$i]["property"] = $v;                    
+                        
+                    }else if(get_class($item) == "EasyRdf_Literal"){
+                        $results[$i]["property"] = $v;
                         $results[$i]["value"] = $item->__toString();
+                    }else {
+                        $results[$i]["property"] = $v;
+                        $results[$i]["value"] = $item;
                     }
                 }
                 $i++;
@@ -330,7 +386,10 @@ class FrontendController extends ControllerBase {
             '#result' => $results,
             '#header' => $header,
             '#userid' => $uid,
+//            '#jsonGraph' => $oJson,
+            '#jsonGraph' => NULL,
             '#hasBinary' => $hasBinary,
+            '#hasImage' => $hasImage,
             '#childResult' => $childResult,
             '#childHeader' => $childHeader,
             '#editResData' => $editResData,
@@ -372,6 +431,8 @@ class FrontendController extends ControllerBase {
         $uid = \Drupal::currentUser()->id();
         //normal string seacrh
        
+        $metaKey = $this->oeawFunctions->createUriFromPrefix($metaKey);
+        
         $stringSearch = $this->oeawStorage->searchForData($metaValue, $metaKey);
         
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
@@ -402,6 +463,7 @@ class FrontendController extends ControllerBase {
                         //get the resources which is part of this identifier
                         $identifier = $identifier->getUri();
                         
+
                         $ids = $this->oeawStorage->searchForData($identifier, $metaKey);
                         
                         //generate the result array

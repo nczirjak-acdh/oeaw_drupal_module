@@ -35,7 +35,11 @@ class oeawStorage {
     private static $sparqlPref = array(
         'rdfType' => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
         'rdfsLabel' => 'http://www.w3.org/2000/01/rdf-schema#label',
-        'foafName' => 'http://xmlns.com/foaf/0.1/name'
+        'foafName' => 'http://xmlns.com/foaf/0.1/name',
+        'rdfsSubClass' => 'http://www.w3.org/2000/01/rdf-schema#subClassOf',
+        'owlClass' => 'http://www.w3.org/2002/07/owl#Class',
+        'rdfsDomain' => 'http://www.w3.org/2000/01/rdf-schema#domain',
+        'dctLabel' => 'http://purl.org/dc/terms/label',
     );
     
     private $apiUrl;
@@ -75,6 +79,7 @@ class oeawStorage {
           
             $q = new Query();
             $q->addParameter(new HasTriple('?uri', $dcTitle, '?title'));    
+            $q->addParameter((new HasValue(self::$sparqlPref["rdfType"], 'https://vocabs.acdh.oeaw.ac.at/#Project' ))->setSubVar('?uri'));
             $q2 = new Query();
             $q2->addParameter(new HasTriple('?uri', $isPartOf, '?y'));
             $q2->setJoinClause('filter not exists');
@@ -82,7 +87,7 @@ class oeawStorage {
             $q->setSelect(array('?uri', '?title'));
         
             $query= $q->getQuery();
-            
+          
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             
@@ -219,7 +224,7 @@ class oeawStorage {
             $rdfType = self::$sparqlPref["rdfType"];
             $dcTitle = $this->titleProp;        
             $rdfsLabel = self::$sparqlPref["rdfsLabel"];
-            
+             $owlClass = self::$sparqlPref["owlClass"];
             /*
              * 
              * SELECT 
@@ -231,7 +236,7 @@ class oeawStorage {
              * 
              */
             $q = new Query();
-            $q->addParameter((new HasValue($rdfType, 'http://www.w3.org/2002/07/owl#Class'))->setSubVar('?uri'));
+            $q->addParameter((new HasValue($rdfType, $owlClass))->setSubVar('?uri'));
             $q->addParameter(new HasTriple('?uri', $rdfsLabel, '?title'));
             $q->setSelect(array('?uri', '?title'));
             $query = $q->getQuery();
@@ -261,7 +266,53 @@ class oeawStorage {
         try {
             
             $rdfType = self::$sparqlPref["rdfType"];
-          
+            $dcID = $this->idProp;
+            $rdfsSubClass = self::$sparqlPref["rdfsSubClass"];
+            $owlClass = self::$sparqlPref["owlClass"];
+            
+            $q = new Query();            
+            $q->setSelect(array('?id', '?collection'));            
+            
+            $q->addParameter((new HasValue($rdfType, $owlClass))->setSubVar('?class'));
+            $q->addParameter(new HasTriple('?class', $dcID, '?id'));
+            
+            $q2 = new Query();
+            $q2->setJoinClause('optional');
+            
+            
+            $q->addSubquery($q2);
+            
+            /*
+            
+            $q3 = new Query();            
+            $q3->addParameter((new HasValue($rdfsSubClass, 'https://vocabs.acdh.oeaw.ac.at/#Collection'))->setSubVar('?class'));            
+            $q2->addSubquery($q3);
+            
+            $q4 = new Query();
+            $q4->setJoinClause('union');
+            $q4->addParameter((new HasValue($rdfsSubClass, 'https://vocabs.acdh.oeaw.ac.at/#DigitalCollection'))->setSubVar('?class'));
+            $q2->addSubquery($q4);
+            
+            $q5 = new Query();
+            $q5->setJoinClause('union');
+            $q5->addParameter((new HasValue($dcID, 'https://vocabs.acdh.oeaw.ac.at/#Collection'))->setSubVar('?class'));
+            $q2->addSubquery($q5);
+            
+            
+            $q6 = new Query();
+            $q6->setJoinClause('union');
+            $q6->addParameter((new HasValue($dcID, 'https://vocabs.acdh.oeaw.ac.at/#DigitalCollection'))->setSubVar('?class'));
+            $q2->addSubquery($q6);
+            //VALUES ?collection {true}
+            $q2->addParameter((new HasValue('?collection' '{true}'))->setSubVar('VALUES'));;
+            $query = $q->getQuery();
+            
+             * 
+             * 
+        */
+
+
+
             $query=
                 self::$prefixes . ' 
                     SELECT 
@@ -283,7 +334,7 @@ class oeawStorage {
                             }
                         }
             ';
-            
+      
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
@@ -308,6 +359,45 @@ class oeawStorage {
         
         try {
             
+            $rdfType = self::$sparqlPref["rdfType"];
+            $dcTitle = $this->titleProp;        
+            $rdfsLabel = self::$sparqlPref["rdfsLabel"];
+            $idProp = $this->idProp;
+            $rdfsSubClass = self::$sparqlPref['rdfsSubClass'];
+            $rdfsDomain = self::$sparqlPref["rdfsDomain"];
+            $dctLabel = self::$sparqlPref["dctLabel"];
+            
+            $q = new Query();            
+            $q->setSelect(array('?id', '?label'));            
+            
+            $q3 = new Query();
+            $q3->addParameter(new HasTriple($classURI, array( $idProp, '/', '^', $rdfsDomain, ), '?property'));
+            
+            $q2 = new Query();
+            
+            $q4 = new Query();
+            $q4->addParameter(new HasTriple($classURI, array( $rdfsSubClass, '/', '(', '^', $idProp, '/', $rdfsSubClass,')', '*', '/', '^', $rdfsDomain, ), '?property'));           
+            $q4->setJoinClause('union');
+            
+            $q5 = new Query();
+            $q5->addParameter(new HasTriple('?property', $idProp, '?id'));            
+            
+            $q6 = new Query();
+            $q6->addParameter(new HasTriple('?property', $dctLabel, '?label'));            
+            $q6->setJoinClause('optional');
+            
+            $q2->addSubquery($q3);
+            $q2->addSubquery($q4);
+            $q->addSubquery($q2);
+            $q->addSubquery($q5);
+            $q->addSubquery($q6);
+            
+            $q->setOrderBy(array('?id'));
+            $query = $q->getQuery();
+            
+        //HasTriple('?class', array('(', 'rdfs:subClassOf', '/', '^', 'dct:identifier', ')', '*'), 'acdh:DigitalCollection')
+
+/*
             $query = self::$prefixes . ' 
                     SELECT 
                         ?id ?label 
@@ -322,7 +412,7 @@ class oeawStorage {
                             ?property dct:label ?label .
                         }
                     } Order BY (?id)           
-                ';
+                ';*/
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
@@ -339,21 +429,29 @@ class oeawStorage {
     public function searchForData(string $value, string $property): array{
         
         $rdfType = self::$sparqlPref["rdfType"];
+        $dcTitle = $this->titleProp;        
+        $rdfsLabel = self::$sparqlPref["rdfsLabel"];
         
         try {
-            //if the property is url then
-            if(!empty(filter_var($property, FILTER_VALIDATE_URL))){
-                $property = "<". $property .">";
-            }
-            
-            /*
+           
             $q = new Query();            
-            $q->addParameter(new HasTriple('?aaa', $rdfType, '?type'));
-            $q->setSelect(array('?type'));
-            $q->setOrderBy(array('?aaa'));
-            $q->setGroupBy(array('?type'));
+            $q->setSelect(array('?res', '?property', '?value', '?title', '?label'));            
+            //$q->addParameter(new HasTriple('?uri', $property, '?value'));            
+            $q->addParameter(new MatchesRegEx($property, $value), 'i');
+            
+            $q2 = new Query();
+            $q2->addParameter((new HasTriple('?res', $dcTitle, '?title')));
+            $q2->setJoinClause('optional');
+            $q->addSubquery($q2);
+
+            $q3 = new Query();
+            $q3->addParameter((new HasTriple('?res', $rdfsLabel, '?label')));
+            $q3->setJoinClause('optional');
+            $q->addSubquery($q3);
+            
             $query = $q->getQuery();
-       */
+
+            /*
             $query =
                     self::$prefixes . ' SELECT ?uri ?property ?value ?title ?label  '
                     . 'WHERE {'
@@ -364,7 +462,7 @@ class oeawStorage {
                         . ' OPTIONAL {?uri dc:title ?title} . '
                         . ' OPTIONAL {?uri rdfs:label ?label} . '
                     . '} ';
-
+*/
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
@@ -386,7 +484,7 @@ class oeawStorage {
     
     public function getClassesForSideBar():array
     {        
-        $rdfType = self::$sparqlPref["rdfType"];
+        $rdfType = self::$sparqlPref["rdfType"];        
         
         try {
             
