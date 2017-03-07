@@ -429,8 +429,7 @@ class oeawStorage {
     public function getImage(string $value): string
     {
         
-        $idProp = $this->idProp;
-        
+        $idProp = $this->idProp;        
         $result = "";
         
         try{

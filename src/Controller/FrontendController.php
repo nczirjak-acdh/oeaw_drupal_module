@@ -252,7 +252,7 @@ class FrontendController extends ControllerBase {
         
         $rootGraph = $this->oeawFunctions->makeGraph($uri);
         
-        $rootMeta =  $this->oeawFunctions->makeMetaData($uri);        
+        $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
 
         if(count($rootMeta) > 0){
             // get the table data by the details uri from the URL
@@ -265,14 +265,13 @@ class FrontendController extends ControllerBase {
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
                     
                     // if there is a thumbnail
-                    if($v == "http://xmlns.com/foaf/spec/thumbnail"){ 
+                    if($v == "http://xmlns.com/foaf/spec/thumbnail"){                         
                         if($item){
                             $imgData = $this->oeawStorage->getImage($item);                            
                             if(count($imgData) > 0){
                                 $hasImage = $imgData;
-                                echo $hasImage;
                             }
-                        }                        
+                        }
                     }
                     
                     if(get_class($item) == "EasyRdf_Resource"){
@@ -293,7 +292,7 @@ class FrontendController extends ControllerBase {
         } else {
             return drupal_set_message(t('The resource has no metadata!'), 'error');
         }
-        
+        //change the proprty urls to prefixes
         foreach($results as $key => $value){
             $results[$key]["property"] = $this->oeawFunctions->createPrefixesFromString($results[$key]["property"]);            
         }
@@ -309,8 +308,16 @@ class FrontendController extends ControllerBase {
         if($childF){
             foreach($childF as $r){
                 
-                $childResult[$i]['uri']= $r->getUri();
-                $childResult[$i]['title']= $r->getMetadata()->label();
+                $childResult[$i]['uri']= $r->getUri();                
+                
+                $childResult[$i]['title']= $r->getMetadata()->label();                
+                
+                $imageMeta = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://xmlns.com/foaf/spec/thumbnail"));
+                
+                if(!empty($imageMeta)){                    
+                    $childResult[$i]['thumbnail'] = $this->oeawStorage->getImage($imageMeta->getUri());                    
+                }
+                
                 $decUrlChild = $this->oeawFunctions->isURL($r->getUri(), "decode");
                 
                 $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;
@@ -322,11 +329,9 @@ class FrontendController extends ControllerBase {
         }else {
             $childResult = "";
             $childHeader = "";
-        }
+        }        
         
-        
-        $resEditUrl = $this->oeawFunctions->createDetailsUrl($uri, 'encode');
-        
+        $resEditUrl = $this->oeawFunctions->createDetailsUrl($uri, 'encode');        
         $resTitle = $rootGraph->label($uri);
         
         if($resTitle){
@@ -340,7 +345,6 @@ class FrontendController extends ControllerBase {
             "title" => $resTitle
         );        
       
-
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
             '#result' => $results,
