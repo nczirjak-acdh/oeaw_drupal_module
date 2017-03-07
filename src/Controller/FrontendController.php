@@ -602,17 +602,18 @@ class FrontendController extends ControllerBase {
             
             if(count($data) > 0){
                 $res = array();
+                
                 for ($i = 0; $i < count($data); $i++) {            
                     foreach($data[$i] as $key => $value){
-                        // check that the value is an Url or not
+                        // check that the value is an Url or not                    
                         $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
 
                         //create details and editing urls
-                        if($decodeUrl !== false){                             
+                        if(!empty($decodeUrl)){                            
                             $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                            if($uid !== 0 ){
+                            if($uid !== 0){
                                $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                            }
+                            } 
                         }
                         $res[$i][$key] = $value; 
                     }
