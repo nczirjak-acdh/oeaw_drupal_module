@@ -89,9 +89,7 @@ class FrontendController extends ControllerBase {
         }else {
             return drupal_set_message(t('You have no root elements!'), 'error');    
         }
-        
-     
-
+      
         $header = array_keys($res[0]);
         //create the datatable values and pass the twig template name what we want to use
         $datatable = array(
@@ -236,10 +234,9 @@ class FrontendController extends ControllerBase {
      *
      * this generates the detail view when a user clicked the detail href on a reuslt page
      *
-     * @param string $uri : the encoded uri from the url, to we can identify the selected resource
+     * @param string $uri : the encoded uri from the url, to we can identify the selected resource     
+     * @param Request $request : drupal core function     
      * 
-     * @param Request $request : drupal core function
-     *
      * @return array with datatable values and template name
     */
     public function oeaw_detail(string $uri, Request $request): array {
@@ -255,50 +252,8 @@ class FrontendController extends ControllerBase {
         
         $rootGraph = $this->oeawFunctions->makeGraph($uri);
         
-        /*
-        $graphSerial = $rootGraph->serialise('json');
-        $decodedGraph = json_decode($graphSerial);
-        $jGraph = $decodedGraph->{$uri};
-        $jsonArray = array();
-        $i = 1;
-        $jsonArray[0] = array(
-                "id" => $uri,
-                "name" => $uri);
-        
-        foreach($jGraph as $key => $value){
-            
-            $jsonArray[$i] = array("id" => $key,
-            "name" => $key);
+        $rootMeta =  $this->oeawFunctions->makeMetaData($uri);        
 
-            if(is_array($value)){
-
-                foreach($value as $v){
-                    $jsonArray[$i]["adjacencies"][] = 
-                            array(
-                                "nodeTo" => $v->value,
-                                "nodeFrom" => $key,
-                                "data" => array(
-                                    '$color' => "#557EAA"
-                                )
-                            );
-                }
-                
-                $jsonArray[0]["adjacencies"][] = 
-                    array(
-                        "nodeTo" => $key,
-                        "nodeFrom" => $uri,
-                        "data" => array(
-                            '$color' => "#557EAA"
-                        )
-                    );
-            }
-            $i++;
-        }
-        */
-        //$rootMetaAll =  \Drupal\oeaw\oeawFunctions::makeMetaData($uri)->all(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-        
-        $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
-        
         if(count($rootMeta) > 0){
             // get the table data by the details uri from the URL
             $i = 0;
@@ -315,6 +270,7 @@ class FrontendController extends ControllerBase {
                             $imgData = $this->oeawStorage->getImage($item);                            
                             if(count($imgData) > 0){
                                 $hasImage = $imgData;
+                                echo $hasImage;
                             }
                         }                        
                     }
@@ -336,6 +292,10 @@ class FrontendController extends ControllerBase {
             }
         } else {
             return drupal_set_message(t('The resource has no metadata!'), 'error');
+        }
+        
+        foreach($results as $key => $value){
+            $results[$key]["property"] = $this->oeawFunctions->createPrefixesFromString($results[$key]["property"]);            
         }
         
         $header = array_keys($results[0]);     
