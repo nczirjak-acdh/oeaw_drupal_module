@@ -59,7 +59,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }            
         }
         
-
         $classGraph = $this->oeawFunctions->makeGraph($class);
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
         if(!empty($classID)){
@@ -72,11 +71,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // compare the digRes and the actual class, because if it is a DigColl then 
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
-      
-        
+              
         // get the actual class metadata
         $metadataQuery = $this->oeawStorage->getClassMeta($class);  
-       $metadata = array();
+        $metadata = array();
         if(count($metadataQuery) > 0){
             foreach($metadataQuery as $m){            
                 $metadata[] = $m["id"];

@@ -63,29 +63,29 @@ class FrontendController extends ControllerBase {
         $res = array();
         $decodeUrl = "";
         
-        $result = $this->oeawStorage->getRootFromDB();
-        
+        $result = $this->oeawStorage->getRootFromDB();      
+
         $uid = \Drupal::currentUser()->id();
         
         if(count($result) > 0){
-            for ($i = 0; $i < count($result); $i++) {
-                foreach($result[$i] as $key => $value){
-                    // check that the value is an Url or not
-                    
-                    $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
-                    
-                    //create details and editing urls
-                    if($decodeUrl){ 
-                        
-                        $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                        if($uid !== 0){
-                            $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                        } 
+            $i = 0;            
+            foreach($result as $value){
+                // check that the value is an Url or not            
+                $decodeUrl = $this->oeawFunctions->isURL($value["uri"], "decode");
+                
+                //create details and editing urls
+                if($decodeUrl){
+                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                    if($uid !== 0){
+                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
                     }
-                    $res[$i][$key] = $value; 
                 }
-                $decodeUrl = "";
+                $res[$i]["uri"] = $value["uri"];
+                $res[$i]["title"] = $value["title"];
+                $i++;
             }
+            $decodeUrl = "";
+            
         }else {
             return drupal_set_message(t('You have no root elements!'), 'error');    
         }
@@ -455,14 +455,12 @@ class FrontendController extends ControllerBase {
                 //if there is any property which contains the searched value then
                 // we get the uri and 
                 if(!empty($j->getUri())){
-                    //get the resource identifier f.e.: id.acdh.oeaw.ac.at.....
-                    
+                    //get the resource identifier f.e.: id.acdh.oeaw.ac.at.....                    
                     $identifier = $fedora->getResourceByUri($j->getUri())->getMetadata()->getResource(EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'));
                     
                     if(!empty($identifier)){
                         //get the resources which is part of this identifier
-                        $identifier = $identifier->getUri();
-                        
+                        $identifier = $identifier->getUri();                        
 
                         $ids = $this->oeawStorage->searchForData($identifier, $metaKey);
                         
@@ -491,22 +489,34 @@ class FrontendController extends ControllerBase {
         }elseif (empty($data)) {            
             $data = $stringSearch;
         }        
-        
-        for ($i = 0; $i < count($data); $i++) {            
-            foreach($data[$i] as $key => $value){
-                // check that the value is an Url or not
-                $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
+   
+        if(count($data) > 0){
+            $i = 0;            
+            foreach($data as $value){
+                // check that the value is an Url or not            
+                $decodeUrl = $this->oeawFunctions->isURL($value["res"], "decode");
                 
                 //create details and editing urls
-                if($decodeUrl !== false){                             
+                if($decodeUrl){
                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                     if($uid !== 0){
-                       $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                    } 
+                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                    }
                 }
-                $res[$i][$key] = $value; 
+                $res[$i]["uri"] = $value["res"];
+                $res[$i]["title"] = $value["title"];
+                $i++;
             }
+             $searchArray = array(
+                "metaKey" => $metaKey,
+                "metaValue" => $metaValue
+            );
+            $decodeUrl = "";
+            
+        }else {
+            return drupal_set_message(t('There is no data -> Search'), 'error');    
         }
+
 
         $searchArray = array(
             "metaKey" => $metaKey,
@@ -599,33 +609,33 @@ class FrontendController extends ControllerBase {
             $uid = \Drupal::currentUser()->id();
             
             $data = $this->oeawStorage->getDataByProp("rdf:type", $searchResult);
-            
+        
             if(count($data) > 0){
-                $res = array();
-                
-                for ($i = 0; $i < count($data); $i++) {            
-                    foreach($data[$i] as $key => $value){
-                        // check that the value is an Url or not                    
-                        $decodeUrl = $this->oeawFunctions->isURL($value, "decode");
+                $i = 0;            
+                foreach($data as $value){
+                    // check that the value is an Url or not            
+                    $decodeUrl = $this->oeawFunctions->isURL($value["uri"], "decode");
 
-                        //create details and editing urls
-                        if(!empty($decodeUrl)){                            
-                            $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                            if($uid !== 0){
-                               $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                            } 
+                    //create details and editing urls
+                    if($decodeUrl){
+                        $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                        if($uid !== 0){
+                            $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
                         }
-                        $res[$i][$key] = $value; 
                     }
+                    $res[$i]["uri"] = $value["uri"];
+                    $res[$i]["title"] = $value["title"];
+                    $i++;
                 }
-
-                $searchArray = array(
+                 $searchArray = array(
                     "metaKey" => $classesArr[0],
                     "metaValue" => $classesArr[1]
                 );
+                $decodeUrl = "";
+
             }else {
-                return drupal_set_message(t('There is no data -> Class List Search'), 'error');      
-            }
+                return drupal_set_message(t('There is no data -> Class List Search'), 'error');    
+            }         
             
         }else {
             $searchArray = array();

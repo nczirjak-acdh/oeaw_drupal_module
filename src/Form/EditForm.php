@@ -86,6 +86,8 @@ class EditForm extends FormBase {
         //get the hash uri from the url, based on the drupal routing file
         $editHash = \Drupal::request()->get('uri');
 
+        $isImage = false;
+        
         if (empty($editHash)) {
             return drupal_set_message($this->t('the uri is not exists!'), 'error');
         }
@@ -109,9 +111,11 @@ class EditForm extends FormBase {
         $classVal = array();
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
+        
+        //$metadataQuery = $this->oeawStorage->getClassMeta($class); 
         if(count($classValue) > 0){
             foreach ($classValue as $v) {
-                if (strpos($v->getUri(), 'vocabs.acdh.oeaw.ac.at') !== false) {
+                if(!empty($v->getUri())){                    
                     $classVal[] = $v->getUri();                    
                 }
             }
@@ -121,21 +125,19 @@ class EditForm extends FormBase {
 
         $fedora = $this->oeawFunctions->initFedora();
         $editUriClass = "";
-        
+       
         if (!empty($classVal)) {
             foreach ($classVal as $cval) {
                 $res = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $cval);
                 // this will contains the onotology uri, what will helps to use to know
-                // which fields we need to show in the editing form
-                
+                // which fields we need to show in the editing form                
 
                 if(count($res) > 0){
                     $editUriClass = $res[0]->getUri();
+                    $actualClassUri = $cval;
+                    if($cval == "http://xmlns.com/foaf/spec/Image"){ $isImage = true; }
                 }
                 
-                if($editUriClass){
-                    $actualClassUri = $cval;
-                }
             }
         } else {
             return drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
@@ -145,9 +147,10 @@ class EditForm extends FormBase {
             
             return drupal_set_message($this->t('URI Class is empty!!'), 'error');
         }
-        
+        //http://xmlns.com/foaf/spec/Image
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = $this->oeawStorage->getClassMeta($editUriClass);
+        
         if(empty($editUriClassMetaFields)){
             drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
         }        
@@ -252,14 +255,15 @@ class EditForm extends FormBase {
         $checkDigRes = in_array($actualClassUri, $digitalResources);
 
         // if we have a digital resource then the user must upload a binary resource
-        if ($checkDigRes == true) {
+        //
+        if ($checkDigRes == true || $isImage == true) {
             $form['file'] = array(
                 '#type' => 'managed_file',
                 '#title' => t('Binary Resource'),                
                 '#upload_validators' => array(
-                    'file_validate_extensions' => array('xml doc txt simplified docx pdf'),
-                ),
-                '#description' => t('Upload a file, allowed extensions: XML, CSV, etc....'),
+                    'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
+                 ),
+                '#description' => t('Upload a file, allowed extensions: XML, CSV, and images etc....'),
             );
             
         }

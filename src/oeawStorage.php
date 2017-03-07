@@ -87,7 +87,7 @@ class oeawStorage {
             $q->setSelect(array('?uri', '?title'));
         
             $query= $q->getQuery();
-          
+        
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             

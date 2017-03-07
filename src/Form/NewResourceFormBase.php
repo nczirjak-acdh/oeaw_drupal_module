@@ -134,7 +134,7 @@ abstract class NewResourceFormBase extends FormBase {
         
         $fedora = new Fedora($config);      
         $fedora->begin();        
-        
+
         try{
             if(empty($fileName)){
                 $res = $fedora->createResource($meta);
