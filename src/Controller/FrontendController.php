@@ -265,12 +265,20 @@ class FrontendController extends ControllerBase {
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
                     
                     // if there is a thumbnail
-                    if($v == "http://xmlns.com/foaf/spec/thumbnail"){                         
+                    if($v == "http://xmlns.com/foaf/spec/thumbnail"){
                         if($item){
-                            $imgData = $this->oeawStorage->getImage($item);                            
+                            
+                            $imgData = $this->oeawStorage->getImage($item);
+                            
                             if(count($imgData) > 0){
                                 $hasImage = $imgData;
                             }
+                        }
+                    } 
+                    
+                    if($v == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"){
+                        if($item == "http://xmlns.com/foaf/spec/Image"){                            
+                            $hasImage = $uri;
                         }
                     }
                     
@@ -312,12 +320,21 @@ class FrontendController extends ControllerBase {
                 
                 $childResult[$i]['title']= $r->getMetadata()->label();                
                 
-                $imageMeta = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://xmlns.com/foaf/spec/thumbnail"));
+                $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://xmlns.com/foaf/spec/thumbnail"));
+                $imageRdfType = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
                 
-                if(!empty($imageMeta)){                    
-                    $childResult[$i]['thumbnail'] = $this->oeawStorage->getImage($imageMeta->getUri());                    
+                //check the thumbnail
+                if(!empty($imageThumbnail)){
+                    $childResult[$i]['thumbnail'] = $this->oeawStorage->getImage($imageThumbnail->getUri());
                 }
                 
+                //if there is an rdf type with foaf image property, then the resource is an image
+                if(!empty($imageRdfType)){                    
+                    if($imageRdfType->getUri() == "http://xmlns.com/foaf/spec/Image"){
+                        $childResult[$i]['thumbnail'] = $r->getUri();
+                    }
+                }
+              
                 $decUrlChild = $this->oeawFunctions->isURL($r->getUri(), "decode");
                 
                 $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;

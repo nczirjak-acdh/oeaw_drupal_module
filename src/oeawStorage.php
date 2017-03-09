@@ -143,8 +143,8 @@ class oeawStorage {
     */
     public function getDataByProp(string $property, string $value): array {
         
-        if (empty($property)) {
-            return drupal_set_message(t('Empty values!'), 'error');
+        if (empty($value) || empty($property)) {
+            return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
         }
        
         if(!filter_var($property, FILTER_VALIDATE_URL)){
@@ -356,6 +356,10 @@ class oeawStorage {
      * @return Array
     */
     public function getClassMeta(string $classURI): array{
+       
+        if (empty($classURI)) {
+            return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
+        }
         
         try {
             
@@ -426,27 +430,40 @@ class oeawStorage {
       
     }
     
-    public function getImage(string $value): string
+    /*
+     * 
+     * Get the resource thumbnail image
+     * 
+     * @param string $value -> the property value 
+     * 
+     */
+    
+    public function getImage(string $value, string $property = null ): string
     {
-        
-        $idProp = $this->idProp;        
+         
         $result = "";
         
+        if (empty($value)) {
+            return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
+        }
+        
+        if($property == null){
+            $property = $this->idProp;
+        }
+
         try{
             
-            $q = new Query();            
+            $q = new Query();
             $q->setSelect(array('?res'));
-            $q->addParameter((new HasValue($idProp, $value)));
+            $q->addParameter((new HasValue($property, $value)));
             $query = $q->getQuery();
             $result = $this->fedora->runSparql($query);
             
             $fields = $result->getFields(); 
             $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
-            
-            if(count($getResult) > 0){
-                
-                $result = $getResult[0]["res"];
-                
+           
+            if(count($getResult) > 0){                
+                $result = $getResult[0]["res"];                
                 return $result;
             }else {
                 return drupal_set_message(t('There was an error in the function: getImage'), 'error');
@@ -455,9 +472,6 @@ class oeawStorage {
         } catch (Exception $ex) {
             return drupal_set_message(t('There was an error in the function: getImage'), 'error');
         }
-        
-        
-        
     }
     
     
@@ -466,6 +480,10 @@ class oeawStorage {
         $rdfType = self::$sparqlPref["rdfType"];
         $dcTitle = $this->titleProp;        
         $rdfsLabel = self::$sparqlPref["rdfsLabel"];
+        
+        if (empty($value) || empty($property)) {
+            return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
+        }
         
         try {
            
