@@ -400,6 +400,7 @@ class oeawStorage {
             $q->setOrderBy(array('?id'));
             $query = $q->getQuery();
             
+            
         //HasTriple('?class', array('(', 'rdfs:subClassOf', '/', '^', 'dct:identifier', ')', '*'), 'acdh:DigitalCollection')
 
 /*
@@ -557,12 +558,12 @@ class oeawStorage {
             
             $q = new Query();            
             $q->addParameter(new HasTriple('?aaa', $rdfType, '?type'));
-            $q->setSelect(array('?type'));
+            $q->setSelect(array('?type', '(COUNT(?type) as ?typeCount)'));
             $q->setOrderBy(array('?aaa'));
             $q->setGroupBy(array('?type'));
             $query = $q->getQuery();
-         
-         /*   $query =
+            
+            /*   $query =
                     self::$prefixes . ' 
                         SELECT ?type  
                         WHERE {[] a ?type} GROUP BY ?type ';
