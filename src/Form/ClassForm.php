@@ -83,20 +83,24 @@ class ClassForm extends FormBase
              drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
              return;
         }
+        
         /* get the fields from the sparql query */
         $fields = array_keys($data[0]);
         
         $searchTerms = $this->oeawFunctions->createPrefixesFromArray($data, $fields);
         
-        foreach($searchTerms["type"] as $terms){            
+        $i = 0;
+        foreach($searchTerms["type"] as $value){
             
-            $form[$terms] = array(
+            $form[$value] = array(
                 '#type' => 'submit',
                 '#name' => 'class',
-                '#value' => $this->t($terms),                
+                '#value' => $this->t($value." (".$searchTerms["typeCount"][$i].")"),
                 '#button_type' => 'primary',
                 '#prefix' => "<br/>",
             );
+            
+            $i++;
         }
        
         return $form;
