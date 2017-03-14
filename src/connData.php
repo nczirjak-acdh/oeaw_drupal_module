@@ -19,29 +19,29 @@ class connData
 
     
     public function fedoraUrl() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
+        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){
             $url = 'https://fedora.localhost/rest/';
         }else {
             $url = 'https://fedora.hephaistos.arz.oeaw.ac.at/rest/';
-        }        
+        }
         return $url;
     }
     
     public function fedoraDownloadUrl() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
+        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){
             $url = 'https://fedora.localhost/rest/';
         }else {
             $url = 'https://fedora.hephaistos.arz.oeaw.ac.at/rest/';
-        }        
+        }
         return $url;
     }
     
     public function fedoraUrlwHttp() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
+        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){
             $url = 'fedora.localhost/rest/';
         }else {
             $url = 'fedora.hephaistos.arz.oeaw.ac.at/rest/';
-        }        
+        }
         return $url;
     }
     

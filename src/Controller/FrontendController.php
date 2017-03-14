@@ -18,9 +18,10 @@ use Drupal\Core\Ajax\ChangedCommand;
 use Drupal\Core\Ajax\CssCommand;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
+use zozlak\util\Config;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
-use zozlak\util\Config;
+
 use EasyRdf\Graph;
 use EasyRdf\Resource;
 use acdhOeaw\util\EasyRdfUtil;
@@ -34,9 +35,9 @@ class FrontendController extends ControllerBase {
     private $oeawStorage;
     private $oeawFunctions;
     
-    public function __construct() {
+    public function __construct() {  
         $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawFunctions = new oeawFunctions();        
     }
     
     
@@ -198,7 +199,6 @@ class FrontendController extends ControllerBase {
      * @return array with drupal core table values
     */
     public function oeaw_menu(): array {
-        
         $table = array();
         $header = array('id' => t('MENU'));
         $rows = array();
@@ -250,11 +250,11 @@ class FrontendController extends ControllerBase {
        
         // decode the uri hash
         $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
-
+ 
         $uid = \Drupal::currentUser()->id();
         
         $rootGraph = $this->oeawFunctions->makeGraph($uri);
-        
+ 
         $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
 
         if(count($rootMeta) > 0){

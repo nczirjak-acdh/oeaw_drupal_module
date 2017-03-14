@@ -26,8 +26,8 @@ class oeawFunctions {
     
     private $config;
         
-    public function __construct(){
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+    public function __construct(){        
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');        
     }
     
     /*
@@ -81,8 +81,10 @@ class oeawFunctions {
         // setup fedora        
         $fedora = new Fedora($this->config);
         //create and load the data to the graph
-        $res = $fedora->getResourceByUri($uri);
+        
+        $res = $fedora->getResourceByUri($uri);        
         $meta = $res->getMetadata();
+        
         $graph = $meta->getGraph();
         
         return $graph;

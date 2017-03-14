@@ -54,14 +54,16 @@ class oeawStorage {
     
     private $fedora;
      
-    public function __construct() {        
+    public function __construct() {  
+        
         $cfg = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $this->apiUrl = preg_replace('|/$|', '', $cfg->get('fedoraApiUrl'));
         $this->idProp = $cfg->get('fedoraIdProp');
         $this->relProp = $cfg->get('fedoraRelProp');
         $this->titleProp = $cfg->get('fedoraTitleProp');
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawFunctions = new oeawFunctions();        
         $this->fedora = new Fedora($cfg);
+      
     }
 
 

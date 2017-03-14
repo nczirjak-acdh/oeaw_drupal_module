@@ -51,6 +51,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->oeawStorage->getDigitalResources();
 
+   
+
         //create the digitalResources array
         $digitalResources = array();
         foreach($digitalResQuery as $dr){            
@@ -71,12 +73,12 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // compare the digRes and the actual class, because if it is a DigColl then 
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
-              
+              echo $class;
         // get the actual class metadata
         $metadataQuery = $this->oeawStorage->getClassMeta($class);  
         $metadata = array();
         if(count($metadataQuery) > 0){
-            foreach($metadataQuery as $m){            
+            foreach($metadataQuery as $m){                
                 $metadata[] = $m["id"];
             }
         }else {
