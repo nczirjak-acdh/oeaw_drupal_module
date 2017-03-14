@@ -51,6 +51,7 @@ class oeawStorage {
     private $titleProp;
     
     private $oeawFunctions;
+    
     private $fedora;
      
     public function __construct() {        
@@ -435,6 +436,9 @@ class oeawStorage {
      * Get the resource thumbnail image
      * 
      * @param string $value -> the property value 
+     * @param string $property -> the property
+     * 
+     * @return string
      * 
      */
     
@@ -474,6 +478,16 @@ class oeawStorage {
         }
     }
     
+    /*
+     * 
+     * Search function
+     * 
+     * @param string $value -> the property value 
+     * @param string $property -> the property
+     * 
+     * @return array
+     * 
+     */
     
     public function searchForData(string $value, string $property): array{
         

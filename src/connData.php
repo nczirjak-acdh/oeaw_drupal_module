@@ -20,18 +20,18 @@ class connData
     
     public function fedoraUrl() {
         if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
-            $url = 'http://fedora.localhost/rest/';
+            $url = 'https://fedora.localhost/rest/';
         }else {
-            $url = 'http://fedora.hephaistos.arz.oeaw.ac.at/rest/';
+            $url = 'https://fedora.hephaistos.arz.oeaw.ac.at/rest/';
         }        
         return $url;
     }
     
     public function fedoraDownloadUrl() {
         if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){            
-            $url = 'http://fedora.localhost/rest/';
+            $url = 'https://fedora.localhost/rest/';
         }else {
-            $url = 'http://fedora.hephaistos.arz.oeaw.ac.at/rest/';
+            $url = 'https://fedora.hephaistos.arz.oeaw.ac.at/rest/';
         }        
         return $url;
     }

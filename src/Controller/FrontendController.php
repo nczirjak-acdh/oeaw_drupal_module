@@ -21,8 +21,8 @@ use Drupal\Core\Ajax\InvokeCommand;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use zozlak\util\Config;
-use EasyRdf_Graph;
-use EasyRdf_Resource;
+use EasyRdf\Graph;
+use EasyRdf\Resource;
 use acdhOeaw\util\EasyRdfUtil;
 //autocomplete
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -244,6 +244,9 @@ class FrontendController extends ControllerBase {
         if (empty($uri)) {
            return drupal_set_message(t('The uri is missing!'), 'error');
         }
+        
+        $hasBinary = "";
+        $hasImage = "";
        
         // decode the uri hash
         $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
@@ -258,8 +261,7 @@ class FrontendController extends ControllerBase {
             // get the table data by the details uri from the URL
             $i = 0;
             $results = array();
-            $hasBinary = "";
-            $hasImage = "";
+            
             foreach($rootMeta->propertyUris($uri) as $v){
 
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
@@ -573,17 +575,19 @@ class FrontendController extends ControllerBase {
     */
     public function oeaw_classes_result(): array{
         
-
-        $url = Url::fromRoute('<current>');
-        $internalpath = $url->getInternalPath();
-        $internalpath = explode("/", $internalpath);
-        
         $datatable = array();
         $data = array();
+        $interPathArray = array();
+        $classesArr = array();
+        $res = array();
+
+        $url = Url::fromRoute('<current>');
+        $internalPath = $url->getInternalPath();
+        $interPathArray = explode("/", $internalPath);
         
-        if($internalpath[0] == "oeaw_classes_result"){
+        if($interPathArray[0] == "oeaw_classes_result"){
             
-            $searchResult = urldecode($internalpath[1]);
+            $searchResult = urldecode($interPathArray[1]);
             $classesArr = explode(":", $searchResult);        
             $property = $classesArr[0];
             $value =  $classesArr[1];

@@ -17,8 +17,8 @@ use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use acdhOeaw\util\EasyRdfUtil;
 use zozlak\util\Config;
-use EasyRdf_Graph;
-use EasyRdf_Resource;
+use EasyRdf\Graph;
+use EasyRdf\Resource;
 
 
  
@@ -53,7 +53,7 @@ class oeawFunctions {
      * @return EasyRdf_Resource
      */
     
-    public function makeMetaData(string $uri): EasyRdf_Resource{
+    public function makeMetaData(string $uri): \EasyRdf\Resource{
         
         if(empty($uri)){
             return drupal_set_message(t('The uri is missing!'), 'error');
@@ -75,7 +75,7 @@ class oeawFunctions {
      * @return EasyRdf_Graph
      * 
      */
-    public function makeGraph(string $uri): EasyRdf_Graph{
+    public function makeGraph(string $uri): \EasyRdf\Graph{
      
         $graph = array();
         // setup fedora        
@@ -208,7 +208,7 @@ class oeawFunctions {
      * @return array
     */
     
-    public function createSparqlResult(\EasyRdf_Sparql_Result $result, array $fields): array{
+    public function createSparqlResult(\EasyRdf\Sparql\Result $result, array $fields): array{
         
         if(empty($result) && empty($fields)){
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');

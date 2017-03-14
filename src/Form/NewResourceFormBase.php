@@ -109,7 +109,7 @@ abstract class NewResourceFormBase extends FormBase {
         $graph = array();
         $meta = array();
         //create an easyrdf_graph instance
-        $graph = new \EasyRdf_Graph();            
+        $graph = new \EasyRdf\Graph();            
         $meta = $graph->resource('acdh');
         
         // creating the resources for the Fedora class
