@@ -18,6 +18,10 @@ class MyExampleSubscriber implements EventSubscriberInterface {
             error_log("checkredirectionben");
             \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
         }
+        if ($event->getRequest()->getPathInfo() == '/oeaw_newresource_one') {
+            error_log("checkredirectionben");
+            \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
+        }
         
 
     }
