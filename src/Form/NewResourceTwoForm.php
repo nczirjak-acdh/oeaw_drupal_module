@@ -73,7 +73,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // compare the digRes and the actual class, because if it is a DigColl then 
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
-              echo $class;
+              
         // get the actual class metadata
         $metadataQuery = $this->oeawStorage->getClassMeta($class);  
         $metadata = array();

@@ -37,12 +37,11 @@ class FrontendController extends ControllerBase {
     
     public function __construct() {  
         $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();        
+        $this->oeawFunctions = new oeawFunctions();
     }
     
     
-    public function oeaw_ac_form(){
-        
+    public function oeaw_ac_form(){        
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AutoCompleteForm');
         return $form;        
     }
@@ -213,7 +212,7 @@ class FrontendController extends ControllerBase {
         
         //if the user is anonymus then we hide the add resource menu
         if($uid !== 0){
-            $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_newresource_one'));
+            $link2 = Link::fromTextAndUrl('Add New Resource', Url::fromRoute('oeaw_multi_new_resource'));
             $rows[2] = array('data' => array($link2));
         }
         
@@ -272,8 +271,8 @@ class FrontendController extends ControllerBase {
                             
                             $imgData = $this->oeawStorage->getImage($item);
                             
-                            if(count($imgData) > 0){
-                                $hasImage = $imgData;
+                            if(count($imgData) > 0){                                
+                                $hasImage = $imgData[0];
                             }
                         }
                     } 
@@ -326,8 +325,12 @@ class FrontendController extends ControllerBase {
                 $imageRdfType = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
                 
                 //check the thumbnail
-                if(!empty($imageThumbnail)){
-                    $childResult[$i]['thumbnail'] = $this->oeawStorage->getImage($imageThumbnail->getUri());
+                if(!empty($imageThumbnail)){                    
+                    $childThumb = $this->oeawStorage->getImage((string)$imageThumbnail);
+                    
+                    if(count($childThumb) > 0){
+                        $childResult[$i]['thumbnail'] = $childThumb[0];
+                    }
                 }
                 
                 //if there is an rdf type with foaf image property, then the resource is an image
@@ -485,7 +488,7 @@ class FrontendController extends ControllerBase {
                     if($uid !== 0){
                         $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
                     }
-                }
+                }                
                 $res[$i]["uri"] = $value["res"];
                 $res[$i]["title"] = $value["title"];
                 $i++;
@@ -530,17 +533,8 @@ class FrontendController extends ControllerBase {
      * @return Drupal Form 
     */
 
-    public function multi_new_resource() {
-        
-        $uid = \Drupal::currentUser()->id();
-        
-        if($uid !== 0){
-            $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');        
-            return $form;
-        }else {
-            return drupal_set_message(t('You have no rights for this page!'), 'error');    
-        }
-        
+    public function multi_new_resource() {        
+        return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');        
     }
 
     /* 
@@ -556,15 +550,7 @@ class FrontendController extends ControllerBase {
     */
     
     public function oeaw_editing(string $uri, Request $request) {
-     
-        $uid = \Drupal::currentUser()->id();
-        if($uid !== 0){            
-            $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');            
-            return $form;
-            
-        } else {
-            return drupal_set_message(t('You have no rights for this page!'), 'error');    
-        }
+        return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
     }
     
     

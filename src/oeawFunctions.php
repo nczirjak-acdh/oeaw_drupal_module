@@ -228,13 +228,12 @@ class oeawFunctions {
                     
                     $objClass = get_class($result[$x]->$f);
                     
-                    if($objClass == "EasyRdf_Resource"){
-                        
+                    if($objClass == "EasyRdf\Resource"){                        
                         $val = $result[$x]->$f;
                         $val = $val->getUri();
                         $res[$x][$f] = $val;
                         
-                    }else if($objClass == "EasyRdf_Literal"){
+                    }else if($objClass == "EasyRdf\Literal"){
                                                 
                         $val = $result[$x]->$f;
                         $val = $val->__toString();
@@ -478,5 +477,5 @@ class oeawFunctions {
         
         return $res;
     }
-
+    
 }

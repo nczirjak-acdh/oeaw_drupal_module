@@ -57,6 +57,8 @@ class connData
         "https://vocabs.acdh.oeaw.ac.at/#" => "acdh",        
         "http://purl.org/dc/elements/1.1/" => "dc",
         "http://purl.org/dc/terms/" => "dct",
+        "http://purl.org/dc/terms/" => "dcterms",
+        "http://purl.org/dc/terms/" => "dcterm",
         "http://www.w3.org/2002/07/owl#" => "owl",
         "http://xmlns.com/foaf/0.1/" => "foaf",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#" => "rdf",

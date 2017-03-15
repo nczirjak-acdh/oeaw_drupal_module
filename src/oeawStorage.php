@@ -77,6 +77,7 @@ class oeawStorage {
   
         $dcTitle = $this->titleProp;
         $isPartOf = $this->relProp;
+        $getResult = array();
         
         try {
           
@@ -111,6 +112,8 @@ class oeawStorage {
      * @return Array
     */
     public function getAllPropertyForSearch():array {
+        
+        $getResult = array();
         
         try {
             
@@ -165,6 +168,8 @@ class oeawStorage {
             $value = '<'. $value .'>';
         }        
 
+        $getResult = array();
+        
         try {        
             
             $dcTitle = $this->titleProp;        
@@ -222,6 +227,8 @@ class oeawStorage {
     */
     public function getClass(): array {
         
+        $getResult = array();
+        
         try {
         
             $rdfType = self::$sparqlPref["rdfType"];
@@ -266,6 +273,9 @@ class oeawStorage {
     */    
     public function getDigitalResources(): array
     {
+        
+        $getResult = array();
+        
         try {
             
             $rdfType = self::$sparqlPref["rdfType"];
@@ -364,6 +374,8 @@ class oeawStorage {
             return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
         }
         
+        $getResult = array();        
+        
         try {
             
             $rdfType = self::$sparqlPref["rdfType"];
@@ -445,10 +457,8 @@ class oeawStorage {
      * 
      */
     
-    public function getImage(string $value, string $property = null ): string
-    {
-         
-        $result = "";
+    public function getImage(string $value, string $property = null ): array
+    {         
         
         if (empty($value)) {
             return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
@@ -457,6 +467,9 @@ class oeawStorage {
         if($property == null){
             $property = $this->idProp;
         }
+        
+        $result = "";
+        $res = array();
 
         try{
             
@@ -469,12 +482,11 @@ class oeawStorage {
             $fields = $result->getFields(); 
             $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
            
-            if(count($getResult) > 0){                
-                $result = $getResult[0]["res"];                
-                return $result;
-            }else {
-                return drupal_set_message(t('There was an error in the function: getImage'), 'error');
+            if(count($getResult) > 0){
+                $res[] = $getResult[0]["res"];
             }
+            
+            return $res;            
          
         } catch (Exception $ex) {
             return drupal_set_message(t('There was an error in the function: getImage'), 'error');
@@ -501,6 +513,8 @@ class oeawStorage {
         if (empty($value) || empty($property)) {
             return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
         }
+        
+        $getResult = array();
         
         try {
            
@@ -556,6 +570,8 @@ class oeawStorage {
     {        
         $rdfType = self::$sparqlPref["rdfType"];        
         
+        $getResult = array();
+        
         try {
             
             $q = new Query();            
@@ -581,7 +597,5 @@ class oeawStorage {
         }
         
     }
-    
-    
 
 } 

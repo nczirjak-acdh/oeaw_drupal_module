@@ -27,7 +27,7 @@ oeaw_edit:
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_editing'
   requirements:
-    _permission: 'access content'
+    _role: 'authenticated+admin'
     _access: 'TRUE'
         
 oeaw_resources:
@@ -51,8 +51,7 @@ oeaw_multi_new_resource:
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::multi_new_resource'
   requirements:
-    _permission: 'access content'
-    _permission: 'access files overview'
+    _role: 'authenticated+admin'
     _access: 'TRUE'
     
 oeaw_newresource_one:
@@ -61,8 +60,7 @@ oeaw_newresource_one:
     _form: '\Drupal\oeaw\Form\NewResourceOneForm'
     _title: 'Add new Resource, Step 1'
   requirements:
-    _permission: 'access content'
-    _permission: 'access files overview'
+    _role: 'authenticated+admin'
     _access: 'TRUE'
     
 oeaw_newresource_two:
@@ -71,8 +69,7 @@ oeaw_newresource_two:
     _form: '\Drupal\oeaw\Form\NewResourceTwoForm'
     _title: 'Add new Resource, Step 2'
   requirements:
-    _permission: 'access content'
-    _permission: 'access files overview'
+    _role: 'authenticated+admin'    
     _access: 'TRUE'
 
 oeaw_admin_form:
