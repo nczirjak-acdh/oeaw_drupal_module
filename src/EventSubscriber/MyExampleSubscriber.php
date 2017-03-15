@@ -13,11 +13,7 @@ class MyExampleSubscriber implements EventSubscriberInterface {
   * @param GetResponseEvent $event
   */
 
-    public function checkForRedirection(GetResponseEvent $event) {
-        if ($event->getRequest()->getPathInfo() == '/oeaw_newresource_two') {
-            error_log("oeaw_newresource_two");
-            \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
-        }
+    public function checkForRedirection(GetResponseEvent $event) {        
         if ($event->getRequest()->getPathInfo() == '/oeaw_newresource_one') {
             error_log("oeaw_newresource_one");
             \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
@@ -26,10 +22,6 @@ class MyExampleSubscriber implements EventSubscriberInterface {
             error_log("oeaw_multi_new_resource");
             \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
         }
-        
-        
-        
-
     }
 
     /**
@@ -37,8 +29,8 @@ class MyExampleSubscriber implements EventSubscriberInterface {
     */
 
     static function getSubscribedEvents() {
-        $events[KernelEvents::REQUEST][] = array('checkForRedirection');
-        return $events;
+        //$events[KernelEvents::REQUEST][] = array('checkForRedirection');
+        //return $events;
     }
 
 }
