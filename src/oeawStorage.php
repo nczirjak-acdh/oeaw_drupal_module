@@ -63,6 +63,7 @@ class oeawStorage {
         $this->titleProp = $cfg->get('fedoraTitleProp');
         $this->oeawFunctions = new oeawFunctions();        
         $this->fedora = new Fedora($cfg);
+        \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/"); 
       
     }
 

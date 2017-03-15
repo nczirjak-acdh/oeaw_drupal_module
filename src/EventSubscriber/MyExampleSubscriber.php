@@ -15,13 +15,19 @@ class MyExampleSubscriber implements EventSubscriberInterface {
 
     public function checkForRedirection(GetResponseEvent $event) {
         if ($event->getRequest()->getPathInfo() == '/oeaw_newresource_two') {
-            error_log("checkredirectionben");
+            error_log("oeaw_newresource_two");
             \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
         }
         if ($event->getRequest()->getPathInfo() == '/oeaw_newresource_one') {
-            error_log("checkredirectionben");
+            error_log("oeaw_newresource_one");
             \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
         }
+        if ($event->getRequest()->getPathInfo() == '/oeaw_multi_new_resource') {
+            error_log("oeaw_multi_new_resource");
+            \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");            
+        }
+        
+        
         
 
     }
