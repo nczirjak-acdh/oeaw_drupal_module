@@ -169,7 +169,8 @@ class oeawStorage {
         }        
 
         $getResult = array();
-        
+
+
         try {        
             
             $dcTitle = $this->titleProp;        
@@ -194,6 +195,7 @@ class oeawStorage {
             
             $q->setSelect(array('?uri', '?title', '?label', '?name'));
             $query = $q->getQuery();
+            
             $result = $this->fedora->runSparql($query);
             
    

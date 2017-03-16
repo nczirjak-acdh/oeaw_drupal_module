@@ -119,7 +119,7 @@ class oeawFunctions {
                     $oldValues[$newKey] = $value;
                 }else {
                     $newValues[$key] = $value;
-                }            
+                }
             }
             //get the differences
             $result = array_diff_assoc($newValues, $oldValues);
@@ -135,7 +135,7 @@ class oeawFunctions {
             }
         }
         
-        $ajax_response = new AjaxResponse();        
+        $ajax_response = new AjaxResponse();
         
         if(empty($result)){
             return $ajax_response;
@@ -143,21 +143,20 @@ class oeawFunctions {
        
         $color = 'green';
         
-                
         $resNL = array();
         $label = "";
         
         foreach($result as $key => $value){
             
-            $resNL = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", (string)$value);            
+            $resNL = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", (string)$value);
        
             foreach($resNL as $nl){
                 if(!empty($nl->getMetadata()->label())){
-                    $label = (string)utf8_decode($nl->getMetadata()->label());                    
+                    $label = (string)utf8_decode($nl->getMetadata()->label());
                 }else {
                     $label = "";
                 }
-            }            
+            }
 
             if(!empty($label)){
                 $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', "New Value: <a href='".(string)$value."' target='_blank'>".(string)$label."</a>"));

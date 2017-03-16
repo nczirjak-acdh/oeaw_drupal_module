@@ -478,18 +478,23 @@ class FrontendController extends ControllerBase {
    
         if(count($data) > 0){
             $i = 0;            
+        
             foreach($data as $value){
-                // check that the value is an Url or not            
-                $decodeUrl = $this->oeawFunctions->isURL($value["res"], "decode");
+                // check that the value is an Url or not
                 
-                //create details and editing urls
-                if($decodeUrl){
-                    $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
-                    if($uid !== 0){
-                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
-                    }
-                }                
-                $res[$i]["uri"] = $value["res"];
+                if($value["uri"]){
+                    $decodeUrl = $this->oeawFunctions->isURL($value["uri"], "decode");
+                
+                    //create details and editing urls
+                    if($decodeUrl){
+                        $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
+                        if($uid !== 0){
+                            $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                        }
+                    }                
+                    $res[$i]["uri"] = $value["uri"];
+                }
+                
                 $res[$i]["title"] = $value["title"];
                 $i++;
             }
@@ -578,8 +583,18 @@ class FrontendController extends ControllerBase {
             $property = $classesArr[0];
             $value =  $classesArr[1];
             $uid = \Drupal::currentUser()->id();
-            
-            $data = $this->oeawStorage->getDataByProp("rdf:type", $searchResult);
+        
+            if (strpos($value, '(') !== false) {
+                $val = explode(' (', $value);
+                if(count($val) > 0){
+                    $value = $val[0];
+                }
+                
+            }
+         
+            //EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier')
+            //$data = $this->oeawStorage->getDataByProp("rdf:type", $searchResult);
+            $data = $this->oeawStorage->getDataByProp(EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $property.':'.$value);
         
             if(count($data) > 0){
                 $i = 0;            

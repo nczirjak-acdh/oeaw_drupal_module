@@ -94,12 +94,12 @@ class ClassForm extends FormBase
             
             $form[$value] = array(
                 '#type' => 'submit',
-                '#name' => 'class',
+                '#name' => 'class',                
                 '#value' => $this->t($value." (".$searchTerms["typeCount"][$i].")"),
                 '#button_type' => 'primary',
                 '#prefix' => "<br/>",
             );
-            
+
             $i++;
         }
        
@@ -122,14 +122,12 @@ class ClassForm extends FormBase
             
         
         $classes = $form_state->getValue('class');
-       
 
         //$tempstore = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->set('classes_search', '');
         /*$tempstore = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->set('classes_search', $classes);
                 
         $class = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->get('classes_search');*/
      
-
         //$url = Url::fromRoute('oeaw_classes_result');        
         $classes = urlencode($classes);
         

@@ -85,7 +85,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             return drupal_set_message($this->t('There is no metadata for this class'), 'error');
         }
         
-        
         $rootGraph = $this->oeawFunctions->makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $rootID = array();
@@ -97,12 +96,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         }else {
             return drupal_set_message($this->t('Your root element is missing! You cant add new resource without a root element!'), 'error');
         }
-        
-        
-        //old solution
-        //$rootIdentifier = \Drupal\oeaw\oeawStorage::getDefPropByURI($root, "dct:identifier");
-        //$rootIdentifier = $rootIdentifier[0]["value"];
-        
+                
         $fieldsArray = array();       
         $expProp = "";
         $defaultValue = "";
@@ -116,7 +110,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                continue; 
             }
             
-            $expProp = explode("/", $m);            
+            $expProp = explode("/", $m);
             $expProp = end($expProp);
             if (strpos($expProp, '#') !== false) {
                $expProp = str_replace('#', '', $expProp);
@@ -129,9 +123,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             } else {
                 $defaultValue = $this->store->get($m) ? $this->store->get($m) : '';
                 $attributes = array();
-            }            
+            }
 
-            if(empty($m['label']) || !isset($m['label'])){          
+            if(empty($m['label']) || !isset($m['label'])){
                 $label = $expProp;
             }else{
                 $label = $m['label'];
@@ -139,8 +133,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             
             $form[$label] = array(
                 '#type' => 'textfield',
-                '#title' => $this->t($label),                
-                '#default_value' => $defaultValue,                
+                '#title' => $this->t($label),
+                '#default_value' => $defaultValue,
                 '#attributes' => $attributes,
                 '#description' => ' ',
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
