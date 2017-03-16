@@ -230,14 +230,11 @@ class oeawFunctions {
                     if($objClass == "EasyRdf\Resource"){                        
                         $val = $result[$x]->$f;
                         $val = $val->getUri();
-                        $res[$x][$f] = $val;
-                        
-                    }else if($objClass == "EasyRdf\Literal"){
-                                                
+                        $res[$x][$f] = $val;                        
+                    }else if($objClass == "EasyRdf\Literal"){                                                
                         $val = $result[$x]->$f;
                         $val = $val->__toString();
-                        $res[$x][$f] = $val;
-                        
+                        $res[$x][$f] = $val;                        
                     } else {
                         $res[$x][$f] = $result[$x]->$f->__toString();
                     } 
@@ -247,17 +244,16 @@ class oeawFunctions {
                 }
             }
         }
-       
-        return $res;        
+        return $res;
     }
     
-    
-    /* 
-     *
+    /**
+     * 
      * create prefix from string based on the connData.php prefixes     
-     * @param string $string : url     
+     * 
+     * @param string $string
      * @return string
-    */     
+     */
     public static function createPrefixesFromString(string $string): string{
         
         if (empty($string)) {
@@ -278,28 +274,25 @@ class oeawFunctions {
         $newString = array();
         $newString = explode($endValue, $string);
         $newString = $newString[0];
-        
-        
+                
         if(!empty(\Drupal\oeaw\connData::$prefixesToChange[$newString])){
             
             $result = \Drupal\oeaw\connData::$prefixesToChange[$newString].':'.$endValue;
         }
         else {
             $result = $string;
-        }
-         
-        return $result;
-        
+        }         
+        return $result;        
     }
-    
-    /*      
+ 
+    /**
+     * 
      * create prefix from array based on the connData.php prefixes     
      * 
      * @param array $array
      * @param array $header
-     * 
      * @return array
-    */     
+     */
     public function createPrefixesFromArray(array $array, array $header): array{
         
         if (empty($array) && empty($header)) {
@@ -308,8 +301,7 @@ class oeawFunctions {
         
         $result = array();
         $endValue= array();
-        $newString = array();
-        
+        $newString = array();        
         
         for ($index = 0; $index < count($header); $index++) {
             
@@ -333,22 +325,19 @@ class oeawFunctions {
                     $result[$key][] = $value;
                 }
             }
-        }
-       
-        return $result;
-        
+        }       
+        return $result;        
     }
     
-    
-    /* 
-     * details button url generating to pass the uri value to the next page     
-     *
-     * @param string $data :  this is the url
-     * @param string $way : encode/decode     
+    /**
      * 
+     * details button url generating to pass the uri value to the next page     
+     * 
+     * @param string $data
+     * @param string $way
+     * @param string $dl
      * @return string
-    */
-    
+     */
     public static function createDetailsUrl(string $data, string $way = 'encode', string$dl = null): string {
       
         $returnData = "";
@@ -378,14 +367,14 @@ class oeawFunctions {
         return $returnData;
     }
     
-   
-    /*
-     *           
+       
+    /**
+     * 
+     * check that the string is URL
+     * 
      * @param string $string
-     * 
      * @return string
-     * 
-     */    
+     */
     public function isURL(string $string): string{
         
         $res = "";
@@ -401,22 +390,18 @@ class oeawFunctions {
         }        
     }
 
-     /*
+    /**
+     * 
      * We need to check the URL
      * case 1: if it is starting with http then we creating a LINK
      * case 2: if it is starting with http://fedora:8080/rest/, then we need
      * to change it because users cant reach http://fedora:8080/rest/, only the 
      * http://fedora.localhost/rest/
-      * 
-      * 
-      * @param string $value
-      * @param string $dl
-      * 
-      * @return string
-      * 
-      * 
+     * 
+     * @param string $value
+     * @param string $dl
+     * @return string
      */
-
     public static function generateUrl(string $value, string $dl = null): string {
         
         if(empty($value)){
@@ -440,17 +425,14 @@ class oeawFunctions {
 
         return false;
     }
-    
-    /*
+        
+    /**
      * 
      * Creates a property uri based on the prefix
      * 
      * @param string $prefix
-     *      
-     * @return string     
-     * 
+     * @return string
      */
-    
     public function createUriFromPrefix(string $prefix): string{
         
         if(empty($prefix)){

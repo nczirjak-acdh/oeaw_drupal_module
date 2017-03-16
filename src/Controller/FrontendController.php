@@ -46,14 +46,12 @@ class FrontendController extends ControllerBase {
         return $form;        
     }
     
-    
-    /* 
-     *
+    /**
+     * 
      * The root Resources list     
-     *
-     * @return array with datatable values and template name
-    */
-
+     * 
+     * @return array
+     */
     public function roots_list(): array {
         
         // get the root resources
@@ -107,6 +105,15 @@ class FrontendController extends ControllerBase {
         return $datatable;
     }
     
+    /**
+     * 
+     * The autocomplete function to the edit and new form
+     * 
+     * @param \Drupal\oeaw\Controller\request $request
+     * @param string $prop1
+     * @param string $fieldName
+     * @return JsonResponse
+     */
     public function autocomplete(request $request, string $prop1, string $fieldName): JsonResponse {
         
         $matches = array();
@@ -190,13 +197,13 @@ class FrontendController extends ControllerBase {
 
         return new JsonResponse($matches);
     }    
-    
-    /* 
-     *
+        
+    /**
+     * 
      * Here the oeaw module menu is generating with the available menupoints
-     *
-     * @return array with drupal core table values
-    */
+     * 
+     * @return array
+     */
     public function oeaw_menu(): array {
         $table = array();
         $header = array('id' => t('MENU'));
@@ -227,17 +234,17 @@ class FrontendController extends ControllerBase {
 
         return $table;
     }
+        
     
-    
-    /* 
-     *
-     * this generates the detail view when a user clicked the detail href on a reuslt page
-     *
-     * @param string $uri : the encoded uri from the url, to we can identify the selected resource     
-     * @param Request $request : drupal core function     
+    /**
      * 
-     * @return array with datatable values and template name
-    */
+     * This will generate the detail view when a user clicked the detail href on a result page
+     * 
+     * 
+     * @param string $uri
+     * @param Request $request
+     * @return array
+     */
     public function oeaw_detail(string $uri, Request $request): array {
         
         if (empty($uri)) {
@@ -268,10 +275,8 @@ class FrontendController extends ControllerBase {
                     // if there is a thumbnail
                     if($v == "http://xmlns.com/foaf/spec/thumbnail"){
                         if($item){
-                            
                             $imgData = $this->oeawStorage->getImage($item);
-                            
-                            if(count($imgData) > 0){                                
+                            if(count($imgData) > 0){
                                 $hasImage = $imgData[0];
                             }
                         }
@@ -389,26 +394,25 @@ class FrontendController extends ControllerBase {
     }
     
     
-    /* 
-     *
+    /**
+     * 
      * The searching page FORM
-     *
-     * @return Drupal Form 
-    */
-
+     * 
+     * @return type
+     */
     public function oeaw_search() {    
        
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\SearchForm');
         return $form;
     }
     
-    /* 
-     *
+    
+    /**
+     * 
      * This contains the search page results
-     *
-     * @return array with drupal core table generating
-    */
-
+     * 
+     * @return array
+     */
     public function oeaw_resources():array {
         
         $metaKey = $_SESSION['oeaw_form_result_metakey'];
@@ -530,40 +534,36 @@ class FrontendController extends ControllerBase {
        
     }
     
-    /* 
-     *
+    
+    /**
+     * 
      * The multi step FORM to create resources based on the 
      * fedora roots and classes      
-     *
-     * @return Drupal Form 
-    */
-
+     * 
+     * @return type
+     */
     public function multi_new_resource() {        
         return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');        
     }
-
-    /* 
-     *
-     * The editing form, based on the uri resource
-     *
-     * @param string $uri : the encoded uri from the url, to we can identify the selected resource
-     * 
-     * @param Request $request : drupal core function
-     *
-     *
-     * @return Drupal Form 
-    */
     
+    /**
+     * 
+     *  The editing form, based on the uri resource
+     * 
+     * @param string $uri
+     * @param Request $request
+     * @return type
+     */
     public function oeaw_editing(string $uri, Request $request) {
         return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
     }
-    
-    
-    /* 
+        
+    /**
+     * 
      * Get the classes data from the sidebar class list block
      * and display them
-     *     
-    */
+     * @return array
+     */
     public function oeaw_classes_result(): array{
         
         $datatable = array();
@@ -588,8 +588,7 @@ class FrontendController extends ControllerBase {
                 $val = explode(' (', $value);
                 if(count($val) > 0){
                     $value = $val[0];
-                }
-                
+                }                
             }
          
             //EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier')

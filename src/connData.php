@@ -46,6 +46,10 @@ class connData
     }
     
     
+    public static $prefixesToBlazegraph = array(
+        "dct" => "http://purl.org/dc/terms/"        
+    );
+    
     public static $prefixesToChange = array(        
         "http://fedora.info/definitions/v4/repository#" => "fedora",        
         "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#" => "ebucore",

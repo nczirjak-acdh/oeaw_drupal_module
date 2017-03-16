@@ -53,7 +53,9 @@ class oeawStorage {
     private $oeawFunctions;
     
     private $fedora;
-     
+    
+    
+    
     public function __construct() {  
         
         $cfg = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
@@ -63,7 +65,16 @@ class oeawStorage {
         $this->titleProp = $cfg->get('fedoraTitleProp');
         $this->oeawFunctions = new oeawFunctions();        
         $this->fedora = new Fedora($cfg);
-        \EasyRdf\RdfNamespace::set("dct", "http://purl.org/dc/terms/");
+        
+        //blazegraph bugfix. Add missing namespace
+        $blazeGraphNamespaces = \EasyRdf\RdfNamespace::namespaces();
+        $localNamespaces =  \Drupal\oeaw\connData::$prefixesToBlazegraph;
+                
+        foreach($localNamespaces as $key => $val){
+            if(!array_key_exists($val, $blazeGraphNamespaces)){                
+                \EasyRdf\RdfNamespace::set($key, $val);
+            }
+        }
     }
 
 
@@ -104,13 +115,12 @@ class oeawStorage {
         }
     }
 
-   
-    /* 
-     *
+    /**
+     * 
      * Get all property for search
-     *     
-     * @return Array
-    */
+     * 
+     * @return array
+     */
     public function getAllPropertyForSearch():array {
         
         $getResult = array();
@@ -137,16 +147,15 @@ class oeawStorage {
             return drupal_set_message(t('There was an error in the function: getAllPropertyForSearch'), 'error');
         }        
     }
-    
-    /* 
-     *
+        
+    /**
+     * 
      * Get all data by property.
-     *
+     * 
      * @param string $property
      * @param string $value
-     *
-     * @return Array
-    */
+     * @return array
+     */   
     public function getDataByProp(string $property, string $value): array {
         
         if (empty($value) || empty($property)) {
