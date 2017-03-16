@@ -273,7 +273,7 @@ class FrontendController extends ControllerBase {
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
                     
                     // if there is a thumbnail
-                    if($v == "http://xmlns.com/foaf/spec/thumbnail"){
+                    if($v == "http://xmlns.com/foaf/0.1/thumbnail"){
                         if($item){
                             $imgData = $this->oeawStorage->getImage($item);
                             if(count($imgData) > 0){
@@ -283,7 +283,7 @@ class FrontendController extends ControllerBase {
                     } 
                     
                     if($v == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"){
-                        if($item == "http://xmlns.com/foaf/spec/Image"){                            
+                        if($item == "http://xmlns.com/foaf/0.1/Image"){                            
                             $hasImage = $uri;
                         }
                     }
@@ -326,7 +326,7 @@ class FrontendController extends ControllerBase {
                 
                 $childResult[$i]['title']= $r->getMetadata()->label();                
                 
-                $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://xmlns.com/foaf/spec/thumbnail"));
+                $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://xmlns.com/foaf/0.1/thumbnail"));
                 $imageRdfType = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
                 
                 //check the thumbnail
@@ -340,7 +340,7 @@ class FrontendController extends ControllerBase {
                 
                 //if there is an rdf type with foaf image property, then the resource is an image
                 if(!empty($imageRdfType)){                    
-                    if($imageRdfType->getUri() == "http://xmlns.com/foaf/spec/Image"){
+                    if($imageRdfType->getUri() == "http://xmlns.com/foaf/0.1/Image"){
                         $childResult[$i]['thumbnail'] = $r->getUri();
                     }
                 }
