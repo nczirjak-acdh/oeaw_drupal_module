@@ -251,114 +251,44 @@ class FrontendController extends ControllerBase {
            return drupal_set_message(t('The uri is missing!'), 'error');
         }
         
-        $hasBinary = "";
-        $hasImage = "";
+        $hasBinary = "";        
        
         // decode the uri hash
         $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
  
         $uid = \Drupal::currentUser()->id();
         
-        $rootGraph = $this->oeawFunctions->makeGraph($uri);
- 
+        $rootGraph = $this->oeawFunctions->makeGraph($uri); 
         $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
 
-        if(count($rootMeta) > 0){
-            // get the table data by the details uri from the URL
-            $i = 0;
-            $results = array();
+        if(count($rootMeta) > 0){            
             
-            foreach($rootMeta->propertyUris($uri) as $v){
-
-                foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
-                    
-                    // if there is a thumbnail
-                    if($v == "http://xmlns.com/foaf/0.1/thumbnail"){
-                        if($item){
-                            $imgData = $this->oeawStorage->getImage($item);
-                            if(count($imgData) > 0){
-                                $hasImage = $imgData[0];
-                            }
-                        }
-                    } 
-                    
-                    if($v == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"){
-                        if($item == "http://xmlns.com/foaf/0.1/Image"){                            
-                            $hasImage = $uri;
-                        }
-                    }
-                    
-                    if(get_class($item) == "EasyRdf_Resource"){
-                        $results[$i]["property"] = $v;
-                        $results[$i]["value"][] = $item->getUri();
-                        if($item->getUri() == "http://fedora.info/definitions/v4/repository#Binary"){ $hasBinary = $uri;}
-                        
-                    }else if(get_class($item) == "EasyRdf_Literal"){
-                        $results[$i]["property"] = $v;
-                        $results[$i]["value"] = $item->__toString();
-                    }else {
-                        $results[$i]["property"] = $v;
-                        $results[$i]["value"] = $item;
-                    }
-                }
-                $i++;
+            $results = array();
+            //get the root table data
+            $results = $this->oeawFunctions->createDetailTableData($uri);
+            
+            if(empty($results)){
+                return drupal_set_message(t('The resource has no metadata!'), 'error');
             }
+           
         } else {
             return drupal_set_message(t('The resource has no metadata!'), 'error');
         }
-        //change the proprty urls to prefixes
-        foreach($results as $key => $value){
-            $results[$key]["property"] = $this->oeawFunctions->createPrefixesFromString($results[$key]["property"]);            
-        }
-        
+      
         $header = array_keys($results[0]);     
         
         //get the childrens
         $fedora = $this->oeawFunctions->initFedora();
         $childF = $fedora->getResourceByUri($uri);
         $childF = $childF->getChildren();
+
+        $childResult = array();
+        //get the childrens table data
+        if(count($childF) > 0){
+            
+            $childResult = $this->oeawFunctions->createChildrenDetailTableData($childF);
+        }               
         
-        $i = 0;
-        if($childF){
-            foreach($childF as $r){
-                
-                $childResult[$i]['uri']= $r->getUri();                
-                
-                $childResult[$i]['title']= $r->getMetadata()->label();                
-                
-                $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://xmlns.com/foaf/0.1/thumbnail"));
-                $imageRdfType = $r->getMetadata()->get(EasyRdfUtil::fixPropName("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-                
-                //check the thumbnail
-                if(!empty($imageThumbnail)){                    
-                    $childThumb = $this->oeawStorage->getImage((string)$imageThumbnail);
-                    
-                    if(count($childThumb) > 0){
-                        $childResult[$i]['thumbnail'] = $childThumb[0];
-                    }
-                }
-                
-                //if there is an rdf type with foaf image property, then the resource is an image
-                if(!empty($imageRdfType)){                    
-                    if($imageRdfType->getUri() == "http://xmlns.com/foaf/0.1/Image"){
-                        $childResult[$i]['thumbnail'] = $r->getUri();
-                    }
-                }
-              
-                $decUrlChild = $this->oeawFunctions->isURL($r->getUri(), "decode");
-                
-                $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;
-                if($uid !== 0){
-                    $childResult[$i]['edit'] = "/oeaw_editing/".$decUrlChild;                            
-                } 
-                $i++;
-            }
-        }else {
-            $childResult = "";
-            $childHeader = "";
-        }        
-        
-        $resEditUrl = $this->oeawFunctions->createDetailsUrl($uri, 'encode');        
         $resTitle = $rootGraph->label($uri);
         
         if($resTitle){
@@ -368,21 +298,16 @@ class FrontendController extends ControllerBase {
         }
         
         $editResData = array(
-            "editUrl" => $resEditUrl, 
+            "editUrl" => $this->oeawFunctions->createDetailsUrl($uri, 'encode'),
             "title" => $resTitle
         );        
       
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
-            '#result' => $results,
-            '#header' => $header,
-            '#userid' => $uid,
-//            '#jsonGraph' => $oJson,
-            '#jsonGraph' => NULL,
-            '#hasBinary' => $hasBinary,
-            '#hasImage' => $hasImage,
-            '#childResult' => $childResult,
-            '#childHeader' => $childHeader,
+            '#result' => $results,            
+            '#userid' => $uid,            
+            '#hasBinary' => $hasBinary,            
+            '#childResult' => $childResult,         
             '#editResData' => $editResData,
             '#attached' => [
                 'library' => [
@@ -431,7 +356,7 @@ class FrontendController extends ControllerBase {
         //we will search in the title, name, fedoraid
         $idSearch = array(            
             'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $metaValue),
-            'name'   => $fedora->getResourcesByPropertyRegEx('http://xmlns.com/foaf/0.1/name', $metaValue),
+            'name'   => $fedora->getResourcesByPropertyRegEx(\Drupal\oeaw\connData::$foafName, $metaValue),
             'acdhId' => $fedora->getResourcesByPropertyRegEx($config->get('fedoraIdProp'), $metaValue),
         );        
 
@@ -482,12 +407,12 @@ class FrontendController extends ControllerBase {
    
         if(count($data) > 0){
             $i = 0;            
-        
+          
             foreach($data as $value){
                 // check that the value is an Url or not
                 
-                if($value["uri"]){
-                    $decodeUrl = $this->oeawFunctions->isURL($value["uri"], "decode");
+                if($value["res"]){
+                    $decodeUrl = $this->oeawFunctions->isURL($value["res"], "decode");
                 
                     //create details and editing urls
                     if($decodeUrl){
@@ -496,7 +421,7 @@ class FrontendController extends ControllerBase {
                             $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
                         }
                     }                
-                    $res[$i]["uri"] = $value["uri"];
+                    $res[$i]["uri"] = $value["res"];
                 }
                 
                 $res[$i]["title"] = $value["title"];

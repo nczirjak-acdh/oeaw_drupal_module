@@ -194,9 +194,7 @@ class oeawFunctions {
                 }   
             }
         }
-
-        return $label;
-        
+        return $label;        
     }
     
     /* 
@@ -365,6 +363,117 @@ class oeawFunctions {
             }
         }
         return $returnData;
+    }
+    
+    /**
+     * 
+     * create the data for the children resource in the detail view
+     * 
+     * @param array $data
+     * @return array
+     */
+    public function createChildrenDetailTableData(array $data): array{
+        
+        if(empty($data)){
+            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+        }
+        
+        $i = 0;
+        $childResult = array();
+        
+        foreach($data as $r){
+            $childResult[$i]['uri']= $r->getUri();                
+            $childResult[$i]['title']= $r->getMetadata()->label();
+                
+            $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName(\Drupal\oeaw\connData::$imageThumbnail));
+            $imageRdfType = $r->getMetadata()->all(EasyRdfUtil::fixPropName(\Drupal\oeaw\connData::$rdfType));
+                       
+            //check the thumbnail
+            if(!empty($imageThumbnail)){
+                $childThumb = $this->oeawStorage->getImage((string)$imageThumbnail);
+                if(count($childThumb) > 0){
+                    $childResult[$i]['thumbnail'] = $childThumb[0];
+                }
+            }
+                
+            //if there is an rdf type with foaf image property, then the resource is an image
+            if(!empty($imageRdfType)){
+                foreach($imageRdfType as $rdfVal){
+                    if($rdfVal->getUri() == \Drupal\oeaw\connData::$imageProperty){
+                        $childResult[$i]['thumbnail'] = $r->getUri();
+                    }
+                }
+            }
+              
+            $decUrlChild = $this->isURL($r->getUri(), "decode");
+
+            $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;
+            if($uid !== 0){
+                $childResult[$i]['edit'] = "/oeaw_editing/".$decUrlChild;
+            } 
+            $i++;
+        }
+        return $childResult;
+    }
+    
+    /**
+     * 
+     * create table data for the root resource in the detail view.
+     * changes the uris to prefixes
+     * 
+     * @param string $uri
+     * @return array
+     */
+    public function createDetailTableData(string $uri): array{
+        
+        if(empty($uri)){
+            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+        }
+        
+        $results = array();
+        $rootMeta =  $this->makeMetaData($uri);
+        if(count($rootMeta) > 0){
+            $i = 0;
+            foreach($rootMeta->propertyUris($uri) as $v){
+            
+                foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
+
+                    // if there is a thumbnail
+                    if($v == \Drupal\oeaw\connData::$imageThumbnail){                        
+                        if($item){
+                            $imgData = $this->oeawStorage->getImage($item);
+                            if(count($imgData) > 0){
+                                $hasImage = $imgData[0];
+                                $results[$i]["image"] = $imgData[0];
+                            }
+                        }
+                    }
+
+                    if($v == \Drupal\oeaw\connData::$rdfType){
+                        if($item == \Drupal\oeaw\connData::$imageProperty){
+                            $hasImage = $uri;
+                            $results[$i]["image"] = $uri;
+                        }
+                    }
+
+                    if(get_class($item) == "EasyRdf\Resource"){
+                        $results[$i]["property"] = $this->createPrefixesFromString($v);
+                        $results[$i]["value"][] = $item->getUri();
+                        if($item->getUri() == \Drupal\oeaw\connData::$fedoraBinary){ $hasBinary = $uri;}
+
+                    }else if(get_class($item) == "EasyRdf\Literal"){
+                        $results[$i]["property"] = $this->createPrefixesFromString($v);
+                        $results[$i]["value"] = $item->__toString();
+                    }else {
+                        $results[$i]["property"] = $this->createPrefixesFromString($v);
+                        $results[$i]["value"] = $item;
+                    }
+                }
+                $i++;
+            } 
+        }
+
+        return $results;
     }
     
        

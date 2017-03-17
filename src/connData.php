@@ -70,7 +70,11 @@ class connData
         "http://xmlns.com/foaf/spec/" => "foaf"
     );
     
-    
+    public static $imageProperty = "http://xmlns.com/foaf/0.1/Image";
+    public static $imageThumbnail = "http://xmlns.com/foaf/0.1/thumbnail";
+    public static $rdfType = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+    public static $fedoraBinary = "http://fedora.info/definitions/v4/repository#Binary";
+    public static $foafName = "http://xmlns.com/foaf/0.1/name";
     
 }
 

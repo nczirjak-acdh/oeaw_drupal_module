@@ -2,8 +2,7 @@
 
 function oeaw_theme() {
   $theme['oeaw_detail_dt'] = [
-    'variables' => ['result' => NULL, 'header' => NULL, 'childResult' => NULL, 'childHeader' => NULL, 
-        'editResData' => NULL, 'userid' => NULL, 'hasBinary' => NULL, 'jsonGraph' => NULL, 'hasImage' => NULL,],
+    'variables' => ['result' => NULL, 'childResult' => NULL, 'editResData' => NULL, 'userid' => NULL, 'hasBinary' => NULL],
     'template' => 'dtDetail',
   ];  
   

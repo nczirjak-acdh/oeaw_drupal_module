@@ -1,17 +1,16 @@
 
 <div class="vcenter" style="height:100px;">
     <div style="float:left; width: 50%; font-size: 20px; font-weight: bold;">
-        
-            {{ editResData.title }} |  <a href="/oeaw_editing/{{ editResData.editUrl }}"><i class="fa fa-pencil-square-o fa-1x"></i></a> 
+            {{ editResData.title }} |  <a href="/oeaw_editing/{{ editResData.editUrl }}"><i class="fa fa-pencil-square-o fa-1x"></i></a>
              {% if hasBinary %} | <a href="{{ hasBinary }}"><i class="fa fa-download" aria-hidden="true"></i></a>  {% endif %}
-        
-    </div>    
+    </div>
     <div style="float:right; width: 50%; max-height:100px; ">
-        {% if hasImage %} 
-            <a href="{{ hasImage }}" data-lightbox="{{ editResData.title }}" data-title="{{ editResData.title }}"><img src="{{ hasImage }}" height="80px;"></a>
-        {% endif %}
+        {% for item in result %}
+            {% if item.image %} 
+                <a href="{{ item.image }}" data-lightbox="{{ editResData.title }}" data-title="{{ editResData.title }}"><img src="{{ item.image }}" height="80px;"></a>
+            {% endif %}
+        {% endfor %}
     </div>    
-    
 </div>    
 
 <table id="" class="display" cellspacing="0" width="100%">
@@ -64,6 +63,10 @@
                 <td>
                     {% if cItem.thumbnail != ""  %}                    
                         <a href="{{ cItem.thumbnail }}" data-lightbox="{{ cItem.title }}" data-title="{{ cItem.title }}"><img src="{{ cItem.thumbnail }}" height="50px;"></a>                    
+                    {% endif %}
+                    
+                    {% if cItem.image != ""  %}                    
+                        <a href="{{ cItem.image }}" data-lightbox="{{ cItem.title }}" data-title="{{ cItem.title }}"><img src="{{ cItem.image }}" height="50px;"></a>                    
                     {% endif %}
                 </td>
                 <td>
