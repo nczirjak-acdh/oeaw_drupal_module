@@ -275,8 +275,6 @@ class FrontendController extends ControllerBase {
             return drupal_set_message(t('The resource has no metadata!'), 'error');
         }
       
-        $header = array_keys($results[0]);     
-        
         //get the childrens
         $fedora = $this->oeawFunctions->initFedora();
         $childF = $fedora->getResourceByUri($uri);
@@ -285,9 +283,8 @@ class FrontendController extends ControllerBase {
         $childResult = array();
         //get the childrens table data
         if(count($childF) > 0){
-            
             $childResult = $this->oeawFunctions->createChildrenDetailTableData($childF);
-        }               
+        }
         
         $resTitle = $rootGraph->label($uri);
         

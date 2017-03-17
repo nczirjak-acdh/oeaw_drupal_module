@@ -63,7 +63,7 @@ class oeawStorage {
         $this->idProp = $cfg->get('fedoraIdProp');
         $this->relProp = $cfg->get('fedoraRelProp');
         $this->titleProp = $cfg->get('fedoraTitleProp');
-        $this->oeawFunctions = new oeawFunctions();        
+        $this->oeawFunctions = new oeawFunctions();
         $this->fedora = new Fedora($cfg);
         
         //blazegraph bugfix. Add missing namespace
@@ -71,7 +71,7 @@ class oeawStorage {
         $localNamespaces =  \Drupal\oeaw\connData::$prefixesToBlazegraph;
                 
         foreach($localNamespaces as $key => $val){
-            if(!array_key_exists($val, $blazeGraphNamespaces)){                
+            if(!array_key_exists($val, $blazeGraphNamespaces)){
                 \EasyRdf\RdfNamespace::set($key, $val);
             }
         }
@@ -334,8 +334,6 @@ class oeawStorage {
              * 
              * 
         */
-
-
 
             $query=
                 self::$prefixes . ' 

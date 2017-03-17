@@ -25,9 +25,9 @@ use EasyRdf\Resource;
 class oeawFunctions {
     
     private $config;
-        
+            
     public function __construct(){        
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');        
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');     
     }
     
     /*
@@ -166,36 +166,7 @@ class oeawFunctions {
         // Return the AjaxResponse Object.
         return $ajax_response;        
     }
-    
-    /*
-     * This functions checks the given identifier label/name/title
-     * This used for the editForm title generating
-     * 
-     * @param string $value
-     * @return string 
-     */
-    
-    public function getLabelByIdentifier(string $value): string{
-        
-        $res = $this->oeawStorage->getDataByProp('dct:identifier', (string)$value);
-        
-        $label = "";
-        //the possible titles
-        if(!empty($res)){
-            for ($i = 0; $i < count($res); $i++) {
-                if(!empty($res[$i]["title"])){
-                   $label = $res[$i]["title"];
-                }else if(!empty($res[$i]["label"])){
-                   $label = $res[$i]["label"];
-                }else if(!empty($res[$i]["name"])){
-                   $label = $res[$i]["name"];
-                }else{
-                    $label = " ";
-                }   
-            }
-        }
-        return $label;        
-    }
+  
     
     /* 
      *
@@ -205,8 +176,7 @@ class oeawFunctions {
      * @param array $fields
      *
      * @return array
-    */
-    
+    */    
     public function createSparqlResult(\EasyRdf\Sparql\Result $result, array $fields): array{
         
         if(empty($result) && empty($fields)){
@@ -387,12 +357,17 @@ class oeawFunctions {
                 
             $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName(\Drupal\oeaw\connData::$imageThumbnail));
             $imageRdfType = $r->getMetadata()->all(EasyRdfUtil::fixPropName(\Drupal\oeaw\connData::$rdfType));
-                       
+                        
             //check the thumbnail
-            if(!empty($imageThumbnail)){
-                $childThumb = $this->oeawStorage->getImage((string)$imageThumbnail);
-                if(count($childThumb) > 0){
-                    $childResult[$i]['thumbnail'] = $childThumb[0];
+            if($imageThumbnail){
+                $imgUri = $imageThumbnail->getUri();
+                if(!empty($imgUri)){
+                    $oeawStorage = new oeawStorage();
+                    $childThumb = $oeawStorage->getImage($imgUri);
+                    
+                    if(count($childThumb) > 0){
+                        $childResult[$i]['thumbnail'] = $childThumb[0];
+                    }
                 }
             }
                 
@@ -441,7 +416,8 @@ class oeawFunctions {
                     // if there is a thumbnail
                     if($v == \Drupal\oeaw\connData::$imageThumbnail){                        
                         if($item){
-                            $imgData = $this->oeawStorage->getImage($item);
+                            $oeawStorage = new oeawStorage();                            
+                            $imgData = $oeawStorage->getImage($item);
                             if(count($imgData) > 0){
                                 $hasImage = $imgData[0];
                                 $results[$i]["image"] = $imgData[0];
@@ -499,41 +475,7 @@ class oeawFunctions {
         }        
     }
 
-    /**
-     * 
-     * We need to check the URL
-     * case 1: if it is starting with http then we creating a LINK
-     * case 2: if it is starting with http://fedora:8080/rest/, then we need
-     * to change it because users cant reach http://fedora:8080/rest/, only the 
-     * http://fedora.localhost/rest/
-     * 
-     * @param string $value
-     * @param string $dl
-     * @return string
-     */
-    public static function generateUrl(string $value, string $dl = null): string {
-        
-        if(empty($value)){
-            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
-        }
-        $result = "";
-        
-        if (substr($value, 0, 4) == 'http') {
-            if (substr($value, 0, 24) == \Drupal\oeaw\connData::fedoraUrl()) {
-                $value = str_replace(\Drupal\oeaw\connData::fedoraUrl(), \Drupal\oeaw\connData::fedoraDownloadUrl(), $value);
-                if ($dl == true) {
-                    $result = $value;
-                    return $result;
-                }
-                $result = t('<a href="' . $value . '">' . $value . '</a>');
-                return $result;
-            }
-            $result = t('<a href="' . $value . '">' . $value . '</a>');
-            return $result;
-        }
-
-        return false;
-    }
+    
         
     /**
      * 
