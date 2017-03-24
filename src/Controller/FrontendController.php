@@ -186,16 +186,24 @@ class FrontendController extends ControllerBase {
                 continue;
             }
             $acdhId = $acdhId->getUri();
-
-            $label = empty($meta->label()) ? $acdhId : $meta->label();
-            $matches[] = ['value' => $acdhId , 'label' => (string)utf8_decode($label)];
+         
+            $label = empty($meta->label()) ? $acdhId : $meta->label();            
+            //because of the special characters we need to convert it            
+            $label = htmlentities($label, ENT_QUOTES, "UTF-8");
+            //error_log(html_entity_decode($label, ENT_COMPAT | ENT_HTML401, 'UTF-8'));
+                
+            $matches[] = ['value' => $acdhId , 'label' => $label];
 
             if(count($matches) >= 10){
                  break;
             }
         }
-
-        return new JsonResponse($matches);
+        $response = new JsonResponse($matches);
+        $response->setCharset('utf-8');
+        $response->headers->set('charset', 'utf-8');
+        $response->headers->set('Content-Type', 'application/json');
+        
+        return $response;
     }    
         
     /**
@@ -235,6 +243,29 @@ class FrontendController extends ControllerBase {
         return $table;
     }
         
+    
+    public function oeaw_new_res_success(string $uri){
+        
+        if (empty($uri)) {
+           return drupal_set_message(t('The uri is missing!'), 'error');
+        }
+        
+        // decode the uri hash
+        $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
+        
+        $datatable = array(
+            '#theme' => 'oeaw_success_resource',
+            '#result' => $uri,
+            '#userid' => $uid,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', 
+                ]
+            ]
+        );
+        
+        return $datatable;
+    }
     
     /**
      * 
@@ -298,7 +329,7 @@ class FrontendController extends ControllerBase {
             "editUrl" => $this->oeawFunctions->createDetailsUrl($uri, 'encode'),
             "title" => $resTitle
         );        
-      
+        
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
             '#result' => $results,            
@@ -344,6 +375,9 @@ class FrontendController extends ControllerBase {
         //normal string seacrh
        
         $metaKey = $this->oeawFunctions->createUriFromPrefix($metaKey);
+        if($metaKey === false){
+            return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
+        }
         
         $stringSearch = $this->oeawStorage->searchForData($metaValue, $metaKey);
         

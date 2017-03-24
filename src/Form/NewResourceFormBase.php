@@ -16,8 +16,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 use zozlak\util\Config;
-use Drupal\oeaw\oeawStorage;
-use Drupal\oeaw\oeawFunctions;
+use Drupal\oeaw\OeawStorage;
+use Drupal\oeaw\OeawFunctions;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 
 abstract class NewResourceFormBase extends FormBase {
@@ -60,8 +61,8 @@ abstract class NewResourceFormBase extends FormBase {
         $this->currentUser = $current_user;
         
         $this->store = $this->tempStoreFactory->get('multistep_data');
-        $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawStorage = new OeawStorage();
+        $this->oeawFunctions = new OeawFunctions();
         
     }
     
@@ -149,9 +150,25 @@ abstract class NewResourceFormBase extends FormBase {
             $uri = $uri.'/fcr:metadata';
             
             $this->deleteStore($metadata);
-                         
-            drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a> '));
+
+            $encodeUri = $this->oeawFunctions->createDetailsUrl($uri, 'encode');
+            
+            $datatable = array(
+                '#theme' => 'oeaw_success_resource',
+                '#result' => $encodeUri,
+                '#userid' => $uid,
+                '#attached' => [
+                    'library' => [
+                    'oeaw/oeaw-styles', //include our custom library for this response
+                    ]
+                ]
+            );    
+
+        $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => 'sssss']));
+        $response->send();
+        return;
         
+        //    drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a> '));
             
         } catch (Exception $ex) {
             

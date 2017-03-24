@@ -12,7 +12,7 @@ use EasyRdf_Resource;
 use acdhOeaw\util\EasyRdfUtil;
 use InvalidArgumentException;
 use RuntimeException;
-use Drupal\oeaw\oeawFunctions;
+use Drupal\oeaw\OeawFunctions;
 
 
 class NewResourceTwoForm extends NewResourceFormBase  {

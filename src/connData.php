@@ -1,7 +1,7 @@
 <?php
 namespace Drupal\oeaw;
 
-class connData 
+class ConnData 
 {
     /*      
      * prefixes to sparql querys

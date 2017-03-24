@@ -22,21 +22,20 @@ use EasyRdf\Resource;
 
 
  
-class oeawFunctions {
+class OeawFunctions {
     
     private $config;
             
     public function __construct(){        
         $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');     
     }
-    
-    /*
+        
+    /**
      * 
      * Creates the Fedora instance
-     *           
+     * 
      * @return Fedora
-     */
-       
+     */   
     public function initFedora(): Fedora{
         // setup fedora
         $fedora = array();        
@@ -44,15 +43,14 @@ class oeawFunctions {
         
         return $fedora;
     }
-    
-    /*
+        
+    /**
      * 
      * Creates the EasyRdf_Resource by uri
-     *      
-     * @param string $uri  - resource uri
-     * @return EasyRdf_Resource
+     * 
+     * @param string $uri
+     * @return \EasyRdf\Resource
      */
-    
     public function makeMetaData(string $uri): \EasyRdf\Resource{
         
         if(empty($uri)){
@@ -68,11 +66,11 @@ class oeawFunctions {
         return $meta;
     }
     
-    /*
+    /**
      * Creates the EasyRdf_Graph by uri
      * 
      * @param string $uri - resource uri
-     * @return EasyRdf_Graph
+     * @return  \EasyRdf\Graph
      * 
      */
     public function makeGraph(string $uri): \EasyRdf\Graph{
@@ -101,8 +99,7 @@ class oeawFunctions {
      * @param string $mode -> edit/new form.
      * @return AjaxResponse
      * 
-     */
-    
+     */    
     public static function getFieldNewTitle(array $formElements, string $mode = 'edit'): AjaxResponse {
         
         $ajax_response = array();
@@ -143,8 +140,7 @@ class oeawFunctions {
        
         $color = 'green';
         
-        $resNL = array();
-        $label = "";
+        $resNL = array();        
         
         foreach($result as $key => $value){
             
@@ -152,7 +148,8 @@ class oeawFunctions {
        
             foreach($resNL as $nl){
                 if(!empty($nl->getMetadata()->label())){
-                    $label = (string)utf8_decode($nl->getMetadata()->label());
+                    //$label = (string)utf8_decode($nl->getMetadata()->label());
+                    $label = htmlentities($nl->getMetadata()->label(), ENT_QUOTES, "UTF-8");
                 }else {
                     $label = "";
                 }
@@ -167,16 +164,15 @@ class oeawFunctions {
         return $ajax_response;        
     }
   
-    
-    /* 
-     *
+           
+    /**
+     * 
      * Create array from  EasyRdf_Sparql_Result object
-     *
-     * @param EasyRdf_Sparql_Result object $result  
+     * 
+     * @param \EasyRdf\Sparql\Result $result
      * @param array $fields
-     *
      * @return array
-    */    
+     */
     public function createSparqlResult(\EasyRdf\Sparql\Result $result, array $fields): array{
         
         if(empty($result) && empty($fields)){
@@ -225,7 +221,7 @@ class oeawFunctions {
     public static function createPrefixesFromString(string $string): string{
         
         if (empty($string)) {
-           return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+           return false;
         }
         
         $result = array();
@@ -433,14 +429,25 @@ class oeawFunctions {
                     }
 
                     if(get_class($item) == "EasyRdf\Resource"){
+                        
+                        if($this->createPrefixesFromString($v) === false){
+                            return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
+                        }                        
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
                         $results[$i]["value"][] = $item->getUri();
                         if($item->getUri() == \Drupal\oeaw\connData::$fedoraBinary){ $hasBinary = $uri;}
 
                     }else if(get_class($item) == "EasyRdf\Literal"){
+                        
+                        if($this->createPrefixesFromString($v) === false){
+                            return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
+                        }
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
                         $results[$i]["value"] = $item->__toString();
                     }else {
+                        if($this->createPrefixesFromString($v) === false){
+                            return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
+                        }
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
                         $results[$i]["value"] = $item;
                     }
@@ -487,7 +494,7 @@ class oeawFunctions {
     public function createUriFromPrefix(string $prefix): string{
         
         if(empty($prefix)){
-            return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
+           return false;
         }
         
         $res = "";

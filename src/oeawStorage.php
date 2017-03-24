@@ -3,8 +3,8 @@
 namespace Drupal\oeaw;
 
 use Drupal\Core\Url;
-use Drupal\oeaw\oeawFunctions;
-use Drupal\oeaw\connData;
+use Drupal\oeaw\OeawFunctions;
+use Drupal\oeaw\ConnData;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Component\Render\MarkupInterface;
 use acdhOeaw\fedora\Fedora;
@@ -20,7 +20,7 @@ use acdhOeaw\util\SparqlEndpoint;
 use zozlak\util\Config;
 
 
-class oeawStorage {
+class OeawStorage {
 
     private static $prefixes = 'PREFIX dct: <http://purl.org/dc/terms/> '
             . 'PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> '
@@ -63,12 +63,12 @@ class oeawStorage {
         $this->idProp = $cfg->get('fedoraIdProp');
         $this->relProp = $cfg->get('fedoraRelProp');
         $this->titleProp = $cfg->get('fedoraTitleProp');
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawFunctions = new OeawFunctions();
         $this->fedora = new Fedora($cfg);
         
         //blazegraph bugfix. Add missing namespace
         $blazeGraphNamespaces = \EasyRdf\RdfNamespace::namespaces();
-        $localNamespaces =  \Drupal\oeaw\connData::$prefixesToBlazegraph;
+        $localNamespaces =  \Drupal\oeaw\ConnData::$prefixesToBlazegraph;
                 
         foreach($localNamespaces as $key => $val){
             if(!array_key_exists($val, $blazeGraphNamespaces)){
@@ -81,8 +81,7 @@ class oeawStorage {
     /*
      * Get the root elements from fedora
      * 
-     * @return Array
-     * +
+     * @return Array     
      */
     public function getRootFromDB(): array {
   
@@ -147,7 +146,8 @@ class oeawStorage {
             return drupal_set_message(t('There was an error in the function: getAllPropertyForSearch'), 'error');
         }        
     }
-        
+       
+    
     /**
      * 
      * Get all data by property.
@@ -155,7 +155,7 @@ class oeawStorage {
      * @param string $property
      * @param string $value
      * @return array
-     */   
+     */
     public function getDataByProp(string $property, string $value): array {
         
         if (empty($value) || empty($property)) {
@@ -164,6 +164,9 @@ class oeawStorage {
        
         if(!filter_var($property, FILTER_VALIDATE_URL)){
             $property = $this->oeawFunctions->createUriFromPrefix($property);
+            if($property === false){
+                return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
+            }
            
         }else if(filter_var($property, FILTER_VALIDATE_URL)){            
             $property = '<'. $property .'>';
@@ -172,6 +175,9 @@ class oeawStorage {
 
         if(!filter_var($value, FILTER_VALIDATE_URL)){
             $value = $this->oeawFunctions->createUriFromPrefix($value);
+            if($value === false){
+                return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
+            }
            
         }else if(filter_var($value, FILTER_VALIDATE_URL)){            
             $value = '<'. $value .'>';
@@ -279,8 +285,7 @@ class oeawStorage {
      * Get the digital rescources to we can know which is needed a file upload
      *     
      *
-     * @return Array
-     * +
+     * @return Array     
     */    
     public function getDigitalResources(): array
     {
