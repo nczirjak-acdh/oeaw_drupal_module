@@ -199,7 +199,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
-        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
+        $result = \Drupal\oeaw\OeawFunctions::getFieldNewTitle($formElements, "new");
        
         return $result;        
     }

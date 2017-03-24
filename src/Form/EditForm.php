@@ -24,8 +24,8 @@ use acdhOeaw\util\EasyRdfUtil;
 use zozlak\util\Config;
 use EasyRdf_Graph;
 use EasyRdf_Resource;
-use Drupal\oeaw\oeawStorage;
-use Drupal\oeaw\oeawFunctions;
+use Drupal\oeaw\OeawStorage;
+use Drupal\oeaw\OeawFunctions;
 
 class EditForm extends FormBase {
 
@@ -66,8 +66,8 @@ class EditForm extends FormBase {
 
         $this->store = $this->tempStoreFactory->get('edit_form');
         
-        $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawStorage = new OeawStorage();
+        $this->oeawFunctions = new OeawFunctions();
     }
 
     public static function create(ContainerInterface $container) {
@@ -282,7 +282,7 @@ class EditForm extends FormBase {
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
-        $result = \Drupal\oeaw\oeawFunctions::getFieldNewTitle($formElements, "new");
+        $result = \Drupal\oeaw\OeawFunctions::getFieldNewTitle($formElements, "new");
        
         return $result;        
     }

@@ -6,8 +6,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
-use Drupal\oeaw\oeawStorage;
-use Drupal\oeaw\oeawFunctions;
+use Drupal\oeaw\OeawStorage;
+use Drupal\oeaw\OeawFunctions;
 
 class SearchForm extends FormBase
 {
@@ -16,8 +16,8 @@ class SearchForm extends FormBase
     private $oeawFunctions;
     
     public function __construct() {    
-        $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawStorage = new OeawStorage();
+        $this->oeawFunctions = new OeawFunctions();
     }
     
     public function getFormId()

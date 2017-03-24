@@ -10,8 +10,8 @@ namespace Drupal\oeaw\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
-use Drupal\oeaw\oeawStorage;
-use Drupal\oeaw\oeawFunctions;
+use Drupal\oeaw\OeawStorage;
+use Drupal\oeaw\OeawFunctions;
 //ajax
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ChangedCommand;
@@ -36,8 +36,8 @@ class FrontendController extends ControllerBase {
     private $oeawFunctions;
     
     public function __construct() {  
-        $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawStorage = new OeawStorage();
+        $this->oeawFunctions = new OeawFunctions();
     }
     
     
@@ -387,7 +387,7 @@ class FrontendController extends ControllerBase {
         //we will search in the title, name, fedoraid
         $idSearch = array(            
             'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $metaValue),
-            'name'   => $fedora->getResourcesByPropertyRegEx(\Drupal\oeaw\connData::$foafName, $metaValue),
+            'name'   => $fedora->getResourcesByPropertyRegEx(\Drupal\oeaw\ConnData::$foafName, $metaValue),
             'acdhId' => $fedora->getResourcesByPropertyRegEx($config->get('fedoraIdProp'), $metaValue),
         );        
 

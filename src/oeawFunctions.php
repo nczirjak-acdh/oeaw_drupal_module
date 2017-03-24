@@ -11,7 +11,7 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Component\Render\MarkupInterface;
 
 use Drupal\oeaw\oeawStorage;
-use Drupal\oeaw\connData;
+use Drupal\oeaw\ConnData;
 
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
@@ -239,9 +239,9 @@ class OeawFunctions {
         $newString = explode($endValue, $string);
         $newString = $newString[0];
                 
-        if(!empty(\Drupal\oeaw\connData::$prefixesToChange[$newString])){
+        if(!empty(\Drupal\oeaw\ConnData::$prefixesToChange[$newString])){
             
-            $result = \Drupal\oeaw\connData::$prefixesToChange[$newString].':'.$endValue;
+            $result = \Drupal\oeaw\ConnData::$prefixesToChange[$newString].':'.$endValue;
         }
         else {
             $result = $string;
@@ -283,8 +283,8 @@ class OeawFunctions {
                 $newString = explode($endValue, $value);
                 $newString = $newString[0];
                  
-                if(!empty(\Drupal\oeaw\connData::$prefixesToChange[$newString])){            
-                    $result[$key][] = \Drupal\oeaw\connData::$prefixesToChange[$newString].':'.$endValue;
+                if(!empty(\Drupal\oeaw\ConnData::$prefixesToChange[$newString])){            
+                    $result[$key][] = \Drupal\oeaw\ConnData::$prefixesToChange[$newString].':'.$endValue;
                 }else {
                     $result[$key][] = $value;
                 }
@@ -307,7 +307,7 @@ class OeawFunctions {
         $returnData = "";
         
         if ($way == 'encode') {
-            $data = str_replace(\Drupal\oeaw\connData::fedoraUrl(), '', $data);
+            $data = str_replace(\Drupal\oeaw\ConnData::fedoraUrl(), '', $data);
             $data = base64_encode($data);
             $returnData = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
         }
@@ -323,9 +323,9 @@ class OeawFunctions {
             $data = base64_decode($data);
             
             if ($dl == null) {
-                $returnData = \Drupal\oeaw\connData::fedoraUrl() . $data;
+                $returnData = \Drupal\oeaw\ConnData::fedoraUrl() . $data;
             } else {
-                $returnData = \Drupal\oeaw\connData::fedoraDownloadUrl() . $data;
+                $returnData = \Drupal\oeaw\ConnData::fedoraDownloadUrl() . $data;
             }
         }
         return $returnData;
@@ -351,8 +351,8 @@ class OeawFunctions {
             $childResult[$i]['uri']= $r->getUri();                
             $childResult[$i]['title']= $r->getMetadata()->label();
                 
-            $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName(\Drupal\oeaw\connData::$imageThumbnail));
-            $imageRdfType = $r->getMetadata()->all(EasyRdfUtil::fixPropName(\Drupal\oeaw\connData::$rdfType));
+            $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$imageThumbnail));
+            $imageRdfType = $r->getMetadata()->all(EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$rdfType));
                         
             //check the thumbnail
             if($imageThumbnail){
@@ -370,7 +370,7 @@ class OeawFunctions {
             //if there is an rdf type with foaf image property, then the resource is an image
             if(!empty($imageRdfType)){
                 foreach($imageRdfType as $rdfVal){
-                    if($rdfVal->getUri() == \Drupal\oeaw\connData::$imageProperty){
+                    if($rdfVal->getUri() == \Drupal\oeaw\ConnData::$imageProperty){
                         $childResult[$i]['thumbnail'] = $r->getUri();
                     }
                 }
@@ -410,7 +410,7 @@ class OeawFunctions {
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
 
                     // if there is a thumbnail
-                    if($v == \Drupal\oeaw\connData::$imageThumbnail){                        
+                    if($v == \Drupal\oeaw\ConnData::$imageThumbnail){                        
                         if($item){
                             $oeawStorage = new oeawStorage();                            
                             $imgData = $oeawStorage->getImage($item);
@@ -421,8 +421,8 @@ class OeawFunctions {
                         }
                     }
 
-                    if($v == \Drupal\oeaw\connData::$rdfType){
-                        if($item == \Drupal\oeaw\connData::$imageProperty){
+                    if($v == \Drupal\oeaw\ConnData::$rdfType){
+                        if($item == \Drupal\oeaw\ConnData::$imageProperty){
                             $hasImage = $uri;
                             $results[$i]["image"] = $uri;
                         }
@@ -435,7 +435,7 @@ class OeawFunctions {
                         }                        
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
                         $results[$i]["value"][] = $item->getUri();
-                        if($item->getUri() == \Drupal\oeaw\connData::$fedoraBinary){ $hasBinary = $uri;}
+                        if($item->getUri() == \Drupal\oeaw\ConnData::$fedoraBinary){ $hasBinary = $uri;}
 
                     }else if(get_class($item) == "EasyRdf\Literal"){
                         
@@ -473,7 +473,7 @@ class OeawFunctions {
         
         if (filter_var($string, FILTER_VALIDATE_URL)) { 
             
-            if (strpos($string, \Drupal\oeaw\connData::fedoraUrl()) !== false) {
+            if (strpos($string, \Drupal\oeaw\ConnData::fedoraUrl()) !== false) {
                 $res = $this->createDetailsUrl($string, 'encode');                
             }
             return $res;
@@ -506,7 +506,7 @@ class OeawFunctions {
         $newPrefix = $newValue[0];
         $newValue =  $newValue[1];
         
-        $prefixes = \Drupal\oeaw\connData::$prefixesToChange;
+        $prefixes = \Drupal\oeaw\ConnData::$prefixesToChange;
         
         foreach ($prefixes as $key => $value){            
             if($value == $newPrefix){

@@ -85,7 +85,7 @@ class AdminForm extends ConfigFormBase {
             '#markup' => '<p>' . $this->t('<br/><h2>Prefix settings</h2><br/>') . '</p>',
         ];
         
-        $propertys = \Drupal\oeaw\oeawStorage::getAllPropertyForSearch();
+        $propertys = \Drupal\oeaw\OeawStorage::getAllPropertyForSearch();
         
         if($propertys == false){
             drupal_set_message($this->t('please provide sparql endpoint and fedora url'), 'error');

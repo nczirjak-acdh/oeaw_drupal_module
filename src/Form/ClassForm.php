@@ -10,8 +10,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\oeaw\oeawStorage;
-use Drupal\oeaw\oeawFunctions;
+use Drupal\oeaw\OeawStorage;
+use Drupal\oeaw\OeawFunctions;
 
 class ClassForm extends FormBase
 {
@@ -56,8 +56,8 @@ class ClassForm extends FormBase
         
         $this->store = $this->tempStoreFactory->get('class_search_data');
         
-        $this->oeawStorage = new oeawStorage();
-        $this->oeawFunctions = new oeawFunctions();
+        $this->oeawStorage = new OeawStorage();
+        $this->oeawFunctions = new OeawFunctions();
     }
     
     public static function create(ContainerInterface $container){
