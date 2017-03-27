@@ -23,12 +23,21 @@ oeaw_detail_list:
     _access: 'TRUE'
 
 oeaw_edit:
-  path: '/oeaw_editing/{uri}'
+  path: '/oeaw_edit/{uri}'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_editing'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_edit'
   requirements:
     _role: 'authenticated+admin'
     _access: 'TRUE'
+
+oeaw_delete:
+  path: '/oeaw_delete/{uri}'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_delete'
+  requirements:
+    _role: 'authenticated+admin'
+    _access: 'TRUE'
+
         
 oeaw_resources:
   path: '/oeaw_resources'

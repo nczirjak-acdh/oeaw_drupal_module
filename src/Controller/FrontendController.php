@@ -75,7 +75,8 @@ class FrontendController extends ControllerBase {
                 if($decodeUrl){
                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                     if($uid !== 0){
-                        $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                        $res[$i]['edit'] = "/oeaw_edit/".$decodeUrl;
+                        $res[$i]['delete'] = "/oeaw_delete/".$decodeUrl;
                     }
                 }
                 $res[$i]["uri"] = $value["uri"];
@@ -451,7 +452,8 @@ class FrontendController extends ControllerBase {
                     if($decodeUrl){
                         $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                         if($uid !== 0){
-                            $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                            $res[$i]['edit'] = "/oeaw_edit/".$decodeUrl;
+                            $res[$i]['delete'] = "/oeaw_delete/".$decodeUrl;
                         }
                     }                
                     $res[$i]["uri"] = $value["res"];
@@ -512,8 +514,15 @@ class FrontendController extends ControllerBase {
      * @param Request $request
      * @return type
      */
-    public function oeaw_editing(string $uri, Request $request) {
+    public function oeaw_edit(string $uri, Request $request) {
         return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
+    }
+    
+    public function oeaw_delete(string $uri, Request $request) {
+        
+        
+        return drupal_set_message(t('The delete function is under development!'), 'error');
+        
     }
         
     /**
@@ -562,7 +571,8 @@ class FrontendController extends ControllerBase {
                     if($decodeUrl){
                         $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                         if($uid !== 0){
-                            $res[$i]['edit'] = "/oeaw_editing/".$decodeUrl;
+                            $res[$i]['edit'] = "/oeaw_edit/".$decodeUrl;
+                            $res[$i]['delete'] = "/oeaw_delete/".$decodeUrl;
                         }
                     }
                     $res[$i]["uri"] = $value["uri"];

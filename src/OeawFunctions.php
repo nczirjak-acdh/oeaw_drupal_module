@@ -377,7 +377,8 @@ class OeawFunctions {
 
             $childResult[$i]['detail'] = "/oeaw_detail/".$decUrlChild;
             if($uid !== 0){
-                $childResult[$i]['edit'] = "/oeaw_editing/".$decUrlChild;
+                $childResult[$i]['edit'] = "/oeaw_edit/".$decUrlChild;
+                $childResult[$i]['delete'] = "/oeaw_delete/".$decUrlChild;
             } 
             $i++;
         }
