@@ -582,13 +582,13 @@ class OeawStorage {
     
     public function getClassesForSideBar():array
     {        
-        $rdfType = self::$sparqlPref["rdfType"];        
+        $rdfType = self::$sparqlPref["rdfType"];
         
         $getResult = array();
         
         try {
             
-            $q = new Query();            
+            $q = new Query();
             $q->addParameter(new HasTriple('?aaa', $rdfType, '?type'));
             $q->setSelect(array('?type', '(COUNT(?type) as ?typeCount)'));
             $q->setOrderBy(array('?aaa'));
