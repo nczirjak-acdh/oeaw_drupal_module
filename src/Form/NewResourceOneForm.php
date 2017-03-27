@@ -32,7 +32,7 @@ class NewResourceOneForm extends NewResourceFormBase {
         $form['#attributes']['enctype'] = "multipart/form-data";
         $roots = array();
         // get the root resources to we can show it on the select element        
-        $roots = $this->oeawStorage->getRootFromDB();
+        $roots = $this->OeawStorage->getRootFromDB();
        
         if(count($roots) > 0 ){
             //create the root option values
@@ -55,7 +55,7 @@ class NewResourceOneForm extends NewResourceFormBase {
         
         $classes = array();
         //get the class resources to we can show it on the select element
-        $classes = $this->oeawStorage->getClass();
+        $classes = $this->OeawStorage->getClass();
         
         if(count($classes) > 0){
             foreach($classes as $c){

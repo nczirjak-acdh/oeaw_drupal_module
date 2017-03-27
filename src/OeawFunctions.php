@@ -10,7 +10,7 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Component\Render\MarkupInterface;
 
-use Drupal\oeaw\oeawStorage;
+use Drupal\oeaw\OeawStorage;
 use Drupal\oeaw\ConnData;
 
 use acdhOeaw\fedora\Fedora;
@@ -302,12 +302,12 @@ class OeawFunctions {
      * @param string $dl
      * @return string
      */
-    public static function createDetailsUrl(string $data, string $way = 'encode', string$dl = null): string {
+    public function createDetailsUrl(string $data, string $way = 'encode', string$dl = null): string {
       
         $returnData = "";
         
         if ($way == 'encode') {
-            $data = str_replace(\Drupal\oeaw\ConnData::fedoraUrl(), '', $data);
+            $data = str_replace($this->config->get('fedoraApiUrl'), '', $data);
             $data = base64_encode($data);
             $returnData = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
         }
@@ -321,12 +321,9 @@ class OeawFunctions {
             if ($mod4) { $data .= substr('====', $mod4); }
             
             $data = base64_decode($data);
+                        
+            $returnData = $this->config->get('fedoraApiUrl') . $data;
             
-            if ($dl == null) {
-                $returnData = \Drupal\oeaw\ConnData::fedoraUrl() . $data;
-            } else {
-                $returnData = \Drupal\oeaw\ConnData::fedoraDownloadUrl() . $data;
-            }
         }
         return $returnData;
     }
@@ -358,8 +355,8 @@ class OeawFunctions {
             if($imageThumbnail){
                 $imgUri = $imageThumbnail->getUri();
                 if(!empty($imgUri)){
-                    $oeawStorage = new oeawStorage();
-                    $childThumb = $oeawStorage->getImage($imgUri);
+                    $OeawStorage = new OeawStorage();
+                    $childThumb = $OeawStorage->getImage($imgUri);
                     
                     if(count($childThumb) > 0){
                         $childResult[$i]['thumbnail'] = $childThumb[0];
@@ -412,8 +409,8 @@ class OeawFunctions {
                     // if there is a thumbnail
                     if($v == \Drupal\oeaw\ConnData::$imageThumbnail){                        
                         if($item){
-                            $oeawStorage = new oeawStorage();                            
-                            $imgData = $oeawStorage->getImage($item);
+                            $OeawStorage = new OeawStorage();                            
+                            $imgData = $OeawStorage->getImage($item);
                             if(count($imgData) > 0){
                                 $hasImage = $imgData[0];
                                 $results[$i]["image"] = $imgData[0];
@@ -473,7 +470,7 @@ class OeawFunctions {
         
         if (filter_var($string, FILTER_VALIDATE_URL)) { 
             
-            if (strpos($string, \Drupal\oeaw\ConnData::fedoraUrl()) !== false) {
+            if (strpos($string, $this->config->get('fedoraApiUrl')) !== false) {
                 $res = $this->createDetailsUrl($string, 'encode');                
             }
             return $res;

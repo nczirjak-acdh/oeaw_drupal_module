@@ -43,8 +43,8 @@ abstract class NewResourceFormBase extends FormBase {
     */
     protected $store;    
     
-    protected $oeawStorage;
-    protected $oeawFunctions;
+    protected $OeawStorage;
+    protected $OeawFunctions;
     
     /**
    * Constructs a Multi step form Base.
@@ -61,8 +61,8 @@ abstract class NewResourceFormBase extends FormBase {
         $this->currentUser = $current_user;
         
         $this->store = $this->tempStoreFactory->get('multistep_data');
-        $this->oeawStorage = new OeawStorage();
-        $this->oeawFunctions = new OeawFunctions();
+        $this->OeawStorage = new OeawStorage();
+        $this->OeawFunctions = new OeawFunctions();
         
     }
     
@@ -151,7 +151,7 @@ abstract class NewResourceFormBase extends FormBase {
             
             $this->deleteStore($metadata);
 
-            $encodeUri = $this->oeawFunctions->createDetailsUrl($uri, 'encode');
+            $encodeUri = $this->OeawFunctions->createDetailsUrl($uri, 'encode');
             
             $datatable = array(
                 '#theme' => 'oeaw_success_resource',

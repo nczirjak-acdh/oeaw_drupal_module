@@ -16,36 +16,7 @@ class ConnData
             . 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> '
             . 'PREFIX owl: <http://www.w3.org/2002/07/owl#>';
     
-
-    
-    public function fedoraUrl() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){
-            $url = 'https://fedora.localhost/rest/';
-        }else {
-            $url = 'https://fedora.hephaistos.arz.oeaw.ac.at/rest/';
-        }
-        return $url;
-    }
-    
-    public function fedoraDownloadUrl() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){
-            $url = 'https://fedora.localhost/rest/';
-        }else {
-            $url = 'https://fedora.hephaistos.arz.oeaw.ac.at/rest/';
-        }
-        return $url;
-    }
-    
-    public function fedoraUrlwHttp() {
-        if(\Drupal::request()->getHttpHost() == 'drupal.localhost'){
-            $url = 'fedora.localhost/rest/';
-        }else {
-            $url = 'fedora.hephaistos.arz.oeaw.ac.at/rest/';
-        }
-        return $url;
-    }
-    
-    
+  
     public static $prefixesToBlazegraph = array(
         "dct" => "http://purl.org/dc/terms/"        
     );

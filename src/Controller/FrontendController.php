@@ -32,12 +32,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 class FrontendController extends ControllerBase {
     
-    private $oeawStorage;
-    private $oeawFunctions;
+    private $OeawStorage;
+    private $OeawFunctions;
     
     public function __construct() {  
-        $this->oeawStorage = new OeawStorage();
-        $this->oeawFunctions = new OeawFunctions();
+        $this->OeawStorage = new OeawStorage();
+        $this->OeawFunctions = new OeawFunctions();
     }
     
     
@@ -61,7 +61,7 @@ class FrontendController extends ControllerBase {
         $res = array();
         $decodeUrl = "";
         
-        $result = $this->oeawStorage->getRootFromDB();      
+        $result = $this->OeawStorage->getRootFromDB();      
 
         $uid = \Drupal::currentUser()->id();
         
@@ -69,7 +69,7 @@ class FrontendController extends ControllerBase {
             $i = 0;            
             foreach($result as $value){
                 // check that the value is an Url or not            
-                $decodeUrl = $this->oeawFunctions->isURL($value["uri"], "decode");
+                $decodeUrl = $this->OeawFunctions->isURL($value["uri"], "decode");
                 
                 //create details and editing urls
                 if($decodeUrl){
@@ -253,7 +253,7 @@ class FrontendController extends ControllerBase {
         }
         
         // decode the uri hash
-        $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
+        $uri = $this->OeawFunctions->createDetailsUrl($uri, 'decode');
         
         $datatable = array(
             '#theme' => 'oeaw_success_resource',
@@ -287,18 +287,18 @@ class FrontendController extends ControllerBase {
         $hasBinary = "";        
        
         // decode the uri hash
-        $uri = $this->oeawFunctions->createDetailsUrl($uri, 'decode');
+        $uri = $this->OeawFunctions->createDetailsUrl($uri, 'decode');
  
         $uid = \Drupal::currentUser()->id();
         
-        $rootGraph = $this->oeawFunctions->makeGraph($uri); 
-        $rootMeta =  $this->oeawFunctions->makeMetaData($uri);
+        $rootGraph = $this->OeawFunctions->makeGraph($uri); 
+        $rootMeta =  $this->OeawFunctions->makeMetaData($uri);
 
         if(count($rootMeta) > 0){            
             
             $results = array();
             //get the root table data
-            $results = $this->oeawFunctions->createDetailTableData($uri);
+            $results = $this->OeawFunctions->createDetailTableData($uri);
             
             if(empty($results)){
                 return drupal_set_message(t('The resource has no metadata!'), 'error');
@@ -309,14 +309,14 @@ class FrontendController extends ControllerBase {
         }
       
         //get the childrens
-        $fedora = $this->oeawFunctions->initFedora();
+        $fedora = $this->OeawFunctions->initFedora();
         $childF = $fedora->getResourceByUri($uri);
         $childF = $childF->getChildren();
 
         $childResult = array();
         //get the childrens table data
         if(count($childF) > 0){
-            $childResult = $this->oeawFunctions->createChildrenDetailTableData($childF);
+            $childResult = $this->OeawFunctions->createChildrenDetailTableData($childF);
         }
         
         $resTitle = $rootGraph->label($uri);
@@ -328,7 +328,7 @@ class FrontendController extends ControllerBase {
         }
         
         $editResData = array(
-            "editUrl" => $this->oeawFunctions->createDetailsUrl($uri, 'encode'),
+            "editUrl" => $this->OeawFunctions->createDetailsUrl($uri, 'encode'),
             "title" => $resTitle
         );        
         
@@ -376,12 +376,12 @@ class FrontendController extends ControllerBase {
         $uid = \Drupal::currentUser()->id();
         //normal string seacrh
        
-        $metaKey = $this->oeawFunctions->createUriFromPrefix($metaKey);
+        $metaKey = $this->OeawFunctions->createUriFromPrefix($metaKey);
         if($metaKey === false){
             return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
         }
         
-        $stringSearch = $this->oeawStorage->searchForData($metaValue, $metaKey);
+        $stringSearch = $this->OeawStorage->searchForData($metaValue, $metaKey);
         
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
@@ -410,7 +410,7 @@ class FrontendController extends ControllerBase {
                         //get the resources which is part of this identifier
                         $identifier = $identifier->getUri();                        
 
-                        $ids = $this->oeawStorage->searchForData($identifier, $metaKey);
+                        $ids = $this->OeawStorage->searchForData($identifier, $metaKey);
                         
                         //generate the result array
                         foreach($ids as $v){
@@ -445,7 +445,7 @@ class FrontendController extends ControllerBase {
                 // check that the value is an Url or not
                 
                 if($value["res"]){
-                    $decodeUrl = $this->oeawFunctions->isURL($value["res"], "decode");
+                    $decodeUrl = $this->OeawFunctions->isURL($value["res"], "decode");
                 
                     //create details and editing urls
                     if($decodeUrl){
@@ -550,14 +550,14 @@ class FrontendController extends ControllerBase {
             }
          
             //EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier')
-            //$data = $this->oeawStorage->getDataByProp("rdf:type", $searchResult);
-            $data = $this->oeawStorage->getDataByProp(EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $property.':'.$value);
+            //$data = $this->OeawStorage->getDataByProp("rdf:type", $searchResult);
+            $data = $this->OeawStorage->getDataByProp(EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $property.':'.$value);
         
             if(count($data) > 0){
                 $i = 0;            
                 foreach($data as $value){
                     // check that the value is an Url or not            
-                    $decodeUrl = $this->oeawFunctions->isURL($value["uri"], "decode");
+                    $decodeUrl = $this->OeawFunctions->isURL($value["uri"], "decode");
 
                     //create details and editing urls
                     if($decodeUrl){

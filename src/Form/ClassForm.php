@@ -37,8 +37,8 @@ class ClassForm extends FormBase
     */
     protected $store;    
     
-    private $oeawStorage;    
-    private $oeawFunctions;
+    private $OeawStorage;    
+    private $OeawFunctions;
     
     /**
    * Constructs a Multi step form Base.
@@ -56,8 +56,8 @@ class ClassForm extends FormBase
         
         $this->store = $this->tempStoreFactory->get('class_search_data');
         
-        $this->oeawStorage = new OeawStorage();
-        $this->oeawFunctions = new OeawFunctions();
+        $this->OeawStorage = new OeawStorage();
+        $this->OeawFunctions = new OeawFunctions();
     }
     
     public static function create(ContainerInterface $container){
@@ -78,7 +78,7 @@ class ClassForm extends FormBase
     */
     public function buildForm(array $form, FormStateInterface $form_state) 
     {          
-        $data = $this->oeawStorage->getClassesForSideBar();        
+        $data = $this->OeawStorage->getClassesForSideBar();        
         if(empty($data)){
              drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
              return;
@@ -87,7 +87,7 @@ class ClassForm extends FormBase
         /* get the fields from the sparql query */
         $fields = array_keys($data[0]);
         
-        $searchTerms = $this->oeawFunctions->createPrefixesFromArray($data, $fields);
+        $searchTerms = $this->OeawFunctions->createPrefixesFromArray($data, $fields);
         
         $i = 0;
         foreach($searchTerms["type"] as $value){

@@ -50,7 +50,7 @@ class OeawStorage {
     
     private $titleProp;
     
-    private $oeawFunctions;
+    private $OeawFunctions;
     
     private $fedora;
     
@@ -63,7 +63,7 @@ class OeawStorage {
         $this->idProp = $cfg->get('fedoraIdProp');
         $this->relProp = $cfg->get('fedoraRelProp');
         $this->titleProp = $cfg->get('fedoraTitleProp');
-        $this->oeawFunctions = new OeawFunctions();
+        $this->OeawFunctions = new OeawFunctions();
         $this->fedora = new Fedora($cfg);
         
         //blazegraph bugfix. Add missing namespace
@@ -105,7 +105,7 @@ class OeawStorage {
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
         
             return $getResult;
             
@@ -137,7 +137,7 @@ class OeawStorage {
             
             $fields = $result->getFields(); 
 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
             return $getResult;                
             
@@ -163,7 +163,7 @@ class OeawStorage {
         }
        
         if(!filter_var($property, FILTER_VALIDATE_URL)){
-            $property = $this->oeawFunctions->createUriFromPrefix($property);
+            $property = $this->OeawFunctions->createUriFromPrefix($property);
             if($property === false){
                 return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
             }
@@ -174,7 +174,7 @@ class OeawStorage {
 
 
         if(!filter_var($value, FILTER_VALIDATE_URL)){
-            $value = $this->oeawFunctions->createUriFromPrefix($value);
+            $value = $this->OeawFunctions->createUriFromPrefix($value);
             if($value === false){
                 return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
             }
@@ -227,7 +227,7 @@ class OeawStorage {
           
   */       
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
             return $getResult;                
         
@@ -270,7 +270,7 @@ class OeawStorage {
             $result = $this->fedora->runSparql($query);
                         
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
             return $getResult; 
             
@@ -364,7 +364,7 @@ class OeawStorage {
       
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
             return $getResult;
             
@@ -449,7 +449,7 @@ class OeawStorage {
                 ';*/
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
             
             return $getResult;    
             
@@ -494,7 +494,7 @@ class OeawStorage {
             $result = $this->fedora->runSparql($query);
             
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
            
             if(count($getResult) > 0){
                 $res[] = $getResult[0]["res"];
@@ -563,7 +563,7 @@ class OeawStorage {
 */
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
             return $getResult;
 
@@ -602,7 +602,7 @@ class OeawStorage {
 */
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
-            $getResult = $this->oeawFunctions->createSparqlResult($result, $fields);
+            $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
             return $getResult;
 

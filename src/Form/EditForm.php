@@ -50,8 +50,8 @@ class EditForm extends FormBase {
      */
     protected $store;
 
-    private $oeawFunctions;
-    private $oeawStorage;
+    private $OeawFunctions;
+    private $OeawStorage;
     
     /**
      *
@@ -67,8 +67,8 @@ class EditForm extends FormBase {
 
         $this->store = $this->tempStoreFactory->get('edit_form');
         
-        $this->oeawStorage = new OeawStorage();
-        $this->oeawFunctions = new OeawFunctions();
+        $this->OeawStorage = new OeawStorage();
+        $this->OeawFunctions = new OeawFunctions();
     }
 
     public static function create(ContainerInterface $container) {
@@ -93,10 +93,10 @@ class EditForm extends FormBase {
             return drupal_set_message($this->t('the uri is not exists!'), 'error');
         }
 
-        $editUri = $this->oeawFunctions->createDetailsUrl($editHash, 'decode');
+        $editUri = $this->OeawFunctions->createDetailsUrl($editHash, 'decode');
       
         // get the digital resource classes where the user must upload binary file
-        $digitalResQuery = $this->oeawStorage->getDigitalResources();
+        $digitalResQuery = $this->OeawStorage->getDigitalResources();
         
         $digitalResources = array();
 
@@ -107,13 +107,13 @@ class EditForm extends FormBase {
             }
         }
         //create and load the data to the graph
-        $classGraph = $this->oeawFunctions->makeGraph($editUri);
+        $classGraph = $this->OeawFunctions->makeGraph($editUri);
 
         $classVal = array();
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
         
-        //$metadataQuery = $this->oeawStorage->getClassMeta($class); 
+        //$metadataQuery = $this->OeawStorage->getClassMeta($class); 
         if(count($classValue) > 0){
             foreach ($classValue as $v) {
                 if(!empty($v->getUri())){                    
@@ -124,7 +124,7 @@ class EditForm extends FormBase {
             return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');
         }
 
-        $fedora = $this->oeawFunctions->initFedora();
+        $fedora = $this->OeawFunctions->initFedora();
         $editUriClass = "";
        
         if (!empty($classVal)) {
@@ -150,7 +150,7 @@ class EditForm extends FormBase {
         }
         //http://xmlns.com/foaf/spec/Image
         //the actual fields for the editing form based on the editUriClass variable
-        $editUriClassMetaFields = $this->oeawStorage->getClassMeta($editUriClass);
+        $editUriClassMetaFields = $this->OeawStorage->getClassMeta($editUriClass);
         
         if(empty($editUriClassMetaFields)){
             drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
@@ -374,7 +374,7 @@ class EditForm extends FormBase {
 
             $fedora->commit();
             $this->deleteStore($editForm);            
-            $encodeUri = $this->oeawFunctions->createDetailsUrl($resourceUri, 'encode');
+            $encodeUri = $this->OeawFunctions->createDetailsUrl($resourceUri, 'encode');
             $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => $encodeUri]));
             $response->send();
             return;

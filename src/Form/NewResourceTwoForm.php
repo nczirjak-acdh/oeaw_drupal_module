@@ -49,7 +49,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $root =  $formVal['root'];
         
         // get the digital resource classes where the user must upload binary file
-        $digitalResQuery = $this->oeawStorage->getDigitalResources();
+        $digitalResQuery = $this->OeawStorage->getDigitalResources();
 
    
 
@@ -61,7 +61,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }            
         }
         
-        $classGraph = $this->oeawFunctions->makeGraph($class);
+        $classGraph = $this->OeawFunctions->makeGraph($class);
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
         if(!empty($classID)){
             $classValue = $classID["value"];
@@ -75,7 +75,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $checkDigRes = in_array($classValue, $digitalResources);
               
         // get the actual class metadata
-        $metadataQuery = $this->oeawStorage->getClassMeta($class);  
+        $metadataQuery = $this->OeawStorage->getClassMeta($class);  
         $metadata = array();
         if(count($metadataQuery) > 0){
             foreach($metadataQuery as $m){                
@@ -85,7 +85,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             return drupal_set_message($this->t('There is no metadata for this class'), 'error');
         }
         
-        $rootGraph = $this->oeawFunctions->makeGraph($root);
+        $rootGraph = $this->OeawFunctions->makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $rootID = array();
         $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();

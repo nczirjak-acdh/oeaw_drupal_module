@@ -12,12 +12,12 @@ use Drupal\oeaw\OeawFunctions;
 class SearchForm extends FormBase
 {
     
-    private $oeawStorage;
-    private $oeawFunctions;
+    private $OeawStorage;
+    private $OeawFunctions;
     
     public function __construct() {    
-        $this->oeawStorage = new OeawStorage();
-        $this->oeawFunctions = new OeawFunctions();
+        $this->OeawStorage = new OeawStorage();
+        $this->OeawFunctions = new OeawFunctions();
     }
     
     public function getFormId()
@@ -31,7 +31,7 @@ class SearchForm extends FormBase
     public function buildForm(array $form, FormStateInterface $form_state) 
     {   
         $propertys = array();
-        $propertys = $this->oeawStorage->getAllPropertyForSearch();
+        $propertys = $this->OeawStorage->getAllPropertyForSearch();
         
         if(empty($propertys)){
              drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys -> SearchForm '), 'error');
@@ -41,7 +41,7 @@ class SearchForm extends FormBase
         // get the fields from the sparql query 
         $fields = array_keys($propertys[0]);
         $searchTerms = array();
-        $searchTerms = $this->oeawFunctions->createPrefixesFromArray($propertys, $fields);
+        $searchTerms = $this->OeawFunctions->createPrefixesFromArray($propertys, $fields);
         
         if(count($searchTerms) > 0) {
         
