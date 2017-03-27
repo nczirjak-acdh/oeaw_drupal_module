@@ -16,11 +16,8 @@ use Drupal\oeaw\OeawFunctions;
 
 
 class NewResourceTwoForm extends NewResourceFormBase  {
-
-    
     
     /* 
-     *
      * drupal core formid
      *     
      * @return string : form id
@@ -28,10 +25,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
     public function getFormId() {
         return 'multistep_form_two';
     }
-    
-   
-    /* 
-     *
+       
+    /*      
      * drupal core buildForm function, to create the form what the user will see
      *
      * @param array $form : it will contains the form elements
@@ -51,8 +46,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->OeawStorage->getDigitalResources();
 
-   
-
         //create the digitalResources array
         $digitalResources = array();
         foreach($digitalResQuery as $dr){            
@@ -62,7 +55,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         }
         
         $classGraph = $this->OeawFunctions->makeGraph($class);
-        $classID = $classGraph->get($class,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
+        $classID = $classGraph->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
         if(!empty($classID)){
             $classValue = $classID["value"];
         }
@@ -88,7 +81,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $rootGraph = $this->OeawFunctions->makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $rootID = array();
-        $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'))->toRdfPhp();
+        $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
         
         //get the value of the property
         if(count($rootID) > 0 ){
@@ -106,7 +99,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         foreach ($metadata as $m) {            
 
             //we dont need the identifier, because doorkeeper will generate it automatically
-            if($m === "http://purl.org/dc/terms/identifier"){
+            if($m === $this->config->get('fedoraIdProp')){
                continue; 
             }
             
@@ -117,7 +110,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }
             
             //|| $editUriClassMetaFields[$i]["id"] ===
-            if($m === "http://purl.org/dc/terms/isPartOf" ){
+            if($m === $this->config->get('fedoraRelProp') ){
                 $defaultValue = $rootIdentifier;
                 $attributes = array('readonly' => 'readonly');
             } else {
@@ -199,8 +192,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
-        $result = \Drupal\oeaw\OeawFunctions::getFieldNewTitle($formElements, "new");
-       
+        
+        $oeawFunc = new OeawFunctions();
+        $result = $oeawFunc->getFieldNewTitle($formElements, "new");
+        
         return $result;        
     }
     

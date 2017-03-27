@@ -42,7 +42,7 @@ abstract class NewResourceFormBase extends FormBase {
     * @var \Drupal\user\PrivateTempStore
     */
     protected $store;    
-    
+    protected $config;
     protected $OeawStorage;
     protected $OeawFunctions;
     
@@ -59,7 +59,7 @@ abstract class NewResourceFormBase extends FormBase {
         $this->tempStoreFactory = $temp_store_factory;
         $this->sessionManager = $session_manager;
         $this->currentUser = $current_user;
-        
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $this->store = $this->tempStoreFactory->get('multistep_data');
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();

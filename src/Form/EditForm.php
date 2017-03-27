@@ -50,6 +50,7 @@ class EditForm extends FormBase {
      */
     protected $store;
 
+    private $config;
     private $OeawFunctions;
     private $OeawStorage;
     
@@ -60,13 +61,11 @@ class EditForm extends FormBase {
      * @param \Drupal\Core\Session\AccountInterface $current_user
      */
     public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
-
         $this->tempStoreFactory = $temp_store_factory;
         $this->sessionManager = $session_manager;
         $this->currentUser = $current_user;
-
         $this->store = $this->tempStoreFactory->get('edit_form');
-        
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
     }
@@ -111,7 +110,7 @@ class EditForm extends FormBase {
 
         $classVal = array();
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
-        $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'));
+        $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$rdfType));
         
         //$metadataQuery = $this->OeawStorage->getClassMeta($class); 
         if(count($classValue) > 0){
@@ -129,7 +128,7 @@ class EditForm extends FormBase {
        
         if (!empty($classVal)) {
             foreach ($classVal as $cval) {
-                $res = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $cval);
+                $res = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $cval);
                 // this will contains the onotology uri, what will helps to use to know
                 // which fields we need to show in the editing form                
 
@@ -177,9 +176,9 @@ class EditForm extends FormBase {
                 $value = $value["value"];
                 // if the input field value contains the id.acdh... then we check the labels
                 // and shows the old Label to the user
-                if (strpos($value, 'https://id.acdh.oeaw.ac.at') !== false) {
+                if (strpos($value, $this->config->get('fedoraIdNamespace')) !== false) {
                     
-                    $resOT = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", $value);
+                    $resOT = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $value);
                     foreach($resOT as $ot){
                         if(!empty($ot->getMetadata()->label())){
                             $labelURL = (string)$value;
@@ -201,7 +200,7 @@ class EditForm extends FormBase {
 
             // if the label is the isPartOf or identifier, then we need to disable the editing
             // to the users, they do not have a permission to change it
-            if($editUriClassMetaFields[$i]["id"] === "http://purl.org/dc/terms/isPartOf" || $editUriClassMetaFields[$i]["id"] ==="http://purl.org/dc/terms/identifier"){
+            if($editUriClassMetaFields[$i]["id"] === $this->config->get('fedoraRelProp') || $editUriClassMetaFields[$i]["id"] === $this->config->get('fedoraIdProp')){
                 $attributes = array('readonly' => 'readonly');
             } else {
                 $attributes = array();
@@ -265,8 +264,7 @@ class EditForm extends FormBase {
                     'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
                  ),
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, and images etc....'),
-            );
-            
+            );            
         }
      
         $form['submit'] = array(
@@ -283,7 +281,9 @@ class EditForm extends FormBase {
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
-        $result = \Drupal\oeaw\OeawFunctions::getFieldNewTitle($formElements, "new");
+        
+        $oeawFunc = new OeawFunctions();
+        $result = $oeawFunc->getFieldNewTitle($formElements, "new");
        
         return $result;        
     }
@@ -349,13 +349,11 @@ class EditForm extends FormBase {
             if (!empty($value)) {
                 if (strpos($value, 'http') !== false) {
                     //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
-                    //remove the property
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addResource($key, $value);
                 } else {
-                    //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
-                    //remove the property
+                    //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");                    
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addLiteral($key, $value);

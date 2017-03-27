@@ -100,7 +100,7 @@ class OeawFunctions {
      * @return AjaxResponse
      * 
      */    
-    public static function getFieldNewTitle(array $formElements, string $mode = 'edit'): AjaxResponse {
+    public function getFieldNewTitle(array $formElements, string $mode = 'edit'): AjaxResponse {
         
         $ajax_response = array();
         $fedora = array();
@@ -144,7 +144,7 @@ class OeawFunctions {
         
         foreach($result as $key => $value){
             
-            $resNL = $fedora->getResourcesByProperty("http://purl.org/dc/terms/identifier", (string)$value);
+            $resNL = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), (string)$value);
        
             foreach($resNL as $nl){
                 if(!empty($nl->getMetadata()->label())){
@@ -307,7 +307,7 @@ class OeawFunctions {
         $returnData = "";
         
         if ($way == 'encode') {
-            $data = str_replace($this->config->get('fedoraApiUrl'), '', $data);
+            $data = str_replace($this->config->get('fedoraApiUrl').'/', '', $data);
             $data = base64_encode($data);
             $returnData = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
         }
@@ -322,7 +322,7 @@ class OeawFunctions {
             
             $data = base64_decode($data);
                         
-            $returnData = $this->config->get('fedoraApiUrl') . $data;
+            $returnData = $this->config->get('fedoraApiUrl').'/' . $data;
             
         }
         return $returnData;
