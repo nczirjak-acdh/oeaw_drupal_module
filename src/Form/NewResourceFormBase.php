@@ -164,11 +164,9 @@ abstract class NewResourceFormBase extends FormBase {
                 ]
             );    
 
-        $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => 'sssss']));
-        $response->send();
-        return;
-        
-        //    drupal_set_message($this->t('The form has been saved. Your new resource is: <a href="'.$uri.'" target="_blank">'.$uri.'</a> '));
+            $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => $encodeUri]));
+            $response->send();
+            return;
             
         } catch (Exception $ex) {
             
@@ -177,8 +175,6 @@ abstract class NewResourceFormBase extends FormBase {
             
             drupal_set_message($this->t('Error during the saving process'), 'error');
         }
-        
-        
     }
     
     

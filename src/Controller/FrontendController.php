@@ -176,21 +176,22 @@ class FrontendController extends ControllerBase {
         $matchBoth = array_intersect($matchResource, $matchValue);
 
         foreach ($matchClass as $i) {
+            
             if (!in_array($i->getUri(), $matchBoth)) {
                 continue;
             }
 
             $meta = $i->getMetadata();
             $acdhId = $meta->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
+            
             if(empty($acdhId)){
                 continue;
             }
             $acdhId = $acdhId->getUri();
          
-            $label = empty($meta->label()) ? $acdhId : $meta->label();            
-            //because of the special characters we need to convert it            
+            $label = empty($meta->label()) ? $acdhId : $meta->label();
+            //because of the special characters we need to convert it
             $label = htmlentities($label, ENT_QUOTES, "UTF-8");
-            //error_log(html_entity_decode($label, ENT_COMPAT | ENT_HTML401, 'UTF-8'));
                 
             $matches[] = ['value' => $acdhId , 'label' => $label];
 
@@ -198,6 +199,7 @@ class FrontendController extends ControllerBase {
                  break;
             }
         }
+        
         $response = new JsonResponse($matches);
         $response->setCharset('utf-8');
         $response->headers->set('charset', 'utf-8');
@@ -211,7 +213,7 @@ class FrontendController extends ControllerBase {
      * Here the oeaw module menu is generating with the available menupoints
      * 
      * @return array
-     */
+    */
     public function oeaw_menu(): array {
         $table = array();
         $header = array('id' => t('MENU'));
