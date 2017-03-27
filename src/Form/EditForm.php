@@ -26,6 +26,7 @@ use EasyRdf_Graph;
 use EasyRdf_Resource;
 use Drupal\oeaw\OeawStorage;
 use Drupal\oeaw\OeawFunctions;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class EditForm extends FormBase {
 
@@ -372,8 +373,12 @@ class EditForm extends FormBase {
             }
 
             $fedora->commit();
-            $this->deleteStore($editForm);
-            drupal_set_message($this->t('The form has been saved and you resource was changed'));
+            $this->deleteStore($editForm);            
+            $encodeUri = $this->oeawFunctions->createDetailsUrl($resourceUri, 'encode');
+            $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => $encodeUri]));
+            $response->send();
+            return;
+            
         } catch (Exception $ex) {
 
             $fedora->rollback();
