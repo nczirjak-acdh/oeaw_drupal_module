@@ -136,7 +136,7 @@ class EditForm extends FormBase {
                 if(count($res) > 0){
                     $editUriClass = $res[0]->getUri();
                     $actualClassUri = $cval;
-                    if($cval == "http://xmlns.com/foaf/spec/Image"){ $isImage = true; }
+                    if($cval == \Drupal\oeaw\ConnData::$imageProperty ){ $isImage = true; }
                 }
                 
             }

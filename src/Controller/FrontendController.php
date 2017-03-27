@@ -520,6 +520,7 @@ class FrontendController extends ControllerBase {
      * 
      * Get the classes data from the sidebar class list block
      * and display them
+     * 
      * @return array
      */
     public function oeaw_classes_result(): array{
@@ -548,15 +549,13 @@ class FrontendController extends ControllerBase {
                     $value = $val[0];
                 }                
             }
-         
-            //EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier')
-            //$data = $this->OeawStorage->getDataByProp("rdf:type", $searchResult);
+            
             $data = $this->OeawStorage->getDataByProp(EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $property.':'.$value);
         
             if(count($data) > 0){
-                $i = 0;            
+                $i = 0;
                 foreach($data as $value){
-                    // check that the value is an Url or not            
+                    // check that the value is an Url or not
                     $decodeUrl = $this->OeawFunctions->isURL($value["uri"], "decode");
 
                     //create details and editing urls
@@ -577,8 +576,8 @@ class FrontendController extends ControllerBase {
                 $decodeUrl = "";
 
             }else {
-                return drupal_set_message(t('There is no data -> Class List Search'), 'error');    
-            }         
+                return drupal_set_message(t('There is no data -> Class List Search'), 'error');
+            }
             
         }else {
             $searchArray = array();

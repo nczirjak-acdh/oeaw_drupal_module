@@ -594,7 +594,7 @@ class OeawStorage {
             $q->setOrderBy(array('?aaa'));
             $q->setGroupBy(array('?type'));
             $query = $q->getQuery();
-            
+         
             /*   $query =
                     self::$prefixes . ' 
                         SELECT ?type  

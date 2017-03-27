@@ -38,7 +38,7 @@ class ConnData
         "http://xmlns.com/foaf/0.1/" => "foaf",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#" => "rdf",
         "http://www.w3.org/2004/02/skos/core#" => "skos",
-        "http://xmlns.com/foaf/spec/" => "foaf"
+        //"http://xmlns.com/foaf/spec/" => "foaf"
     );
     
     public static $imageProperty = "http://xmlns.com/foaf/0.1/Image";
