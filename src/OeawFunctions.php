@@ -394,6 +394,8 @@ class OeawFunctions {
      */
     public function createDetailTableData(string $uri): array{
         
+        $OeawStorage = new OeawStorage();
+        
         if(empty($uri)){
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
@@ -409,7 +411,7 @@ class OeawFunctions {
                     // if there is a thumbnail
                     if($v == \Drupal\oeaw\ConnData::$imageThumbnail){                        
                         if($item){
-                            $OeawStorage = new OeawStorage();                            
+                                                    
                             $imgData = $OeawStorage->getImage($item);
                             if(count($imgData) > 0){
                                 $hasImage = $imgData[0];
@@ -424,7 +426,21 @@ class OeawFunctions {
                             $results[$i]["image"] = $uri;
                         }
                     }
-
+                    
+                    if (strpos($item, $this->config->get('fedoraIdNamespace')) !== false) {
+                        $itemRes = $OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), $item);
+                        
+                        if(count($itemRes) > 0){
+                            if($itemRes[0]["title"]){
+                                $item = $itemRes[0]["title"].' : '.$item;
+                            }else if($itemRes[0]["label"]){
+                                $item = $itemRes[0]["label"].' : '.$item;
+                            }else if($itemRes[0]["name"]){
+                                $item = $itemRes[0]["name"].' : '.$item;
+                            }
+                        }                        
+                    }
+                    
                     if(get_class($item) == "EasyRdf\Resource"){
                         
                         if($this->createPrefixesFromString($v) === false){
