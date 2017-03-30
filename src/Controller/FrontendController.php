@@ -34,10 +34,14 @@ class FrontendController extends ControllerBase {
     
     private $OeawStorage;
     private $OeawFunctions;
-    
+    private $config;
+
+
     public function __construct() {  
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        
     }
     
     
@@ -518,10 +522,49 @@ class FrontendController extends ControllerBase {
         return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
     }
     
-    public function oeaw_delete(string $uri, Request $request) {
+    
+    public function oeaw_delete(string $uri, Request $request): JsonResponse {
         
+        $matches = array();
+        $response = array();
         
-        return drupal_set_message(t('The delete function is under development!'), 'error');
+        if(!$uri){
+            $matches = array(
+                "result" => false,
+                "error_msg" => "URI MISSING!"
+                );
+        }
+        $resUri = $this->OeawFunctions->createDetailsUrl($uri, 'decode');
+        $graph = $this->OeawFunctions->makeGraph($resUri);
+        $fedora = new Fedora($this->config);
+        
+        try{
+            
+            $fedora->begin();
+            $res = $fedora->getResourceByUri($resUri);            
+            $res->delete();            
+            $fedora->commit();
+            
+            $matches = array(
+                "result"=> true, 
+                "resourceid" => $uri
+                );
+            
+        } catch (Exception $ex) {
+            $fedora->rollback();
+            
+            $matches = array(
+                "result" => false,
+                "error_msg" => "Problem during the delete method!"
+                );
+        }
+        
+        $response = new JsonResponse($matches);
+        $response->setCharset('utf-8');
+        $response->headers->set('charset', 'utf-8');
+        $response->headers->set('Content-Type', 'application/json');
+        
+        return $response;
         
     }
         
@@ -572,7 +615,7 @@ class FrontendController extends ControllerBase {
                         $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;
                         if($uid !== 0){
                             $res[$i]['edit'] = "/oeaw_edit/".$decodeUrl;
-                            $res[$i]['delete'] = "/oeaw_delete/".$decodeUrl;
+                            $res[$i]['delete'] = $decodeUrl;
                         }
                     }
                     $res[$i]["uri"] = $value["uri"];

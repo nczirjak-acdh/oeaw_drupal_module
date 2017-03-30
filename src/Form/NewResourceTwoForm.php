@@ -190,13 +190,13 @@ class NewResourceTwoForm extends NewResourceFormBase  {
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
 
         //get the formelements
-        $formElements = $form_state->getUserInput();        
+        $formElements = $form_state->getUserInput();
         $result = array();
         
         $oeawFunc = new OeawFunctions();
         $result = $oeawFunc->getFieldNewTitle($formElements, "new");
         
-        return $result;        
+        return $result;
     }
     
     public function validateForm(array &$form, FormStateInterface $form_state) 

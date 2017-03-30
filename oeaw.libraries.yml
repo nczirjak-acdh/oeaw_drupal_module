@@ -5,12 +5,12 @@ oeaw-styles:
             css/oeaw.css: {}
             css/jquery.dataTables.min.css: {}
             css/font-awesome/css/font-awesome.min.css: {}
-            css/lightbox.css: {}
+            css/lightbox.css: {}            
     js:        
         https://code.jquery.com/jquery-1.12.3.js: {type: external, minified: false}
-        https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }    
+        https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }
         js/datatable_init.js: {}
-        js/lightbox.js: {}
+        js/lightbox.js: {}        
 oeaw_edit        :
     version: 1.0.0
     js:

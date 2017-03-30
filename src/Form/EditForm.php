@@ -89,7 +89,7 @@ class EditForm extends FormBase {
         $isImage = false;
         
         if (empty($editHash)) {
-            return drupal_set_message($this->t('the uri is not exists!'), 'error');
+            return drupal_set_message($this->t('The uri is not exists!'), 'error');            
         }
 
         $editUri = $this->OeawFunctions->createDetailsUrl($editHash, 'decode');
@@ -120,7 +120,7 @@ class EditForm extends FormBase {
                 }
             }
         } else {
-            return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');
+            return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');            
         }
 
         $fedora = $this->OeawFunctions->initFedora();
@@ -136,8 +136,7 @@ class EditForm extends FormBase {
                     $editUriClass = $res[0]->getUri();
                     $actualClassUri = $cval;
                     if($cval == \Drupal\oeaw\ConnData::$imageProperty ){ $isImage = true; }
-                }
-                
+                }                
             }
         } else {
             return drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
@@ -146,14 +145,15 @@ class EditForm extends FormBase {
         if (empty($editUriClass)) {
             
             return drupal_set_message($this->t('URI Class is empty!!'), 'error');
+            return false;
         }
         //http://xmlns.com/foaf/spec/Image
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = $this->OeawStorage->getClassMeta($editUriClass);
         
         if(empty($editUriClassMetaFields)){
-            drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
-        }        
+            return drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');            
+        }
  
         $attributes = array();        
                 
