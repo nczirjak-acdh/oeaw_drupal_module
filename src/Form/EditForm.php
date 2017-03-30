@@ -115,12 +115,12 @@ class EditForm extends FormBase {
         //$metadataQuery = $this->OeawStorage->getClassMeta($class); 
         if(count($classValue) > 0){
             foreach ($classValue as $v) {
-                if(!empty($v->getUri())){                    
-                    $classVal[] = $v->getUri();                    
+                if(!empty($v->getUri())){
+                    $classVal[] = $v->getUri();
                 }
             }
         } else {
-            return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');            
+            return drupal_set_message($this->t('The acdh RDF Type is missing'), 'error');
         }
 
         $fedora = $this->OeawFunctions->initFedora();
@@ -130,8 +130,7 @@ class EditForm extends FormBase {
             foreach ($classVal as $cval) {
                 $res = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $cval);
                 // this will contains the onotology uri, what will helps to use to know
-                // which fields we need to show in the editing form                
-
+                // which fields we need to show in the editing form
                 if(count($res) > 0){
                     $editUriClass = $res[0]->getUri();
                     $actualClassUri = $cval;
@@ -142,12 +141,10 @@ class EditForm extends FormBase {
             return drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
         }
 
-        if (empty($editUriClass)) {
-            
-            return drupal_set_message($this->t('URI Class is empty!!'), 'error');
-            return false;
+        if (empty($editUriClass)) {            
+            return drupal_set_message($this->t('URI Class is empty!!'), 'error');            
         }
-        //http://xmlns.com/foaf/spec/Image
+        
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = $this->OeawStorage->getClassMeta($editUriClass);
         
@@ -162,12 +159,23 @@ class EditForm extends FormBase {
         $form['resource_title'] = array(
             '#markup' => '<h2><b><a href="'.$editUri.'" target="_blank">'.$resTitle.'</a></b></h2>',
         );
+        $editUriClassMetaFields[] = array("id" => "http://purl.org/dc/terms/identifier", "label" => "");
+        $editUriClassMetaFields[] = array("id" => "http://purl.org/dc/terms/contributor", "label" => "");
+
+        //get the propertys which have more than one values
+        $duplicates = $this->OeawFunctions->getDuplicatesFromArray($editUriClassMetaFields, "id");
+                
+        
+        if(count($duplicates) > 0){}
+        
         
         for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
-
+            
             // get the field values based on the edituri and the metadata uri
             //if the property is not exists then we need to avoid the null error message
+            
             $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
+            
             $oldLabel = "";
             
             if (!empty($value)) {
@@ -176,8 +184,7 @@ class EditForm extends FormBase {
                 $value = $value["value"];
                 // if the input field value contains the id.acdh... then we check the labels
                 // and shows the old Label to the user
-                if (strpos($value, $this->config->get('fedoraIdNamespace')) !== false) {
-                    
+                if (strpos($value, $this->config->get('fedoraIdNamespace')) !== false) {                    
                     $resOT = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $value);
                     foreach($resOT as $ot){
                         if(!empty($ot->getMetadata()->label())){
@@ -201,9 +208,9 @@ class EditForm extends FormBase {
             // if the label is the isPartOf or identifier, then we need to disable the editing
             // to the users, they do not have a permission to change it
             if($editUriClassMetaFields[$i]["id"] === $this->config->get('fedoraRelProp') || $editUriClassMetaFields[$i]["id"] === $this->config->get('fedoraIdProp')){
-                $attributes = array('readonly' => 'readonly');
+                $attributes = array('readonly' => 'readonly', 'data-repoid' => $editUriClassMetaFields[$i]["id"]);
             } else {
-                $attributes = array();
+                $attributes = array('data-repoid' => $editUriClassMetaFields[$i]["id"]);
             }
             
             // generate the form fields
@@ -234,6 +241,8 @@ class EditForm extends FormBase {
                     ),                    
                   ],
             );
+            
+            
            
             //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
@@ -254,8 +263,7 @@ class EditForm extends FormBase {
 
         $checkDigRes = in_array($actualClassUri, $digitalResources);
 
-        // if we have a digital resource then the user must upload a binary resource
-        //
+        // if we have a digital resource then the user must upload a binary resource        
         if ($checkDigRes == true || $isImage == true) {
             $form['file'] = array(
                 '#type' => 'managed_file',
@@ -266,6 +274,8 @@ class EditForm extends FormBase {
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, and images etc....'),
             );            
         }
+        
+  
      
         $form['submit'] = array(
             '#type' => 'submit',
@@ -274,10 +284,8 @@ class EditForm extends FormBase {
        
         return $form;
     }
-
     
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
-
         //get the formelements
         $formElements = $form_state->getUserInput();        
         $result = array();
@@ -295,7 +303,8 @@ class EditForm extends FormBase {
     public function submitForm(array &$form, FormStateInterface $form_state) {
 
         //get the form stored values
-        $editForm = $this->store->get('formEditFields');
+        $editForm = $this->store->get('formEditFields');        
+        //$form_state->getUserInput()        
         $editOldForm = $this->store->get('formEditOldFields');
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
@@ -347,13 +356,11 @@ class EditForm extends FormBase {
 
         foreach ($uriAndValue as $key => $value) {
             if (!empty($value)) {
-                if (strpos($value, 'http') !== false) {
-                    //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
+                if (strpos($value, 'http') !== false) {                    
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addResource($key, $value);
-                } else {
-                    //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");                    
+                } else {                    
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addLiteral($key, $value);
@@ -362,26 +369,27 @@ class EditForm extends FormBase {
         }
 
         try {
-
             $fr->setMetadata($meta);
             $fr->updateMetadata();
 
-            if (!empty($fUri)) {
-                $fr->updateContent($fUri);
-            }
+            if (!empty($fUri)) { $fr->updateContent($fUri); }
 
             $fedora->commit();
             $this->deleteStore($editForm);            
             $encodeUri = $this->OeawFunctions->createDetailsUrl($resourceUri, 'encode');
+            
+            if (strpos($encodeUri, 'fcr:metadata') !== false) {
+                $encodeUri = $encodeUri.'/fcr:metadata';
+            }
+            
             $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => $encodeUri]));
             $response->send();
             return;
             
         } catch (Exception $ex) {
-
             $fedora->rollback();
             $this->deleteStore($editForm);
-            drupal_set_message($this->t('Error during the saving process'), 'error');
+            return drupal_set_message($this->t('Error during the saving process'), 'error');
         }
     }
 
@@ -390,7 +398,6 @@ class EditForm extends FormBase {
      * the multistep form.
      */
     protected function deleteStore($editForm) {
-
         foreach ($metadata as $key => $value) {
             $this->store->delete($key);
         }

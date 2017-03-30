@@ -152,6 +152,10 @@ abstract class NewResourceFormBase extends FormBase {
 
             $encodeUri = $this->OeawFunctions->createDetailsUrl($uri, 'encode');
             
+            if (strpos($encodeUri, 'fcr:metadata') !== false) {
+                $encodeUri = $encodeUri.'/fcr:metadata';
+            }
+            
             $datatable = array(
                 '#theme' => 'oeaw_success_resource',
                 '#result' => $encodeUri,

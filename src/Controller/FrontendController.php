@@ -36,14 +36,12 @@ class FrontendController extends ControllerBase {
     private $OeawFunctions;
     private $config;
 
-
     public function __construct() {  
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
         $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         
-    }
-    
+    }    
     
     public function oeaw_ac_form(){        
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AutoCompleteForm');
@@ -341,7 +339,7 @@ class FrontendController extends ControllerBase {
             '#theme' => 'oeaw_detail_dt',
             '#result' => $results,            
             '#userid' => $uid,            
-            '#hasBinary' => $hasBinary,            
+            '#hasBinary' => $results["hasBinary"],
             '#childResult' => $childResult,         
             '#editResData' => $editResData,
             '#attached' => [
@@ -419,9 +417,12 @@ class FrontendController extends ControllerBase {
                         
                         //generate the result array
                         foreach($ids as $v){
+                            if(!$v["uri"]){
+                                break;
+                            }
                             $data[$x]["uri"] = $v["uri"];
-                            ;
-                            if(empty($v["title"])){                                
+                            
+                            if(empty($v["title"])){
                                 $v["title"] = "";
                             }
                             $data[$x]["title"] = $v["title"];
@@ -432,16 +433,16 @@ class FrontendController extends ControllerBase {
                         $data[$x]["value"] = $metaValue;
                         $data[$x]["title"] = $j->getMetadata()->label()->__toString();
                         $x++;
-                    }                    
-                }                
+                    }
+                }
             }
-        }        
+        }
 
-        if(!empty($data) && !empty($stringSearch)){            
-            $data = array_merge($data, $stringSearch);                        
-        }elseif (empty($data)) {            
+        if(!empty($data) && !empty($stringSearch)){
+            $data = array_merge($data, $stringSearch);
+        }elseif (empty($data)) {
             $data = $stringSearch;
-        }        
+        }
    
         if(count($data) > 0){
             $i = 0;            
@@ -560,6 +561,7 @@ class FrontendController extends ControllerBase {
         }
         
         $response = new JsonResponse($matches);
+        
         $response->setCharset('utf-8');
         $response->headers->set('charset', 'utf-8');
         $response->headers->set('Content-Type', 'application/json');

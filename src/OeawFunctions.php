@@ -43,6 +43,28 @@ class OeawFunctions {
         
         return $fedora;
     }
+    
+    public function getDuplicatesFromArray(array $data, string $array_key): array{
+        
+        if(empty($data) || empty($array_key)){
+            return drupal_set_message(t('Data is missing!'), 'error');
+        }
+        
+        $result = array();
+        
+        foreach ($data as $current_key => $current_array) {        
+            foreach ($data as $search_key => $search_array) {
+                if ($search_array[$array_key] == $current_array[$array_key]) {
+                    if ($search_key != $current_key) {
+                        $result[$search_array[$array_key]][] = $search_key;
+                    }
+                }
+            }
+        }
+        
+        return $result;
+        
+    }
         
     /**
      * 
@@ -410,7 +432,7 @@ class OeawFunctions {
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
 
                     // if there is a thumbnail
-                    if($v == \Drupal\oeaw\ConnData::$imageThumbnail){                        
+                    if($v == \Drupal\oeaw\ConnData::$imageThumbnail){
                         if($item){
                                                     
                             $imgData = $OeawStorage->getImage($item);
@@ -429,6 +451,7 @@ class OeawFunctions {
                     }
                     
                     if (strpos($item, $this->config->get('fedoraIdNamespace')) !== false) {
+                        
                         $itemRes = $OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), $item);
                         
                         if(count($itemRes) > 0){
@@ -439,7 +462,7 @@ class OeawFunctions {
                             }else if($itemRes[0]["name"]){
                                 $item = $itemRes[0]["name"].' : '.$item;
                             }
-                        }                        
+                        }
                     }
                     
                     if(get_class($item) == "EasyRdf\Resource"){
@@ -449,7 +472,7 @@ class OeawFunctions {
                         }                        
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
                         $results[$i]["value"][] = $item->getUri();
-                        if($item->getUri() == \Drupal\oeaw\ConnData::$fedoraBinary){ $hasBinary = $uri;}
+                        if($item->getUri() == \Drupal\oeaw\ConnData::$fedoraBinary){ $results["hasBinary"] = $uri; }
 
                     }else if(get_class($item) == "EasyRdf\Literal"){
                         
@@ -469,7 +492,7 @@ class OeawFunctions {
                 $i++;
             } 
         }
-
+        
         return $results;
     }
     
