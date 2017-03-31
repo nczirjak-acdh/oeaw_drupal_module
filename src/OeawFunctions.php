@@ -425,6 +425,7 @@ class OeawFunctions {
         
         $results = array();
         $rootMeta =  $this->makeMetaData($uri);
+        
         if(count($rootMeta) > 0){
             $i = 0;
             foreach($rootMeta->propertyUris($uri) as $v){
@@ -450,32 +451,25 @@ class OeawFunctions {
                         }
                     }
                     
-                    if (strpos($item, $this->config->get('fedoraIdNamespace')) !== false) {
-                        
-                        $itemRes = $OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), $item);
-                        
-                        if(count($itemRes) > 0){
-                            if($itemRes[0]["title"]){
-                                $item = $itemRes[0]["title"].' : '.$item;
-                            }else if($itemRes[0]["label"]){
-                                $item = $itemRes[0]["label"].' : '.$item;
-                            }else if($itemRes[0]["name"]){
-                                $item = $itemRes[0]["name"].' : '.$item;
-                            }
-                        }
-                    }
-                    
-                    if(get_class($item) == "EasyRdf\Resource"){
-                        
+                    if(get_class($item) == "EasyRdf\Resource"){                       
                         if($this->createPrefixesFromString($v) === false){
                             return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
-                        }                        
+                        }
+                        //check the title based on the acdh id
+                        $resVal = $item->getUri();
+                        
+                        $resVal = $this->getTitleByTheFedIdNameSpace($resVal);
+                        if(empty($resVal)){
+                            $resVal = $item->getUri();
+                        }
+                        
+                        $results[$i]["value"][] = $resVal;
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
-                        $results[$i]["value"][] = $item->getUri();
+                        
                         if($item->getUri() == \Drupal\oeaw\ConnData::$fedoraBinary){ $results["hasBinary"] = $uri; }
 
                     }else if(get_class($item) == "EasyRdf\Literal"){
-                        
+                                                
                         if($this->createPrefixesFromString($v) === false){
                             return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
                         }
@@ -494,6 +488,37 @@ class OeawFunctions {
         }
         
         return $results;
+    }
+    /**
+     * Get the title if the url contains the fedoraIDNamespace
+     * 
+     * 
+     * @param string $string
+     * @return string
+     */
+    function getTitleByTheFedIdNameSpace(string $string): string{
+        
+        if(!$string) {
+            return false;
+        }
+        
+        $return = "";
+        $OeawStorage = new OeawStorage();
+                
+        if (strpos($string, $this->config->get('fedoraIdNamespace')) !== false) {            
+            $itemRes = $OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), $string);
+            if(count($itemRes) > 0){
+                if($itemRes[0]["title"]){
+                    $return = $itemRes[0]["title"].' : '.$string;
+                }else if($itemRes[0]["label"]){
+                    $return = $itemRes[0]["label"].' : '.$string;
+                }else if($itemRes[0]["name"]){
+                    $return = $itemRes[0]["name"].' : '.$string;
+                }
+            }
+        }
+        
+        return $return;
     }
     
        

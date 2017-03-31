@@ -22,19 +22,21 @@
     </thead>
     <tbody>  
             {% for item in result %}
-            <tr>                
-                <td>{{ item.property }}</td>
-                <td>
-                    {% if item.value is iterable %}
-                        {% for value in item.value %}
-                            {{ value }}
-                            <br>
-                       {% endfor %}     
-                    {% else %}                        
-                        {{ item.value }}                        
-                    {% endif %}
-                </td>
-            </tr>
+                {%  if item.property != "" %}    
+                <tr>                
+                    <td>{{ item.property }}</td>
+                    <td>
+                        {% if item.value is iterable %}
+                            {% for value in item.value %}
+                                {{ value }}
+                                <br>
+                           {% endfor %}     
+                        {% else %}                        
+                            {{ item.value }}                        
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
         {% endfor %}                                          
     </tbody>        
 </table>

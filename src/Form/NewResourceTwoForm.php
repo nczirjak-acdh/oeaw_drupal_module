@@ -55,7 +55,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         }
         
         $classGraph = $this->OeawFunctions->makeGraph($class);
+        
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
+        
         if(!empty($classID)){
             $classValue = $classID["value"];
         }
@@ -81,7 +83,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $rootGraph = $this->OeawFunctions->makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $rootID = array();
+        
         $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
+        $fedRes = $this->OeawFunctions->makeMetaData($root);
         
         //get the value of the property
         if(count($rootID) > 0 ){
@@ -110,6 +114,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }
             
             //|| $editUriClassMetaFields[$i]["id"] ===
+            
             if($m === $this->config->get('fedoraRelProp') ){
                 $defaultValue = $rootIdentifier;
                 $attributes = array('readonly' => 'readonly');
