@@ -205,7 +205,13 @@ class NewResourceTwoForm extends NewResourceFormBase  {
     
     public function validateForm(array &$form, FormStateInterface $form_state) 
     {    
+        if (strlen($form_state->getValue('title')) == 0) {
+            $form_state->setErrorByName('title', $this->t('Title is required'));
+        }
         
+        if (strlen($form_state->getValue('isPartOf')) == 0) {
+            $form_state->setErrorByName('isPartOf', $this->t('isPartOf is required'));
+        }
     }
 
     /**
