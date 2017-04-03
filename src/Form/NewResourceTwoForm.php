@@ -43,24 +43,32 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $class = $formVal['class'];
         $root =  $formVal['root'];
         
+        $fedora = new Fedora($this->config);        
+        $rootID = $fedora->getResourceByUri($root)->getId();
+        
+        //get the value of the property
+        if(count($rootID) > 0 ){
+            $rootIdentifier = $rootID;
+        }else {
+            return drupal_set_message($this->t('Your root element is missing! You cant add new resource without a root element!'), 'error');
+        }
+        
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->OeawStorage->getDigitalResources();
 
         //create the digitalResources array
         $digitalResources = array();
-        foreach($digitalResQuery as $dr){            
+        foreach($digitalResQuery as $dr){
             if(isset($dr["collection"])){
                 $digitalResources[] = $dr["id"];
-            }            
+            }
         }
         
         $classGraph = $this->OeawFunctions->makeGraph($class);
         
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
         
-        if(!empty($classID)){
-            $classValue = $classID["value"];
-        }
+        if(!empty($classID)){ $classValue = $classID["value"]; }
            
         //we store the ontology identifier for the saving process
         $this->store->set('ontologyClassIdentifier', $classValue);
@@ -82,17 +90,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         $rootGraph = $this->OeawFunctions->makeGraph($root);
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
-        $rootID = array();
         
-        $rootID = $rootGraph->get($root,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
         $fedRes = $this->OeawFunctions->makeMetaData($root);
-        
-        //get the value of the property
-        if(count($rootID) > 0 ){
-            $rootIdentifier = $rootID["value"];
-        }else {
-            return drupal_set_message($this->t('Your root element is missing! You cant add new resource without a root element!'), 'error');
-        }
                 
         $fieldsArray = array();       
         $expProp = "";
@@ -100,7 +99,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $label = "";
         $attributes = array();
         $labelVal = "";
-        foreach ($metadata as $m) {            
+        
+        foreach ($metadata as $m) {
 
             //we dont need the identifier, because doorkeeper will generate it automatically
             if($m === $this->config->get('fedoraIdProp')){
@@ -150,19 +150,18 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                         'type' => 'throbber',
                         // Message to show along progress graphic. Default: 'Please wait...'.
                         'message' => NULL,
-                    ),                    
+                    ),
                   ],
             );
 
             $labelVal = str_replace(' ', '+', $label);
             $form[$labelVal.':prop'] = array(
-                '#type' => 'hidden',                
+                '#type' => 'hidden',
                 '#value' => $m,
             );
 
             $fieldsArray[] = $label;
-            $fieldsArray[] = $labelVal.':prop';                
-            
+            $fieldsArray[] = $labelVal.':prop';            
         }
                
              
