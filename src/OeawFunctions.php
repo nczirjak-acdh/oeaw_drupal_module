@@ -127,8 +127,7 @@ class OeawFunctions {
         $ajax_response = array();
         $fedora = array();
         
-        $cfg = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($cfg);
+        $fedora = new Fedora($this->config);
         
         if($mode == "edit"){
             //create the old values and the new values arrays with the user inputs

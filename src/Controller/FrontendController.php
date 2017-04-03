@@ -123,19 +123,12 @@ class FrontendController extends ControllerBase {
         $string = $request->query->get('q');
         
         //check the user entered char's
-        if(strlen($string) < 3) {            
-            return new JsonResponse(array());
-        }
+        if(strlen($string) < 3) { return new JsonResponse(array()); }
         
         //f.e.: depositor
         $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
 
-        // this is the fedora.localhost url
-        //$resourceUri = base64_decode(strtr($prop2, '-_,', '+/='));
-
-        if(empty($propUri)){
-            return new JsonResponse(array());
-        }
+        if(empty($propUri)){ return new JsonResponse(array()); }
 
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config); 
@@ -148,7 +141,9 @@ class FrontendController extends ControllerBase {
             $propMeta = $prop->getMetadata();
             // check the range property in the res metadata
             $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
-        }  catch (\RuntimeException $e){}
+        }  catch (\RuntimeException $e){
+            return new JsonResponse(array());
+        }
 
         if($rangeRes === null){
             return new JsonResponse(array()); // range property is missing - no autocompletion
@@ -185,8 +180,10 @@ class FrontendController extends ControllerBase {
             }
 
             $meta = $i->getMetadata();
-            $acdhId = $meta->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
             
+            $acdhId = $meta->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
+            error_log("itt");
+            error_log($acdhId);
             if(empty($acdhId)){
                 continue;
             }
