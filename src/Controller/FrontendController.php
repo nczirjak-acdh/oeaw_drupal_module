@@ -181,13 +181,9 @@ class FrontendController extends ControllerBase {
 
             $meta = $i->getMetadata();
             
-            $acdhId = $meta->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
-            error_log("itt");
-            error_log($acdhId);
-            if(empty($acdhId)){
-                continue;
-            }
-            $acdhId = $acdhId->getUri();
+            //$acdhId = $meta->getResource(EasyRdfUtil::fixPropName($config->get('fedoraIdProp')));
+            $acdhId = $fedora->getResourceByUri($i->getUri());
+            $acdhId = $acdhId->getId();
          
             $label = empty($meta->label()) ? $acdhId : $meta->label();
             //because of the special characters we need to convert it
