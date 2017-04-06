@@ -77,8 +77,10 @@ class ClassForm extends FormBase
     * {@inheritdoc}.
     */
     public function buildForm(array $form, FormStateInterface $form_state) 
-    {          
-        $data = $this->OeawStorage->getClassesForSideBar();        
+    {
+        $data = $this->OeawStorage->getClassesForSideBar();
+        $searchClasses = array();
+        
         if(empty($data)){
              drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
              return;
@@ -88,13 +90,15 @@ class ClassForm extends FormBase
         $fields = array_keys($data[0]);
         
         $searchTerms = $this->OeawFunctions->createPrefixesFromArray($data, $fields);
+        $searchClasses = $searchTerms["type"];
+        asort($searchClasses);
         
         $i = 0;
-        foreach($searchTerms["type"] as $value){
+        foreach($searchClasses as $value){
             
             $form[$value] = array(
                 '#type' => 'submit',
-                '#name' => 'class',                
+                '#name' => 'class',
                 '#value' => $this->t($value." (".$searchTerms["typeCount"][$i].")"),
                 '#button_type' => 'primary',
                 '#prefix' => "<br/>",

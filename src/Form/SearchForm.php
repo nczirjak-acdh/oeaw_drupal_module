@@ -31,6 +31,7 @@ class SearchForm extends FormBase
     public function buildForm(array $form, FormStateInterface $form_state) 
     {   
         $propertys = array();
+        $searchTerms = array();
         $propertys = $this->OeawStorage->getAllPropertyForSearch();
         
         if(empty($propertys)){
@@ -39,13 +40,15 @@ class SearchForm extends FormBase
         }
         $fields = array();
         // get the fields from the sparql query 
-        $fields = array_keys($propertys[0]);
-        $searchTerms = array();
+        $fields = array_keys($propertys[0]);        
         $searchTerms = $this->OeawFunctions->createPrefixesFromArray($propertys, $fields);
+        
+        $searchTerms = $searchTerms["p"];
+        asort($searchTerms);
         
         if(count($searchTerms) > 0) {
         
-            foreach($searchTerms["p"] as $terms){
+            foreach($searchTerms as $terms){
                 $select[$terms] = t($terms);
             }
 
