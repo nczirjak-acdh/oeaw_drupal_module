@@ -110,7 +110,7 @@ class OeawStorage {
             return $getResult;
             
         } catch (Exception $ex) {            
-            return drupal_set_message(t('There was an error in the function: getRootFromDB'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
     }
 
@@ -143,7 +143,7 @@ class OeawStorage {
             
         } catch (Exception $ex) {
             
-            return drupal_set_message(t('There was an error in the function: getAllPropertyForSearch'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }        
     }
        
@@ -165,7 +165,7 @@ class OeawStorage {
         if(!filter_var($property, FILTER_VALIDATE_URL)){
             $property = $this->OeawFunctions->createUriFromPrefix($property);
             if($property === false){
-                return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
+                return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error'); 
             }
            
         }else if(filter_var($property, FILTER_VALIDATE_URL)){            
@@ -176,7 +176,7 @@ class OeawStorage {
         if(!filter_var($value, FILTER_VALIDATE_URL)){
             $value = $this->OeawFunctions->createUriFromPrefix($value);
             if($value === false){
-                return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
+                return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error'); 
             }
            
         }else if(filter_var($value, FILTER_VALIDATE_URL)){            
@@ -232,7 +232,7 @@ class OeawStorage {
             return $getResult;                
         
         } catch (Exception $ex) {            
-            return drupal_set_message(t('There was an error in the function: getDataByProp'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
     }
     
@@ -275,7 +275,7 @@ class OeawStorage {
             return $getResult; 
             
         } catch (Exception $ex) {
-            return drupal_set_message(t('There was an error in the function: getClass'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }    
         
     }
@@ -369,7 +369,7 @@ class OeawStorage {
             return $getResult;
             
         } catch (Exception $ex) {            
-             return drupal_set_message(t('There was an error in the function: getDigitalResources'), 'error');
+             return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
     }
     
@@ -455,7 +455,7 @@ class OeawStorage {
             
             
         } catch (Exception $ex) {
-            return drupal_set_message(t('There was an error in the function: getClassMeta'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
       
     }
@@ -503,7 +503,7 @@ class OeawStorage {
             return $res;            
          
         } catch (Exception $ex) {
-            return drupal_set_message(t('There was an error in the function: getImage'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
     }
     
@@ -568,7 +568,7 @@ class OeawStorage {
             return $getResult;
 
         } catch (Exception $ex) {
-            return drupal_set_message(t('There was an error in the function: searchForData'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
         
     }
@@ -600,6 +600,7 @@ class OeawStorage {
                         SELECT ?type  
                         WHERE {[] a ?type} GROUP BY ?type ';
 */
+
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
@@ -607,7 +608,7 @@ class OeawStorage {
             return $getResult;
 
         } catch (Exception $ex) {
-            return drupal_set_message(t('There was an error in the function: getClassesForSideBar'), 'error');
+            return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
         
     }

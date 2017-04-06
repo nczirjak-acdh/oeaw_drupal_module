@@ -153,7 +153,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                     ),
                   ],
             );
-
+            
             $labelVal = str_replace(' ', '+', $label);
             $form[$labelVal.':prop'] = array(
                 '#type' => 'hidden',
@@ -163,8 +163,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             $fieldsArray[] = $label;
             $fieldsArray[] = $labelVal.':prop';            
         }
-               
-             
+        
+        
         $this->store->set('form2Fields', $fieldsArray);
         // if we have a digital resource then the user must upload a binary resource
         if($checkDigRes == true){

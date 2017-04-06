@@ -168,12 +168,9 @@ class OeawFunctions {
             $resNL = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), (string)$value);
        
             foreach($resNL as $nl){
-                if(!empty($nl->getMetadata()->label())){
-                    //$label = (string)utf8_decode($nl->getMetadata()->label());
+                if(!empty($nl->getMetadata()->label())){                    
                     $label = htmlentities($nl->getMetadata()->label(), ENT_QUOTES, "UTF-8");
-                }else {
-                    $label = "";
-                }
+                }else { $label = ""; }
             }
 
             if(!empty($label)){

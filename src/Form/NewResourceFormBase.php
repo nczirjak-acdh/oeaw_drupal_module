@@ -117,7 +117,7 @@ abstract class NewResourceFormBase extends FormBase {
         foreach($uriAndValue as $key => $value){        
             if(!empty($value)){
                 
-                if (strpos($value, 'http') !== false) {
+                if (strpos(substr($value,0,4), 'http') !== false) {
                     //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
                     $meta->addResource($key, $value);
                 } else {

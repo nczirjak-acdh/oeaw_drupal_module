@@ -317,7 +317,7 @@ class EditForm extends FormBase {
             //create the file object
             $fObj = file_load($fileID);
             if (!empty($fObj) || isset($fObj)) {
-                //get the temp file uri        
+                //get the temp file uri
                 $fUri = $fObj->getFileUri();
             }
         }
@@ -345,7 +345,6 @@ class EditForm extends FormBase {
         }
 
         $config = new Config($_SERVER["DOCUMENT_ROOT"] . '/modules/oeaw/config.ini');
-
         $fedora = new Fedora($config);
         $fedora->begin();
         $resourceUri = preg_replace('|^.*/rest/|', '', $resourceUri);
@@ -353,14 +352,14 @@ class EditForm extends FormBase {
         $fr = $fedora->getResourceByUri($resourceUri);
         //get the existing metadata
         $meta = $fr->getMetadata();
-
+        
         foreach ($uriAndValue as $key => $value) {
             if (!empty($value)) {
-                if (strpos($value, 'http') !== false) {                    
+                if (strpos(substr($value,0,4), 'http') !== false) {
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addResource($key, $value);
-                } else {                    
+                } else {
                     $meta->delete($key);
                     //insert the property with the new key
                     $meta->addLiteral($key, $value);
