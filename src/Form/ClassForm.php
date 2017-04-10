@@ -82,28 +82,40 @@ class ClassForm extends FormBase
         $searchClasses = array();
         
         if(empty($data)){
-             drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
-             return;
+            return drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');             
         }
         
         /* get the fields from the sparql query */
         $fields = array_keys($data[0]);
         
-        $searchTerms = $this->OeawFunctions->createPrefixesFromArray($data, $fields);
-        $searchClasses = $searchTerms["type"];
+        $searchTerms = $this->OeawFunctions->createPrefixesFromArray($data, $fields);        
+        
+        $i = 0;
+        foreach($searchTerms["type"] as $v){
+            $searchClasses[$i]["type"] = $v;
+            $searchClasses[$i]["value"] = $searchTerms["typeCount"][$i];
+            $i++;
+        }
         asort($searchClasses);
         
         $i = 0;
-        foreach($searchClasses as $value){
-            
-            $form[$value] = array(
-                '#type' => 'submit',
-                '#name' => 'class',
-                '#value' => $this->t($value." (".$searchTerms["typeCount"][$i].")"),
-                '#button_type' => 'primary',
-                '#prefix' => "<br/>",
-            );
+        $lbl = "";
+        $count = "";
 
+        foreach($searchClasses as $value){
+            foreach($value as $k => $v){
+                
+                if($k == "type"){ $lbl = $v; }                
+                if($k == "value"){ $count = $v; }
+                
+                $form[$lbl] = array(
+                    '#type' => 'submit',
+                    '#name' => 'class',
+                    '#value' => $this->t($lbl." (".$count.")"),                    
+                    '#button_type' => 'primary',
+                    '#prefix' => "<br/>",
+                );
+            }            
             $i++;
         }
        
