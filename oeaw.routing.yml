@@ -40,7 +40,7 @@ oeaw_delete:
 
         
 oeaw_resources:
-  path: '/oeaw_resources'
+  path: '/oeaw_resources/{metakey}/{metavalue}'
   defaults:
     _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_resources'
   requirements:
