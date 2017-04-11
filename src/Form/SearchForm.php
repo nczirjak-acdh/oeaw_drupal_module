@@ -6,6 +6,10 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\user\PrivateTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\oeaw\OeawStorage;
 use Drupal\oeaw\OeawFunctions;
 
@@ -93,15 +97,22 @@ class SearchForm extends FormBase
   
     public function submitForm(array &$form, FormStateInterface $form_state) {
         
+        
+        
+        $metakey = $form_state->getValue('metakey');
+        $metavalue = $form_state->getValue('metavalue');
+        $metakey = urlencode($metakey);
+        $metavalue = urlencode($metavalue);
+        
+        $form_state->setRedirect('oeaw_resources', ["metakey" => $metakey, "metavalue" => $metavalue]); 
     
-        foreach ($form_state->getValues() as $key => $value) {
+/*        foreach ($form_state->getValues() as $key => $value) {
         
             // I pass the values with the session to the redirected url where i generating the tables
-            $_SESSION['oeaw_form_result_'.$key] = $value;            
+            $_SESSION['oeaw_form_result_'.$key] = $value;
             $url = Url::fromRoute('oeaw_resources');
             $form_state->setRedirectUrl($url);           
-           
-        }
+        }*/
     }
   
 }

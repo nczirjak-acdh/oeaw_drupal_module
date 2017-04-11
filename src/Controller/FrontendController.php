@@ -366,12 +366,21 @@ class FrontendController extends ControllerBase {
      */
     public function oeaw_resources():array {
         
-        $metaKey = $_SESSION['oeaw_form_result_metakey'];
-        $metaValue = $_SESSION['oeaw_form_result_metavalue'];
+        drupal_get_messages();
         
+        $url = Url::fromRoute('<current>');
+        $internalPath = $url->getInternalPath();
+        $interPathArray = explode("/", $internalPath);
+        
+        if($interPathArray[0] == "oeaw_resources"){            
+            $metaKey = urldecode($interPathArray[1]);
+            $metaValue = urldecode($interPathArray[2]);            
+        }else{
+            return drupal_set_message(t('There is no data -> Search'), 'error');        
+        }
         $uid = \Drupal::currentUser()->id();
         //normal string seacrh
-       
+
         $metaKey = $this->OeawFunctions->createUriFromPrefix($metaKey);
         if($metaKey === false){
             return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
