@@ -40,6 +40,10 @@ class OeawStorage {
         'owlClass' => 'http://www.w3.org/2002/07/owl#Class',
         'rdfsDomain' => 'http://www.w3.org/2000/01/rdf-schema#domain',
         'dctLabel' => 'http://purl.org/dc/terms/label',
+        'owlOnProperty' => 'http://www.w3.org/2002/07/owl#onProperty',
+        'owlCardinality' => 'http://www.w3.org/2002/07/owl#cardinality',
+        'owlMinCardinality' => 'http://www.w3.org/2002/07/owl#minCardinality',
+        'owlMaxCardinality' => 'http://www.w3.org/2002/07/owl#maxCardinality'        
     );
     
     private $apiUrl;
@@ -99,9 +103,9 @@ class OeawStorage {
             $q2->setJoinClause('filter not exists');
             $q->addSubquery($q2);            
             $q->setSelect(array('?uri', '?title'));
-        
+            $q->setOrderBy(array('UCASE(str(?title))'));
             $query= $q->getQuery();
-        
+            
             $result = $this->fedora->runSparql($query);
             $fields = $result->getFields(); 
             
@@ -266,9 +270,10 @@ class OeawStorage {
             $q->addParameter((new HasValue($rdfType, $owlClass))->setSubVar('?uri'));
             $q->addParameter(new HasTriple('?uri', $rdfsLabel, '?title'));
             $q->setSelect(array('?uri', '?title'));
+            $q->setOrderBy(array('UCASE(str(?title))'));
             $query = $q->getQuery();
-            $result = $this->fedora->runSparql($query);
-                        
+            
+            $result = $this->fedora->runSparql($query);                        
             $fields = $result->getFields(); 
             $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
@@ -279,7 +284,7 @@ class OeawStorage {
         }    
         
     }
-    
+   
     /* 
      *
      * Get the digital rescources to we can know which is needed a file upload
@@ -376,7 +381,7 @@ class OeawStorage {
     
     /* 
      *
-     *  Get the digital rescources Meta data by ResourceUri
+     *  Get the digital rescources Meta data and the cardinality data by ResourceUri
      *
      * @param string $classURI 
      *
@@ -399,9 +404,13 @@ class OeawStorage {
             $rdfsSubClass = self::$sparqlPref['rdfsSubClass'];
             $rdfsDomain = self::$sparqlPref["rdfsDomain"];
             $dctLabel = self::$sparqlPref["dctLabel"];
+            $owlOnProperty = self::$sparqlPref["owlOnProperty"];
+            $owlCardinality = self::$sparqlPref["owlCardinality"];
+            $owlMinCardinality = self::$sparqlPref["owlMinCardinality"];
+            $owlMaxCardinality = self::$sparqlPref["owlMaxCardinality"];
             
             $q = new Query();            
-            $q->setSelect(array('?id', '?label'));            
+            $q->setSelect(array('?id', '?cardinality', '?minCardinality', '?maxCardinality' ));            
             
             $q3 = new Query();
             $q3->addParameter(new HasTriple($classURI, array( $idProp, '/', '^', $rdfsDomain, ), '?property'));
@@ -409,27 +418,38 @@ class OeawStorage {
             $q2 = new Query();
             
             $q4 = new Query();
-            $q4->addParameter(new HasTriple($classURI, array( $rdfsSubClass, '/', '(', '^', $idProp, '/', $rdfsSubClass,')', '*', '/', '^', $rdfsDomain, ), '?property'));           
+            $q4->addParameter(new HasTriple($classURI, array( $rdfsSubClass, '/', '(', '^', $idProp, '/', $rdfsSubClass,')', '*', '/', '^', $rdfsDomain, ), '?property'));
             $q4->setJoinClause('union');
             
             $q5 = new Query();
-            $q5->addParameter(new HasTriple('?property', $idProp, '?id'));            
+            $q5->addParameter(new HasTriple('?property', $idProp, '?id'));
             
-            $q6 = new Query();
-            $q6->addParameter(new HasTriple('?property', $dctLabel, '?label'));            
-            $q6->setJoinClause('optional');
+            
+            $q6_1 = new Query();
+            $q6_1->addParameter(new HasTriple('?property', $owlCardinality, '?cardinality'));
+            $q6_1->setJoinClause('optional');
+            
+            $q6_2 = new Query();
+            $q6_2->addParameter(new HasTriple('?property', $owlMinCardinality, '?minCardinality'));
+            $q6_2->setJoinClause('optional');
+            
+            $q6_3 = new Query();
+            $q6_3->addParameter(new HasTriple('?property', $owlMaxCardinality, '?maxCardinality'));
+            $q6_3->setJoinClause('optional');
+            
             
             $q2->addSubquery($q3);
             $q2->addSubquery($q4);
             $q->addSubquery($q2);
-            $q->addSubquery($q5);
-            $q->addSubquery($q6);
+            $q->addSubquery($q5);            
+            $q->addSubquery($q6_1);
+            $q->addSubquery($q6_2);
+            $q->addSubquery($q6_3);
             
             $q->setOrderBy(array('?id'));
             $query = $q->getQuery();
-            
-            
-        //HasTriple('?class', array('(', 'rdfs:subClassOf', '/', '^', 'dct:identifier', ')', '*'), 'acdh:DigitalCollection')
+         
+            //HasTriple('?class', array('(', 'rdfs:subClassOf', '/', '^', 'dct:identifier', ')', '*'), 'acdh:DigitalCollection')
 
 /*
             $query = self::$prefixes . ' 
@@ -594,7 +614,7 @@ class OeawStorage {
             $q->setOrderBy(array('?aaa'));
             $q->setGroupBy(array('?type'));
             $query = $q->getQuery();
-         
+            
             /*   $query =
                     self::$prefixes . ' 
                         SELECT ?type  
