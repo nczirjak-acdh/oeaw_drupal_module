@@ -11,7 +11,7 @@ oeaw-styles:
         https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js: { type: external, minified: true }
         js/datatable_init.js: {}
         js/lightbox.js: {}        
-oeaw_edit        :
+oeaw_edit:
     version: 1.0.0
     js:
         commands.js; {}

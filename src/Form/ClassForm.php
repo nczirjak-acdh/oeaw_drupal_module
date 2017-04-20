@@ -135,21 +135,11 @@ class ClassForm extends FormBase
   
   
     public function submitForm(array &$form, FormStateInterface $form_state) {
-            
         
         $classes = $form_state->getValue('class');
-
-        //$tempstore = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->set('classes_search', '');
-        /*$tempstore = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->set('classes_search', $classes);
-                
-        $class = \Drupal::service('user.shared_tempstore')->get('oeaw_module_tempstore')->get('classes_search');*/
-     
-        //$url = Url::fromRoute('oeaw_classes_result');        
         $classes = urlencode($classes);
-        
         $form_state->setRedirect('oeaw_classes_result', ["search_classes" => $classes]); 
         //$form_state->setRedirectUrl($url);
-        
     }
   
 }

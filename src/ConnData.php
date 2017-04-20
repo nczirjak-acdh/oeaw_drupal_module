@@ -22,14 +22,14 @@ class ConnData
     );
     
     public static $prefixesToChange = array(        
-        "http://fedora.info/definitions/v4/repository#" => "fedora",        
+        "http://fedora.info/definitions/v4/repository#" => "fedora",
         "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#" => "ebucore",
-        "http://www.loc.gov/premis/rdf/v1#" => "premis",        
-        "http://www.jcp.org/jcr/nt/1.0#" => "nt",        
-        "http://www.w3.org/2000/01/rdf-schema#" => "rdfs",                
+        "http://www.loc.gov/premis/rdf/v1#" => "premis",
+        "http://www.jcp.org/jcr/nt/1.0#" => "nt",
+        "http://www.w3.org/2000/01/rdf-schema#" => "rdfs",
         "http://www.w3.org/ns/ldp#" => "ldp",
         "http://www.iana.org/assignments/relation/" => "iana",
-        "https://vocabs.acdh.oeaw.ac.at/#" => "acdh",        
+        "https://vocabs.acdh.oeaw.ac.at/#" => "acdh",
         "http://purl.org/dc/elements/1.1/" => "dc",
         "http://purl.org/dc/terms/" => "dct",
         "http://purl.org/dc/terms/" => "dcterms",

@@ -54,16 +54,14 @@ abstract class NewResourceFormBase extends FormBase {
    * @param \Drupal\Core\Session\AccountInterface $current_user
    */
     
-    public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
-    
+    public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {    
         $this->tempStoreFactory = $temp_store_factory;
         $this->sessionManager = $session_manager;
         $this->currentUser = $current_user;
         $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $this->store = $this->tempStoreFactory->get('multistep_data');
         $this->OeawStorage = new OeawStorage();
-        $this->OeawFunctions = new OeawFunctions();
-        
+        $this->OeawFunctions = new OeawFunctions();        
     }
     
     public static function create(ContainerInterface $container){
@@ -83,6 +81,7 @@ abstract class NewResourceFormBase extends FormBase {
         }
         
         $form = array();
+        
         $form['actions']['#type'] = 'actions';
         $form['actions']['submit'] = array(
             '#type' => 'submit',

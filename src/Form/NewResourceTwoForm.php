@@ -14,7 +14,6 @@ use InvalidArgumentException;
 use RuntimeException;
 use Drupal\oeaw\OeawFunctions;
 
-
 class NewResourceTwoForm extends NewResourceFormBase  {
     
     /* 
@@ -35,7 +34,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
      * @return void
     */
     public function buildForm(array $form, FormStateInterface $form_state) {
-
+        
         $form = parent::buildForm($form, $form_state);
         $form_state->disableCache();
         // get form page 1 stored values
@@ -55,7 +54,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->OeawStorage->getDigitalResources();
-
         //create the digitalResources array
         $digitalResources = array();
         foreach($digitalResQuery as $dr){
@@ -64,12 +62,15 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }
         }
         
-        $classGraph = $this->OeawFunctions->makeGraph($class);
-        
+        $classGraph = $this->OeawFunctions->makeGraph($class);        
         $classID = $classGraph->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
         
         if(!empty($classID)){ $classValue = $classID["value"]; }
-           
+
+        if(empty($classValue)){
+            return drupal_set_message($this->t('ClassValue is empty!'), 'error');
+        }
+        
         //we store the ontology identifier for the saving process
         $this->store->set('ontologyClassIdentifier', $classValue);
         
@@ -78,13 +79,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $checkDigRes = in_array($classValue, $digitalResources);
               
         // get the actual class metadata
-        $metadataQuery = $this->OeawStorage->getClassMeta($class);  
-        $metadata = array();
-        if(count($metadataQuery) > 0){
-            foreach($metadataQuery as $m){                
-                $metadata[] = $m["id"];
-            }
-        }else {
+        $metadataQuery = $this->OeawStorage->getClassMeta($class);
+   
+        if(count($metadataQuery) < 0){
             return drupal_set_message($this->t('There is no metadata for this class'), 'error');
         }
         
@@ -93,40 +90,27 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         $fedRes = $this->OeawFunctions->makeMetaData($root);
                 
-        $fieldsArray = array();       
-        $expProp = "";
+        $fieldsArray = array();
         $defaultValue = "";
-        $label = "";
-        $attributes = array();
         $labelVal = "";
-        
-        foreach ($metadata as $m) {
-
+       
+        foreach ($metadataQuery as $m) {            
             //we dont need the identifier, because doorkeeper will generate it automatically
-            if($m === $this->config->get('fedoraIdProp')){
+            if($m["id"] === $this->config->get('fedoraIdProp')){
                continue; 
             }
             
-            $expProp = explode("/", $m);
-            $expProp = end($expProp);
-            if (strpos($expProp, '#') !== false) {
-               $expProp = str_replace('#', '', $expProp);
-            }
+            $attributes = array();
+            $label = $this->getLabel($m);
             
-            //|| $editUriClassMetaFields[$i]["id"] ===
+            //set the field cardinality values
+            $attributes = $this->setCardinality($m);
             
-            if($m === $this->config->get('fedoraRelProp') ){
+            if($m["id"] === $this->config->get('fedoraRelProp') ){
                 $defaultValue = $rootIdentifier;
-                $attributes = array('readonly' => 'readonly');
+                $attributes["readonly"] = "readonly";
             } else {
-                $defaultValue = $this->store->get($m) ? $this->store->get($m) : '';
-                $attributes = array();
-            }
-
-            if(empty($m['label']) || !isset($m['label'])){
-                $label = $expProp;
-            }else{
-                $label = $m['label'];
+                $defaultValue = $this->store->get($m["id"]) ? $this->store->get($m["id"]) : '';
             }
             
             $form[$label] = array(
@@ -136,7 +120,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                 '#attributes' => $attributes,
                 '#description' => ' ',
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
-                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m), '+/=', '-_,'), 'fieldName' => $label),
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m["id"]), '+/=', '-_,'), 'fieldName' => $label),
                 //create the ajax to we can display the selected uri title
                 '#ajax' => [
                     // Function to call when event on form element triggered.
@@ -157,9 +141,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             $labelVal = str_replace(' ', '+', $label);
             $form[$labelVal.':prop'] = array(
                 '#type' => 'hidden',
-                '#value' => $m,
+                '#value' => $m["id"],
             );
-
             $fieldsArray[] = $label;
             $fieldsArray[] = $labelVal.':prop';            
         }
@@ -187,12 +170,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             '#weight' => 0,
             '#url' => Url::fromRoute('oeaw_newresource_one'),
         );
-
         return $form;
     }
     
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
-
         //get the formelements
         $formElements = $form_state->getUserInput();
         $result = array();
@@ -213,7 +194,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             $form_state->setErrorByName('isPartOf', $this->t('isPartOf is required'));
         }
     }
-
     /**
      * {@inheritdoc}
      */
@@ -258,7 +238,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         foreach($propUrls as $key => $value){            
             $uriAndValue[$value] = $valuesArray[$key];            
         }       
-
         $this->store->set('propertysArray', $property);
         $this->store->set('valuesArray', $valuesArray);        
         $this->store->set('fileName', $fUri);
@@ -267,5 +246,52 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // Save the data
         parent::saveData();
     }
+    
+    /**
+     * 
+     * set the cardinality values to the field data attributes
+     * based on the metadata array
+     * 
+     * @param array $m
+     * @return array
+     */
+    private function setCardinality(array $m): array{
+        $attributes = array();
+        if(isset($m["cardinality"]) && !empty($m["cardinality"])){
+            $attributes["data-cardinality"] = $m["cardinality"];
+        }
 
+        if(isset($m["minCardinality"]) && !empty($m["minCardinality"])){
+            $attributes["data-mincardinality"] = $m["minCardinality"];
+        }
+
+        if(isset($m["maxCardinality"]) && !empty($m["maxCardinality"])){
+            $attributes["data-maxcardinality"] = $m["maxCardinality"];
+        }
+        
+        return $attributes;
+    }
+    
+    /**
+     * 
+     * create the label from the property
+     * 
+     * @param array $m
+     * @return string
+     */
+    private function getLabel(array $m): string {
+        
+        $expProp = array();
+        $label = "";
+        
+        $expProp = explode("/", $m["id"]);
+        $expProp = end($expProp);
+        if (strpos($expProp, '#') !== false) {
+           $expProp = str_replace('#', '', $expProp);
+        }
+        
+        $label = $expProp;
+        
+        return $label;
+    }
 }

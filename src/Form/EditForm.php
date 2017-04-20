@@ -279,7 +279,7 @@ class EditForm extends FormBase {
      
         $form['submit'] = array(
             '#type' => 'submit',
-            '#value' => t('Submit sample'),
+            '#value' => t('Submit'),
         );
        
         return $form;
