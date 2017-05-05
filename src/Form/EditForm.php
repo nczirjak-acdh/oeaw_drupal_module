@@ -85,34 +85,26 @@ class EditForm extends FormBase {
         $form_state->disableCache();
         //get the hash uri from the url, based on the drupal routing file
         $editHash = \Drupal::request()->get('uri');
-
-        $isImage = false;
-        
         if (empty($editHash)) {
             return drupal_set_message($this->t('The uri is not exists!'), 'error');            
         }
-
+        
+        $isImage = false;
         $editUri = $this->OeawFunctions->createDetailsUrl($editHash, 'decode');
       
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->OeawStorage->getDigitalResources();
         
         $digitalResources = array();
-
-        //we need that ones where the collection is true
-        foreach ($digitalResQuery as $dr) {
-            if (isset($dr["collection"])) {
-                $digitalResources[] = $dr["id"];
-            }
-        }
+        $digitalResources = $this->digitalResources($digitalResQuery);
+        
         //create and load the data to the graph
         $classGraph = $this->OeawFunctions->makeGraph($editUri);
 
         $classVal = array();
         //get tge identifier from the graph and convert the easyrdf_resource object to php array
         $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$rdfType));
-        
-        //$metadataQuery = $this->OeawStorage->getClassMeta($class); 
+                
         if(count($classValue) > 0){
             foreach ($classValue as $v) {
                 if(!empty($v->getUri())){
@@ -135,96 +127,77 @@ class EditForm extends FormBase {
                     $editUriClass = $res[0]->getUri();
                     $actualClassUri = $cval;
                     if($cval == \Drupal\oeaw\ConnData::$imageProperty ){ $isImage = true; }
-                }                
+                }
             }
         } else {
             return drupal_set_message($this->t('ACDH Vocabs missing from the Resource!!'), 'error');
         }
-
-        if (empty($editUriClass)) {            
-            return drupal_set_message($this->t('URI Class is empty!!'), 'error');            
+        
+        if (empty($editUriClass)) {
+            return drupal_set_message($this->t('URI Class is empty!!'), 'error');
         }
         
         //the actual fields for the editing form based on the editUriClass variable
         $editUriClassMetaFields = $this->OeawStorage->getClassMeta($editUriClass);
         
         if(empty($editUriClassMetaFields)){
-            return drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');            
+            return drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
         }
  
-        $attributes = array();        
-                
-        $resTitle = $classGraph->label($editUri);        
+        
+        $resTitle = $classGraph->label($editUri);
         
         $form['resource_title'] = array(
             '#markup' => '<h2><b><a href="'.$editUri.'" target="_blank">'.$resTitle.'</a></b></h2>',
         );
-        $editUriClassMetaFields[] = array("id" => "http://purl.org/dc/terms/identifier", "label" => "");
-        $editUriClassMetaFields[] = array("id" => "http://purl.org/dc/terms/contributor", "label" => "");
+        
+        $frmOldData = array();
+        
+        foreach($editUriClassMetaFields as $m){
+            $fieldValues = array();
+            $fieldValue = "";
+            $attributes = array();
+            $required = FALSE;
+            
+            $fieldValues = $classGraph->all($editUri, EasyRdfUtil::fixPropName($m["id"]));
+            //get the fields cardinality info
+            $attributes = $this->setCardinality($m);
 
-        //get the propertys which have more than one values
-        $duplicates = $this->OeawFunctions->getDuplicatesFromArray($editUriClassMetaFields, "id");
+            //if the input field has value then we need to check the type
+            if(count($fieldValues) !== 0){
+                if(get_class($fieldValues[0]) == "EasyRdf\Literal"){
+                    $fieldValue = $fieldValues[0]->getValue();                    
+                }
                 
-        
-        if(count($duplicates) > 0){}
-        
-        
-        for ($i = 0; $i < count($editUriClassMetaFields); $i++) {
-            
-            // get the field values based on the edituri and the metadata uri
-            //if the property is not exists then we need to avoid the null error message
-            
-            $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]));
+                if(get_class($fieldValues[0]) == "EasyRdf\Resource"){
+                    $fieldValue = $fieldValues[0]->getUri();
+                }
+            }
             
             $oldLabel = "";
-            
-            if (!empty($value)) {
-                //get the input fields values
-                $value = $classGraph->get($editUri, EasyRdfUtil::fixPropName($editUriClassMetaFields[$i]["id"]))->toRdfPhp();
-                $value = $value["value"];
-                // if the input field value contains the id.acdh... then we check the labels
-                // and shows the old Label to the user
-                if (strpos($value, $this->config->get('fedoraIdNamespace')) !== false) {                    
-                    $resOT = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $value);
-                    foreach($resOT as $ot){
-                        if(!empty($ot->getMetadata()->label())){
-                            $labelURL = (string)$value;
-                            $labelTxt = (string)utf8_decode($ot->getMetadata()->label());
-                            $oldLabel = "Old Value: <a href='$labelURL' target='_blank'>".$labelTxt."</a>";
-                        }else {
-                            $oldLabel = "";
-                        }
-                    }
-                }
-            } else {
-                $value = "";
-            }
-
-            // get the field uri s last part to show it as a label title
-            $label = explode("/", $editUriClassMetaFields[$i]["id"]);
-            $label = end($label);
-            $label = str_replace('#', '', $label);
-
+            $label = $this->getLabel($m["id"]);
             // if the label is the isPartOf or identifier, then we need to disable the editing
             // to the users, they do not have a permission to change it
-            if($editUriClassMetaFields[$i]["id"] === $this->config->get('fedoraRelProp') || $editUriClassMetaFields[$i]["id"] === $this->config->get('fedoraIdProp')){
-                $attributes = array('readonly' => 'readonly', 'data-repoid' => $editUriClassMetaFields[$i]["id"]);
-            } else {
-                $attributes = array('data-repoid' => $editUriClassMetaFields[$i]["id"]);
-            }
+            $attributes = $this->disableFields($m["id"], $attributes);
             
-            // generate the form fields
+            
+            $oldLabel = $this->getOldLabel($fieldValue, $classGraph, $fedora, $editUri, $m["id"]);
+            
+            if(isset($attributes["data-cardinality"]) || isset($attributes["data-mincardinality"])){ $required = TRUE; }
+            
+             // generate the form fields
             $form[$label] = array(
                 '#type' => 'textfield',
                 '#title' => $this->t($label),
-                '#default_value' => $value,
+                '#default_value' => $fieldValue,
+                '#required' => $required,
                 '#attributes' => $attributes,
                 '#field_suffix' => $oldLabel,
                 //description required a space, in other case the ajax callback will not works....
-                '#description' => ' ',
+                '#description' => $this->t($label.' description'),
                 //define the autocomplete route and values
                 '#autocomplete_route_name' => 'oeaw.autocomplete',
-                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($editUriClassMetaFields[$i]["id"]), '+/=', '-_,'), 'fieldName' => $label),
+                '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m["id"]), '+/=', '-_,'), 'fieldName' => $label),
                 //create the ajax to we can display the selected uri title
                 '#ajax' => [
                     // Function to call when event on form element triggered.
@@ -242,22 +215,141 @@ class EditForm extends FormBase {
                   ],
             );
             
-            
-           
             //create the hidden propertys to the saving methods
             $labelVal = str_replace(' ', '+', $label);
-            $form[$labelVal . ':oldValues'] = array(
+           /* $form[$labelVal . ':oldValues'] = array(
                 '#type' => 'hidden',
-                '#value' => $value,
+                '#value' => $fieldValue,
             );
-
-            $property[$label] = $editUriClassMetaFields[$i]["id"];
+*/
+            $property[$label] = $m["id"];
             $fieldsArray[] = $label;
-            $fieldsArrayOldValues[] = $labelVal . ':oldValues';
-        }
+            //$fieldsArrayOldValues[] = $labelVal . ':oldValues';
+            $frmOldData[$label][] = $fieldValue;
+            
+            
+            if(isset($attributes["data-mincardinality"]) && $attributes["data-mincardinality"] > 1){
+                
+                for($x = 2; $x <= $attributes["data-mincardinality"]; $x++) {
+                    
+                    $fieldValue = "";
+                    if(isset($fieldValues[$x-1])){
+                        if(get_class($fieldValues[$x-1]) == "EasyRdf\Literal"){
+                            $fieldValue = $fieldValues[$x-1]->getValue();
+                        }
 
-        $this->store->set('formEditFields', $fieldsArray);
-        $this->store->set('formEditOldFields', $fieldsArrayOldValues);
+                        if(get_class($fieldValues[$x-1]) == "EasyRdf\Resource"){
+                            $fieldValue = $fieldValues[$x-1]->getUri();
+                        }
+                    }
+                    
+                    $oldLabel = "";
+                    $oldLabel = $this->getOldLabel($fieldValue, $classGraph, $fedora, $editUri, $m["id"]);
+                    
+                    $form[$label.'-'.$x] = array(
+                        '#type' => 'textfield',                        
+                        '#default_value' => $fieldValue,
+                        '#attributes' => $attributes,
+                        '#required' => $required,
+                        '#field_suffix' => $oldLabel,
+                        '#description' => $this->t($label.'-'.$x.' description'),
+                        '#autocomplete_route_name' => 'oeaw.autocomplete',
+                        '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m["id"]), '+/=', '-_,'), 'fieldName' => $label.'-'.$x),
+                        //create the ajax to we can display the selected uri title
+                        '#ajax' => [
+                            // Function to call when event on form element triggered.
+                            'callback' => 'Drupal\oeaw\Form\EditForm::fieldValidateCallback',
+                            'effect' => 'fade',
+                            // Javascript event to trigger Ajax. Currently for: 'onchange'.
+                            //we need to wait the end of the autocomplete
+                            'event' => 'autocompleteclose',
+                            'progress' => array(
+                                // Graphic shown to indicate ajax. Options: 'throbber' (default), 'bar'.
+                                'type' => 'throbber',
+                                // Message to show along progress graphic. Default: 'Please wait...'.
+                                'message' => NULL,
+                            ),
+                          ],
+                    );
+                    
+                    $form[$labelVal.'-'.$x.':prop'] = array(
+                        '#type' => 'hidden',
+                        '#value' => $m["id"],
+                    );
+                    $frmOldData[$label][] = $fieldValue;
+                    
+                    $fieldsArray[] = $label.'-'.$x;
+                    $fieldsArray[] = $label.'-'.$x.':prop';
+                }
+            }
+            
+            if(isset($attributes["data-maxcardinality"]) && $attributes["data-maxcardinality"] > 1){
+                
+                for($x = 2; $x <= $attributes["data-maxcardinality"]; $x++) {
+                    
+                    
+                    $fieldValue = "";
+                    if(isset($fieldValues[$x-1])){
+                        if(get_class($fieldValues[$x-1]) == "EasyRdf\Literal"){
+                            $fieldValue = $fieldValues[$x-1]->getValue();
+                        }
+
+                        if(get_class($fieldValues[$x-1]) == "EasyRdf\Resource"){
+                            $fieldValue = $fieldValues[$x-1]->getUri();
+                        }
+                    }
+                    
+                    $oldLabel = "";
+                    $oldLabel = $this->getOldLabel($fieldValue, $classGraph, $fedora, $editUri, $m["id"]);
+                    
+                    $form[$label.'-'.$x] = array(
+                        '#type' => 'textfield',                        
+                        '#default_value' => $fieldValue,
+                        '#attributes' => $attributes,
+                        '#required' => $required,
+                        '#field_suffix' => $oldLabel,
+                        '#description' => $this->t($label.'-'.$x.' description'),
+                        '#autocomplete_route_name' => 'oeaw.autocomplete',
+                        '#autocomplete_route_parameters' => array('prop1' => strtr(base64_encode($m["id"]), '+/=', '-_,'), 'fieldName' => $label.'-'.$x),
+                        //create the ajax to we can display the selected uri title
+                        '#ajax' => [
+                            // Function to call when event on form element triggered.
+                            'callback' => 'Drupal\oeaw\Form\EditForm::fieldValidateCallback',
+                            'effect' => 'fade',
+                            // Javascript event to trigger Ajax. Currently for: 'onchange'.
+                            //we need to wait the end of the autocomplete
+                            'event' => 'autocompleteclose',
+                            'progress' => array(
+                                // Graphic shown to indicate ajax. Options: 'throbber' (default), 'bar'.
+                                'type' => 'throbber',
+                                // Message to show along progress graphic. Default: 'Please wait...'.
+                                'message' => NULL,
+                            ),
+                          ],
+                    );
+              
+                    $form[$labelVal.'-'.$x.':prop'] = array(
+                        '#type' => 'hidden',
+                        '#value' => $m["id"],
+                    );
+                    $frmOldData[$label][] = $fieldValue;
+                    $fieldsArray[] = $label.'-'.$x;
+                    $fieldsArray[] = $label.'-'.$x.':prop';
+              
+                }
+            }
+            
+            if(isset($attributes["data-maxcardinality"])){
+                $form[$label.'-add_remove'] = array(
+                    '#type' => 'item',
+                    '#markup' => t('<a href="#" id="'.$label.'-plus">Add fields</a> <a href="#" id="'.$label.'-minus">Remove last</a>')
+                );
+            }
+        
+        }
+        
+        $this->store->set('formEditFields', $fieldsArray);        
+        $this->store->set('frmOldData', $frmOldData);
         $this->store->set('propertysArray', $property);
         $this->store->set('resourceUri', $editUri);
 
@@ -275,8 +367,6 @@ class EditForm extends FormBase {
             );            
         }
         
-  
-     
         $form['submit'] = array(
             '#type' => 'submit',
             '#value' => t('Submit'),
@@ -285,35 +375,25 @@ class EditForm extends FormBase {
         return $form;
     }
     
-    public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
-        //get the formelements
-        $formElements = $form_state->getUserInput();        
-        $result = array();
-        
-        $oeawFunc = new OeawFunctions();
-        $result = $oeawFunc->getFieldNewTitle($formElements, "new");
-       
-        return $result;        
-    }
     
     public function validateForm(array &$form, FormStateInterface $form_state) {
         
     }
 
     public function submitForm(array &$form, FormStateInterface $form_state) {
-
         //get the form stored values
-        $editForm = $this->store->get('formEditFields');        
-        //$form_state->getUserInput()        
-        $editOldForm = $this->store->get('formEditOldFields');
+        $editForm = $this->store->get('formEditFields');
+        $frmOldData = $this->store->get('frmOldData');
         $propertysArray = $this->store->get('propertysArray');
         $resourceUri = $this->store->get('resourceUri');
-
         //get the uploaded files values
         $fileID = $form_state->getValue('file');
-        $fileID = $fileID[0];
-      
+        
+        $newFrmValues = array();
+        
+        //if the user submitted a new binary resource
         if (!empty($fileID)) {
+            $fileID = $fileID[0];
             //create the file object
             $fObj = file_load($fileID);
             if (!empty($fObj) || isset($fObj)) {
@@ -326,80 +406,229 @@ class EditForm extends FormBase {
         foreach ($editForm as $e) {
             $editFormValues[$e] = $form_state->getValue($e);
         }
-
-        // create array with old form values
-        foreach ($editOldForm as $e) {
-            $value = $form_state->getValue($e);
-            $key = str_replace(':oldValues', '', $e);
-            if (!empty($value)) {
-                $editFormOldValues[$key] = $value;
+        
+     
+        //create the newValues array based on the submitted data from the FORM
+        $newValues = array();
+        foreach($editFormValues as $key => $value){
+            //if it is a cardinality field, then we wil add it to the array
+            if ((strpos($key, '-') !== false) && (strpos($key, ':prop') === false) && ( preg_match('/\\d/', $key) > 0)) {
+                if($key !== "isPartOf" || $key !== "identifier"){
+                    $nKey = explode('-', $key);
+                    $newValues[$nKey[0]][] = $value;
+                }
+                //we adding the normal fields too
+            }elseif(strpos($key, ':prop') === false){
+                if(($key !== "isPartOf") || ($key !== "identifier")){
+                    $newValues[$key][] = $value;
+                }
             }
         }
-
+        
         foreach ($propertysArray as $key => $value) {
             //in the editing we need to skip the ispartof
             // because the user cant overwrite the original
-            if ($key !== 'isPartOf') {
-                $uriAndValue[$value] = $editFormValues[$key];
+            if(($key !== "isPartOf")){
+                if(isset($newValues[$key])){
+                    foreach($newValues[$key] as $v){
+                        $uriAndValue[$value][] = $v;
+                    }
+                    
+                }                
             }
         }
-
+        
         $config = new Config($_SERVER["DOCUMENT_ROOT"] . '/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
         $fedora->begin();
         $resourceUri = preg_replace('|^.*/rest/|', '', $resourceUri);
-
         $fr = $fedora->getResourceByUri($resourceUri);
         //get the existing metadata
         $meta = $fr->getMetadata();
         
-        foreach ($uriAndValue as $key => $value) {
-            if (!empty($value)) {
-                if (strpos(substr($value,0,4), 'http') !== false) {
-                    $meta->delete($key);
-                    //insert the property with the new key
-                    $meta->addResource($key, $value);
-                } else {
-                    $meta->delete($key);
-                    //insert the property with the new key
-                    $meta->addLiteral($key, $value);
+        //insert the new metadata data to the graph
+        foreach($uriAndValue as $key => $value){
+            if(!empty($value)){
+                $meta->delete($key);
+                foreach($value as $v){
+                    if(!empty($v)){
+                        if (strpos(substr($v,0,4), 'http') !== false) {
+                            //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
+                            $meta->addResource($key, $v);
+                        } else {
+                            //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
+                            $meta->addLiteral($key, $v);
+                        }
+                    }
                 }
             }
         }
-
+        
+        
         try {
             $fr->setMetadata($meta);
             $fr->updateMetadata();
-
             if (!empty($fUri)) { $fr->updateContent($fUri); }
-
             $fedora->commit();
-            $this->deleteStore($editForm);            
+                   
             $encodeUri = $this->OeawFunctions->createDetailsUrl($resourceUri, 'encode');
             
             if (strpos($encodeUri, 'fcr:metadata') !== false) {
                 $encodeUri = $encodeUri.'/fcr:metadata';
             }
-            
+            //do the redirect with the result URI
             $response = new RedirectResponse(\Drupal::url('oeaw_new_success', ['uri' => $encodeUri]));
             $response->send();
             return;
             
         } catch (Exception $ex) {
             $fedora->rollback();
-            $this->deleteStore($editForm);
+            
             return drupal_set_message($this->t('Error during the saving process'), 'error');
         }
     }
-
-    /**
-     * Helper method that removes all the keys from the store collection used for
-     * the multistep form.
+    
+     /**
+     * 
+     * set the cardinality values to the field data attributes
+     * based on the metadata array
+     * 
+     * @param array $m
+     * @return array
      */
-    protected function deleteStore($editForm) {
-        foreach ($metadata as $key => $value) {
-            $this->store->delete($key);
+    private function setCardinality(array $m): array
+    {
+        $attributes = array();
+        if(isset($m["cardinality"]) && !empty($m["cardinality"])){
+            $attributes["data-cardinality"] = $m["cardinality"];
         }
+
+        if(isset($m["minCardinality"]) && !empty($m["minCardinality"])){
+            $attributes["data-mincardinality"] = $m["minCardinality"];
+        }
+
+        if(isset($m["maxCardinality"]) && !empty($m["maxCardinality"])){
+            $attributes["data-maxcardinality"] = $m["maxCardinality"];
+        }
+        
+        return $attributes;
     }
+    
+    /**
+     * 
+     * Create the attributes to the input fields
+     * 
+     * @param string $field
+     * @param array $attributes
+     * @return string
+     */
+    public function disableFields(string $field, array $attributes){
+        
+        if($field === $this->config->get('fedoraRelProp') || $field === $this->config->get('fedoraIdProp')){
+            $attributes['readonly'] = 'readonly';
+            $attributes['data-repoid'] = $field;
+        } else {
+            $attributes['data-repoid'] = $field;
+        }        
+        return $attributes;
+    }
+    
+    /**
+     * 
+     * Some of the input fields has an http:// value, this method is 
+     * generating a readable format from it.
+     * 
+     * @param type $value
+     * @param type $classGraph
+     * @param type $fedora
+     * @param type $editUri
+     * @param type $property
+     * @return string
+     */
+    public function getOldLabel($value, $classGraph, $fedora, $editUri, $property): string{
+        
+        $oldLabel = "";
+        //if the value is not empty and starts with the http and it is an acdh http
+        if (!empty($value) 
+                &&  (strpos(substr($value,0,4), 'http') !== false) 
+                && (strpos($value, $this->config->get('fedoraIdNamespace')) !== false)) {
+            
+            $resOT = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $value);
+            
+            foreach($resOT as $ot){
+                if(!empty($ot->getMetadata()->label())){
+                    $labelURL = (string)$value;
+                    $labelTxt = (string)$ot->getMetadata()->label();
+                    $oldLabel = "Old Value: <a href='$labelURL' target='_blank'>".$labelTxt."</a>";
+                    
+                }else {
+                    $oldLabel = "";
+                }
+            }
+        }
+                
+        return $oldLabel;   
+    }
+    
+     /**
+     * 
+     * create the label from the property
+     * 
+     * @param array $m
+     * @return string
+     */
+    private function getLabel(string $m): string 
+    {        
+        $label = explode("/", $m);
+        $label = end($label);
+        $label = str_replace('#', '', $label);
+        
+        return $label;
+    }
+    
+    /**
+     * 
+     * Create digital resources array
+     * 
+     * @param array $digRes
+     * @return array
+     */
+    private function digitalResources(array $digRes){
+        $digitalResources = array();
+        
+        if(!$digRes){
+            return drupal_set_message($this->t('digitalResources function has no data!'), 'error');
+        }
+        //we need that ones where the collection is true
+        foreach ($digRes as $dr) {
+            if (isset($dr["collection"])) {
+                $digitalResources[] = $dr["id"];
+            }
+        }
+        
+        return $digitalResources;
+    }
+    
+    /**
+     * 
+     * The ajax validatecallback for the readable field values.
+     * 
+     * @param array $form
+     * @param FormStateInterface $form_state
+     * @return type
+     */
+    public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
+        //get the formelements
+        $formElements = $form_state->getUserInput();
+        $result = array();
+        
+        $oeawFunc = new OeawFunctions();
+        $result = $oeawFunc->getFieldNewTitle($formElements, "new");
+        
+        return $result;
+    }
+    
+    
+
 
 }

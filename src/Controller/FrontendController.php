@@ -36,11 +36,10 @@ class FrontendController extends ControllerBase {
     private $OeawFunctions;
     private $config;
 
-    public function __construct() {  
+    public function __construct() {        
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        
+        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');        
     }    
     
     public function oeaw_ac_form(){        
@@ -55,13 +54,14 @@ class FrontendController extends ControllerBase {
      * @return array
      */
     public function roots_list(): array {
-        
+        drupal_get_messages('error', TRUE);
         // get the root resources
         // sparql result fields - uri, title
         $result = array();
         $datatable = array();
         $res = array();
         $decodeUrl = "";
+        $errorMSG = array();
         
         $result = $this->OeawStorage->getRootFromDB();      
 
@@ -88,16 +88,13 @@ class FrontendController extends ControllerBase {
             $decodeUrl = "";
             
         }else {
-            return drupal_set_message(t('You have no root elements!'), 'error');    
+            $errorMSG = drupal_set_message(t('You have no root elements!'), 'error', FALSE);
         }
-      
-        $header = array_keys($res[0]);
+        
         //create the datatable values and pass the twig template name what we want to use
         $datatable = array(
-            '#theme' => 'oeaw_root_dt',
-            '#result' => $res,
-            '#header' => $header,
             '#userid' => $uid,
+            '#errorMSG' => $errorMSG,
             '#attached' => [
                 'library' => [
                 'oeaw/oeaw-styles', 
@@ -105,6 +102,14 @@ class FrontendController extends ControllerBase {
             ]
         );
         
+         if(isset($res) && $res !== null && !empty($res)){
+            
+            $header = array_keys($res[0]);
+            $datatable['#theme'] = 'oeaw_root_dt';
+            $datatable['#result'] = $res;
+            $datatable['#header'] = $header;
+        }        
+
         return $datatable;
     }
     
@@ -211,6 +216,7 @@ class FrontendController extends ControllerBase {
      * @return array
     */
     public function oeaw_menu(): array {
+        drupal_get_messages('error', TRUE);
         $table = array();
         $header = array('id' => t('MENU'));
         $rows = array();
@@ -247,7 +253,7 @@ class FrontendController extends ControllerBase {
         if (empty($uri)) {
            return drupal_set_message(t('The uri is missing!'), 'error');
         }
-        
+        $uid = \Drupal::currentUser()->id();
         // decode the uri hash
         $uri = $this->OeawFunctions->createDetailsUrl($uri, 'decode');
         
@@ -275,6 +281,7 @@ class FrontendController extends ControllerBase {
      * @return array
      */
     public function oeaw_detail(string $uri, Request $request): array {
+        drupal_get_messages('error', TRUE);
         
         if (empty($uri)) {
            return drupal_set_message(t('The uri is missing!'), 'error');
@@ -326,7 +333,11 @@ class FrontendController extends ControllerBase {
         $editResData = array(
             "editUrl" => $this->OeawFunctions->createDetailsUrl($uri, 'encode'),
             "title" => $resTitle
-        );        
+        );
+        
+        if(empty($results["hasBinary"])){
+            $results["hasBinary"] = "";
+        }
         
         $datatable = array(
             '#theme' => 'oeaw_detail_dt',
@@ -352,7 +363,7 @@ class FrontendController extends ControllerBase {
      * @return type
      */
     public function oeaw_search() {    
-       
+        drupal_get_messages('error', TRUE);
         $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\SearchForm');
         return $form;
     }
@@ -365,12 +376,13 @@ class FrontendController extends ControllerBase {
      * @return array
      */
     public function oeaw_resources():array {
-        
-        drupal_get_messages();
+
+        drupal_get_messages('error', TRUE);
         
         $url = Url::fromRoute('<current>');
         $internalPath = $url->getInternalPath();
         $interPathArray = explode("/", $internalPath);
+        $errorMSG = array();
         
         if($interPathArray[0] == "oeaw_resources"){            
             $metaKey = urldecode($interPathArray[1]);
@@ -387,7 +399,7 @@ class FrontendController extends ControllerBase {
         }
         
         $stringSearch = $this->OeawStorage->searchForData($metaValue, $metaKey);
-        
+    
         $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $fedora = new Fedora($config);
         
@@ -476,7 +488,7 @@ class FrontendController extends ControllerBase {
             $decodeUrl = "";
             
         }else {
-            return drupal_set_message(t('There is no data -> Search'), 'error');    
+            $errorMSG = drupal_set_message(t('There is no data -> Search'), 'error');    
         }
 
 
@@ -486,16 +498,20 @@ class FrontendController extends ControllerBase {
         );
         
         $datatable = array(
-            '#theme' => 'oeaw_search_res_dt',
-            '#result' => $res,
             '#userid' => $uid,
-            '#searchedValues' => $searchArray,
+            '#errorMSG' => $errorMSG,            
             '#attached' => [
                 'library' => [
                 'oeaw/oeaw-styles', 
                 ]
             ]
         );
+        
+        if(isset($res) && $res !== null && !empty($res)){
+            $datatable['#theme'] = 'oeaw_search_res_dt';
+            $datatable['#result'] = $res;
+            $datatable['#searchedValues'] = $searchArray;
+        }
         
         return $datatable;
        
@@ -522,12 +538,13 @@ class FrontendController extends ControllerBase {
      * @return type
      */
     public function oeaw_edit(string $uri, Request $request) {
+        drupal_get_messages('error', TRUE);
         return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\EditForm');
     }
     
     
     public function oeaw_delete(string $uri, Request $request): JsonResponse {
-        
+        drupal_get_messages('error', TRUE);
         $matches = array();
         $response = array();
         
@@ -580,13 +597,14 @@ class FrontendController extends ControllerBase {
      * @return array
      */
     public function oeaw_classes_result(): array{
-        
+        drupal_get_messages('error', TRUE);
         $datatable = array();
         $data = array();
         $interPathArray = array();
         $classesArr = array();
         $res = array();
-
+        $errorMSG = array();
+        
         $url = Url::fromRoute('<current>');
         $internalPath = $url->getInternalPath();
         $interPathArray = explode("/", $internalPath);
@@ -633,7 +651,7 @@ class FrontendController extends ControllerBase {
                 $decodeUrl = "";
 
             }else {
-                return drupal_set_message(t('There is no data -> Class List Search'), 'error');
+                $errorMSG = drupal_set_message(t('There is no data -> Class List Search'), 'error');
             }
             
         }else {
@@ -641,20 +659,23 @@ class FrontendController extends ControllerBase {
             $res = array();
         }
         
-        $datatable = array(
-            '#theme' => 'oeaw_search_class_res_dt',
-            '#result' => $res,  
+        $datatable = array(            
             '#userid' => $uid,
-            '#searchedValues' => $searchArray,
+            '#errorMSG' => $errorMSG,
             '#attached' => [
                 'library' => [
                 'oeaw/oeaw-styles', 
                 ]
             ]
         );
-                
-        return $datatable;
-       
+        
+        if(isset($res) && $res !== null && !empty($res)){
+            $datatable['#theme'] = 'oeaw_search_class_res_dt';
+            $datatable['#result'] = $res;
+            $datatable['#searchedValues'] = $searchArray;                
+        }
+        
+        return $datatable;       
     } 
     
     

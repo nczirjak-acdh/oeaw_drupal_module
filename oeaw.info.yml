@@ -6,3 +6,5 @@ dependencies:
 - node
 - block
 type: module
+libraries:
+    - oeaw/mylibrary

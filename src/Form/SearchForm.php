@@ -76,20 +76,17 @@ class SearchForm extends FormBase
               '#value' => $this->t('Search'),
               '#button_type' => 'primary',
             );
-
+            
             return $form;
-        } else {
+        } else {            
             drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys -> SearchForm'), 'error');
+            return $form;
         }
     }
     
     
     public function validateForm(array &$form, FormStateInterface $form_state) 
     {
-        /*
-        if (strlen($form_state->getValue('metavalue')) < 1) {
-            $form_state->setErrorByName('metavalue', $this->t(''));
-        }*/
         
     }
   

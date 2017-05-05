@@ -106,6 +106,8 @@ abstract class NewResourceFormBase extends FormBase {
         $uriAndValue = $this->store->get('uriAndValue');
         $ontologyClassIdentifier = $this->store->get('ontologyClassIdentifier');
   
+        $uid = \Drupal::currentUser()->id();
+        
         $graph = array();
         $meta = array();
         //create an easyrdf_graph instance
@@ -113,17 +115,20 @@ abstract class NewResourceFormBase extends FormBase {
         $meta = $graph->resource('acdh');
         
         // creating the resources for the Fedora class
-        foreach($uriAndValue as $key => $value){        
+        foreach($uriAndValue as $key => $value){
             if(!empty($value)){
-                
-                if (strpos(substr($value,0,4), 'http') !== false) {
-                    //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
-                    $meta->addResource($key, $value);
-                } else {
-                    //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
-                    $meta->addLiteral($key, $value);
-                }            
-            }            
+                foreach($value as $v){
+                    if(!empty($v)){
+                        if (strpos(substr($v,0,4), 'http') !== false) {
+                            //$meta->addResource("http://vocabs.acdh.oeaw.ac.at/#represents", "http://dddd-value2222");
+                            $meta->addResource($key, $v);
+                        } else {
+                            //$meta->addLiteral("http://vocabs.acdh.oeaw.ac.at/#depositor", "dddd-value");
+                            $meta->addLiteral($key, $v);
+                        }
+                    }
+                }
+            }
         }
         
         // add the ontologyClass dct:identifier to the new resource rdf:type, to we can
@@ -147,8 +152,6 @@ abstract class NewResourceFormBase extends FormBase {
             $uri = preg_replace('|/tx:[-a-zA-Z0-9]+/|', '/', $uri);
             $uri = $uri.'/fcr:metadata';
             
-            $this->deleteStore($metadata);
-
             $encodeUri = $this->OeawFunctions->createDetailsUrl($uri, 'encode');
             
             if (strpos($encodeUri, 'fcr:metadata') !== false) {
@@ -172,23 +175,9 @@ abstract class NewResourceFormBase extends FormBase {
             
         } catch (Exception $ex) {
             
-            $fedora->rollback();
-            $this->deleteStore($metadata);
+            $fedora->rollback();            
             
             drupal_set_message($this->t('Error during the saving process'), 'error');
-        }
-    }
-    
-    
-    /**
-    * Helper method that removes all the keys from the store collection used for
-    * the multistep form.
-    */
-    
-    protected function deleteStore($metadata) {
-        
-        foreach($metadata as $key => $value){
-            $this->store->delete($key);
         }
     }
     

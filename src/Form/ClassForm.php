@@ -82,7 +82,8 @@ class ClassForm extends FormBase
         $searchClasses = array();
         
         if(empty($data)){
-            return drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');             
+            drupal_set_message($this->t('Your DB is EMPTY! There are no Propertys'), 'error');
+            return $form;            
         }
         
         /* get the fields from the sparql query */

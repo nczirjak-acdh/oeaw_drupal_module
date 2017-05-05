@@ -255,7 +255,7 @@ class OeawStorage {
             $rdfType = self::$sparqlPref["rdfType"];
             $dcTitle = $this->titleProp;        
             $rdfsLabel = self::$sparqlPref["rdfsLabel"];
-             $owlClass = self::$sparqlPref["owlClass"];
+            $owlClass = self::$sparqlPref["owlClass"];
             /*
              * 
              * SELECT 
@@ -582,6 +582,7 @@ class OeawStorage {
                     . '} ';
 */
             $result = $this->fedora->runSparql($query);
+            
             $fields = $result->getFields(); 
             $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 

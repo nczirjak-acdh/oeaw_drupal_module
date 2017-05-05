@@ -44,6 +44,7 @@ class OeawFunctions {
         return $fedora;
     }
     
+    
     public function getDuplicatesFromArray(array $data, string $array_key): array{
         
         if(empty($data) || empty($array_key)){
@@ -133,8 +134,10 @@ class OeawFunctions {
             //create the old values and the new values arrays with the user inputs
             foreach($formElements as $key => $value){
                 if (strpos($key, ':oldValues') !== false) {
-                    $newKey = str_replace(':oldValues', "", $key);
-                    $oldValues[$newKey] = $value;
+                    if(strpos($key, ':prop') === false){
+                        $newKey = str_replace(':oldValues', "", $key);
+                        $oldValues[$newKey] = $value;
+                    }
                 }else {
                     $newValues[$key] = $value;
                 }
@@ -145,35 +148,41 @@ class OeawFunctions {
         }else if($mode == "new"){
                                    
             foreach($formElements as $key => $value){
-                if(strpos($key, ':prop') !== false) {
+                error_log($key);
+                error_log("<br>");
+                if((strpos($key, ':prop') !== false)) {
                     unset($formElements[$key]);
                 }elseif (strpos($value, 'http') !== false) {
                     $result[$key] = $value;
                 }
             }
         }
-        
+        error_log("itt");
+        error_log(print_r($result, true));
         $ajax_response = new AjaxResponse();
         
         if(empty($result)){
             return $ajax_response;
         }
        
-        $color = 'green';
-        
-        $resNL = array();        
+        $color = 'green';        
+        $resNL = array();
         
         foreach($result as $key => $value){
             
             $resNL = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), (string)$value);
        
             foreach($resNL as $nl){
-                if(!empty($nl->getMetadata()->label())){                    
+                if(!empty($nl->getMetadata()->label())){
                     $label = htmlentities($nl->getMetadata()->label(), ENT_QUOTES, "UTF-8");
                 }else { $label = ""; }
             }
-
+            
+            error_log("itt a label---".$key);
+            error_log($label);
+            
             if(!empty($label)){
+                
                 $ajax_response->addCommand(new HtmlCommand('#edit-'.$key.'--description', "New Value: <a href='".(string)$value."' target='_blank'>".(string)$label."</a>"));
                 $ajax_response->addCommand(new InvokeCommand('#edit-'.$key.'--description', 'css', array('color', $color)));
             }
@@ -266,7 +275,8 @@ class OeawFunctions {
         }         
         return $result;        
     }
- 
+
+    
     /**
      * 
      * create prefix from array based on the connData.php prefixes     
@@ -361,6 +371,7 @@ class OeawFunctions {
         
         $i = 0;
         $childResult = array();
+        $uid = \Drupal::currentUser()->id();
         
         foreach($data as $r){
             $childResult[$i]['uri']= $r->getUri();                
@@ -371,7 +382,7 @@ class OeawFunctions {
                         
             //check the thumbnail
             if($imageThumbnail){
-                $imgUri = $imageThumbnail->getUri();
+                //$imgUri = $imageThumbnail->getUri();
                 if(!empty($imgUri)){
                     $OeawStorage = new OeawStorage();
                     $childThumb = $OeawStorage->getImage($imgUri);
@@ -420,14 +431,16 @@ class OeawFunctions {
         }
         
         $results = array();
+        $resVal = "";
         $rootMeta =  $this->makeMetaData($uri);
         
         if(count($rootMeta) > 0){
             $i = 0;
+            
             foreach($rootMeta->propertyUris($uri) as $v){
             
                 foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
-
+                    
                     // if there is a thumbnail
                     if($v == \Drupal\oeaw\ConnData::$imageThumbnail){
                         if($item){
@@ -447,19 +460,18 @@ class OeawFunctions {
                         }
                     }
                     
-                    if(get_class($item) == "EasyRdf\Resource"){                       
+                    if(get_class($item) == "EasyRdf\Resource"){
                         if($this->createPrefixesFromString($v) === false){
                             return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
                         }
+                        
                         //check the title based on the acdh id
-                        $resVal = $item->getUri();
-                        
-                        $resVal = $this->getTitleByTheFedIdNameSpace($resVal);
-                        if(empty($resVal)){
-                            $resVal = $item->getUri();
+                        $resVal = $item->getUri();                        
+                        if($this->getTitleByTheFedIdNameSpace($resVal)){
+                            $resVal = $this->getTitleByTheFedIdNameSpace($resVal);
                         }
-                        
-                        $results[$i]["value"][] = $resVal;
+
+                        $results[$i]["value"][] = $resVal;                        
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
                         
                         if($item->getUri() == \Drupal\oeaw\ConnData::$fedoraBinary){ $results["hasBinary"] = $uri; }
@@ -470,13 +482,13 @@ class OeawFunctions {
                             return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
                         }
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
-                        $results[$i]["value"] = $item->__toString();
+                        $results[$i]["value"][] = $item->__toString();
                     }else {
                         if($this->createPrefixesFromString($v) === false){
                             return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
                         }
                         $results[$i]["property"] = $this->createPrefixesFromString($v);
-                        $results[$i]["value"] = $item;
+                        $results[$i]["value"][] = $item;
                     }
                 }
                 $i++;
