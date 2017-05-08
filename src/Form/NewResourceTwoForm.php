@@ -39,10 +39,11 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $form_state->disableCache();
         // get form page 1 stored values
         $formVal = $this->store->get('form1Elements');
+        
         $class = $formVal['class'];
         $root =  $formVal['root'];
         
-        $fedora = new Fedora($this->config);        
+        $fedora = new Fedora($this->config);
         $rootID = $fedora->getResourceByUri($root)->getId();
         
         //get the value of the property
@@ -62,33 +63,31 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }
         }
         
-        $classGraph = $this->OeawFunctions->makeGraph($class);        
-        $classID = $classGraph->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
+        $classID = $this->OeawFunctions->makeGraph($class)->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
         
-        if(!empty($classID)){ $classValue = $classID["value"]; }
-
-        if(empty($classValue)){
+        if(!empty($classID)){             
+            if(empty($classID["value"])){
+                return drupal_set_message($this->t('ClassValue is empty!'), 'error');
+            }else {
+                $classValue = $classID["value"]; 
+                //we store the ontology identifier for the saving process
+                $this->store->set('ontologyClassIdentifier', $classValue);
+            }
+        }else {
             return drupal_set_message($this->t('ClassValue is empty!'), 'error');
         }
-        
-        //we store the ontology identifier for the saving process
-        $this->store->set('ontologyClassIdentifier', $classValue);
         
         // compare the digRes and the actual class, because if it is a DigColl then 
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
 
-        // get the actual class metadata
-        $metadataQuery = $this->OeawStorage->getClassMeta($class);
-   
-        if(count($metadataQuery) < 0){
+        if(count($this->OeawStorage->getClassMeta($class)) < 0){
             return drupal_set_message($this->t('There is no metadata for this class'), 'error');
+        }else {
+            // get the actual class metadata
+            $metadataQuery = $this->OeawStorage->getClassMeta($class);
         }
         
-        $rootGraph = $this->OeawFunctions->makeGraph($root);
-        //get tge identifier from the graph and convert the easyrdf_resource object to php array
-        $fedRes = $this->OeawFunctions->makeMetaData($root);
-
         $fieldsArray = array();
         $defaultValue = "";
         $labelVal = "";
@@ -144,7 +143,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             
             if(isset($attributes["data-mincardinality"]) && $attributes["data-mincardinality"] > 1){
                 
-                for($i = 2; $i <= $attributes["data-mincardinality"]; $i++) {                    
+                for($i = 2; $i <= $attributes["data-mincardinality"]; $i++) {
                     $form[$label.'-'.$i] = array(
                         '#type' => 'textfield',                        
                         '#default_value' => $defaultValue,
@@ -237,7 +236,15 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             $fieldsArray[] = $labelVal.':prop';
         }
       
-        $this->store->set('form2Fields', $fieldsArray);
+        //the user own identifer
+        $form['ownIdentifier'] = array(
+            '#title' => $this->t('ownIdentifier'),
+            '#type' => 'textfield',
+            '#required' => True,
+            '#description' => $this->t('Please add your own identifier'),
+        );
+                    
+        
         // if we have a digital resource then the user must upload a binary resource
         if($checkDigRes == true){
             $form['file'] = array(
@@ -250,6 +257,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                 '#description' => t('Upload a file, allowed extensions: XML, CSV, and images etc....'),
             );
         }
+        
+        $this->store->set('form2Fields', $fieldsArray);
+        
         $form['actions']['previous'] = array(
             '#type' => 'link',
             '#title' => $this->t('Previous'),
@@ -313,6 +323,9 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             //get the temp file uri
             $fUri = $fObj->getFileUri();
         }
+        
+        
+        
         //get the form fields
         foreach($form2Fields as $f){
             //get the property fields
@@ -346,8 +359,19 @@ class NewResourceTwoForm extends NewResourceFormBase  {
                 }
             }            
         }
+        
+        $ownIdentifier = $this->OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), "https://id.acdh.oeaw.ac.at/".urlencode($form_state->getValue('ownIdentifier')));
+        if(count($ownIdentifier) > 0){
+            return drupal_set_message($this->t('This ownIdentifier is already exists in the DB, please change it!!!'), 'error');
+        }else {
+            // add the ownIdentifier
+            $uriAndValue[$this->config->get('fedoraIdProp')][] = "https://id.acdh.oeaw.ac.at/".urlencode($form_state->getValue('ownIdentifier'));
+        }
+        
 
-        $this->store->set('valuesArray', $valuesArray);
+        
+        
+ 
         $this->store->set('fileName', $fUri);
         $this->store->set('uriAndValue', $uriAndValue);
         

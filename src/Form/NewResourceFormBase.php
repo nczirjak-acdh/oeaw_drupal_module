@@ -130,10 +130,11 @@ abstract class NewResourceFormBase extends FormBase {
                 }
             }
         }
-        
+      
         // add the ontologyClass dct:identifier to the new resource rdf:type, to we can
         // recognize the ontologyclass and required fields to the editing form
         $meta->addResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", $ontologyClassIdentifier);  
+        
         //load the config file
         $fedora = new Fedora($this->config);
         $fedora->begin();
@@ -177,7 +178,7 @@ abstract class NewResourceFormBase extends FormBase {
             
             $fedora->rollback();            
             
-            drupal_set_message($this->t('Error during the saving process'), 'error');
+            return drupal_set_message($this->t('Error during the saving process'), 'error');
         }
     }
     
