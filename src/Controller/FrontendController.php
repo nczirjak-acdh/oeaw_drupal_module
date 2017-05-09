@@ -18,13 +18,14 @@ use Drupal\Core\Ajax\ChangedCommand;
 use Drupal\Core\Ajax\CssCommand;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
-use zozlak\util\Config;
+
+use acdhOeaw\util\RepoConfig as RC;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 
 use EasyRdf\Graph;
 use EasyRdf\Resource;
-use acdhOeaw\util\EasyRdfUtil;
+
 //autocomplete
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,12 +35,13 @@ class FrontendController extends ControllerBase {
     
     private $OeawStorage;
     private $OeawFunctions;
-    private $config;
-
-    public function __construct() {        
+    
+    public function __construct() {
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');        
+        
+        //$this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        \acdhOeaw\util\RepoConfig::init($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
     }    
     
     public function oeaw_ac_form(){        
@@ -70,7 +72,8 @@ class FrontendController extends ControllerBase {
         if(count($result) > 0){
             $i = 0;            
             foreach($result as $value){
-                // check that the value is an Url or not            
+                // check that the value is an Url or not
+                
                 $decodeUrl = $this->OeawFunctions->isURL($value["uri"], "decode");
                 
                 //create details and editing urls
@@ -134,9 +137,8 @@ class FrontendController extends ControllerBase {
         $propUri = base64_decode(strtr($prop1, '-_,', '+/='));
 
         if(empty($propUri)){ return new JsonResponse(array()); }
-
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config); 
+        
+        $fedora = new Fedora(); 
         //get the property resources
         $rangeRes = null;
         
@@ -145,7 +147,7 @@ class FrontendController extends ControllerBase {
             //get the property metadata
             $propMeta = $prop->getMetadata();
             // check the range property in the res metadata
-            $rangeRes = $propMeta->getResource(EasyRdfUtil::fixPropName('http://www.w3.org/2000/01/rdf-schema#range'));
+            $rangeRes = $propMeta->getResource('http://www.w3.org/2000/01/rdf-schema#range');
         }  catch (\RuntimeException $e){
             return new JsonResponse(array());
         }
@@ -160,7 +162,7 @@ class FrontendController extends ControllerBase {
         $match = array(
             'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $string),
             'name'   => $fedora->getResourcesByPropertyRegEx('http://xmlns.com/foaf/0.1/name', $string),
-            'acdhId' => $fedora->getResourcesByPropertyRegEx($config->get('fedoraIdProp'), $string),
+            'acdhId' => $fedora->getResourcesByPropertyRegEx(RC::get('fedoraIdProp'), $string),
         );
 
         $matchResource = $matchValue = array();
@@ -288,7 +290,10 @@ class FrontendController extends ControllerBase {
         }
         
         $hasBinary = "";        
-       
+       //get the childrens
+        $fedora = $this->OeawFunctions->initFedora();
+        $childResult = array();
+        
         // decode the uri hash
         $uri = $this->OeawFunctions->createDetailsUrl($uri, 'decode');
  
@@ -297,29 +302,27 @@ class FrontendController extends ControllerBase {
         $rootGraph = $this->OeawFunctions->makeGraph($uri); 
         $rootMeta =  $this->OeawFunctions->makeMetaData($uri);
 
-        if(count($rootMeta) > 0){            
-            
+        if(count($rootMeta) > 0){
             $results = array();
             //get the root table data
-            $results = $this->OeawFunctions->createDetailTableData($uri);
-            
+            $results = $this->OeawFunctions->createDetailTableData($uri);        
             if(empty($results)){
                 return drupal_set_message(t('The resource has no metadata!'), 'error');
-            }
-           
+            }           
         } else {
             return drupal_set_message(t('The resource has no metadata!'), 'error');
         }
-      
-        //get the childrens
-        $fedora = $this->OeawFunctions->initFedora();
-        $childF = $fedora->getResourceByUri($uri);
-        $childF = $childF->getChildren();
 
-        $childResult = array();
-        //get the childrens table data
-        if(count($childF) > 0){
-            $childResult = $this->OeawFunctions->createChildrenDetailTableData($childF);
+        try{
+            if( $fedora->getResourceByUri($uri)->getChildren()){
+                $childF = $fedora->getResourceByUri($uri)->getChildren();                 
+                //get the childrens table data
+                if(count($childF) > 0){            
+                    $childResult = $this->OeawFunctions->createChildrenDetailTableData($childF);
+                }
+            }
+        } catch (\Exception $ex) {
+            return drupal_set_message(t('There was a runtime error during the getChildren method!'), 'error');
         }
         
         $resTitle = $rootGraph->label($uri);
@@ -351,7 +354,8 @@ class FrontendController extends ControllerBase {
                 'oeaw/oeaw-styles', //include our custom library for this response
                 ]
             ]
-        );                
+        );  
+                
         return $datatable;        
     }
     
@@ -397,18 +401,16 @@ class FrontendController extends ControllerBase {
         if($metaKey === false){
             return drupal_set_message(t('Error in function: createUriFromPrefix '), 'error'); 
         }
-        
-        $stringSearch = $this->OeawStorage->searchForData($metaValue, $metaKey);
     
-        $config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $fedora = new Fedora($config);
+        $stringSearch = $this->OeawStorage->searchForData($metaValue, $metaKey);            
+        $fedora = new Fedora();
         
         //we will search in the title, name, fedoraid
-        $idSearch = array(            
+        $idSearch = array(
             'title'  => $fedora->getResourcesByPropertyRegEx('http://purl.org/dc/elements/1.1/title', $metaValue),
             'name'   => $fedora->getResourcesByPropertyRegEx(\Drupal\oeaw\ConnData::$foafName, $metaValue),
-            'acdhId' => $fedora->getResourcesByPropertyRegEx($config->get('fedoraIdProp'), $metaValue),
-        );        
+            'acdhId' => $fedora->getResourcesByPropertyRegEx(RC::get('fedoraIdProp'), $metaValue),
+        );
 
         $x = 0;
         $data = array();
@@ -421,7 +423,7 @@ class FrontendController extends ControllerBase {
                 // we get the uri and 
                 if(!empty($j->getUri())){
                     //get the resource identifier f.e.: id.acdh.oeaw.ac.at.....                    
-                    $identifier = $fedora->getResourceByUri($j->getUri())->getMetadata()->getResource(EasyRdfUtil::fixPropName('http://purl.org/dc/terms/identifier'));
+                    $identifier = $fedora->getResourceByUri($j->getUri())->getMetadata()->getResource('http://purl.org/dc/terms/identifier');
                     
                     if(!empty($identifier)){
                         //get the resources which is part of this identifier
@@ -556,7 +558,7 @@ class FrontendController extends ControllerBase {
         }
         $resUri = $this->OeawFunctions->createDetailsUrl($uri, 'decode');
         $graph = $this->OeawFunctions->makeGraph($resUri);
-        $fedora = new Fedora($this->config);
+        $fedora = new Fedora();
         
         try{
             
@@ -624,7 +626,7 @@ class FrontendController extends ControllerBase {
                 }                
             }
             
-            $data = $this->OeawStorage->getDataByProp(EasyRdfUtil::fixPropName('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), $property.':'.$value);
+            $data = $this->OeawStorage->getDataByProp('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', $property.':'.$value);
         
             if(count($data) > 0){
                 $i = 0;

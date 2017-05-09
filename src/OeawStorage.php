@@ -9,15 +9,18 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Component\Render\MarkupInterface;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
-use acdhOeaw\fedora\metadataQuery\Query;
+
+use acdhOeaw\fedora\metadataQuery\HasProperty;
 use acdhOeaw\fedora\metadataQuery\HasTriple;
 use acdhOeaw\fedora\metadataQuery\HasValue;
-use acdhOeaw\fedora\metadataQuery\HasProperty;
-use acdhOeaw\fedora\metadataQuery\QueryParameter;
 use acdhOeaw\fedora\metadataQuery\MatchesRegEx;
+use acdhOeaw\fedora\metadataQuery\Query;
+use acdhOeaw\fedora\metadataQuery\QueryParameter;
+
 
 use acdhOeaw\util\SparqlEndpoint;
-use zozlak\util\Config;
+//use zozlak\util\Config;
+use acdhOeaw\util\RepoConfig as RC;;
 
 
 class OeawStorage {
@@ -62,13 +65,10 @@ class OeawStorage {
     
     public function __construct() {  
         
-        $cfg = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
-        $this->apiUrl = preg_replace('|/$|', '', $cfg->get('fedoraApiUrl'));
-        $this->idProp = $cfg->get('fedoraIdProp');
-        $this->relProp = $cfg->get('fedoraRelProp');
-        $this->titleProp = $cfg->get('fedoraTitleProp');
+        \acdhOeaw\util\RepoConfig::init($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        /* $this->apiUrl = preg_replace('|/$|', '', $cfg->get('fedoraApiUrl')); */
         $this->OeawFunctions = new OeawFunctions();
-        $this->fedora = new Fedora($cfg);
+        $this->fedora = new Fedora();
         
         //blazegraph bugfix. Add missing namespace
         $blazeGraphNamespaces = \EasyRdf\RdfNamespace::namespaces();
@@ -89,8 +89,10 @@ class OeawStorage {
      */
     public function getRootFromDB(): array {
   
-        $dcTitle = $this->titleProp;
-        $isPartOf = $this->relProp;
+        //$dcTitle = $this->titleProp;
+        $dcTitle = RC::titleProp();
+        $isPartOf = RC::relProp();
+        
         $getResult = array();
         
         try {
@@ -170,8 +172,7 @@ class OeawStorage {
             $property = $this->OeawFunctions->createUriFromPrefix($property);
             if($property === false){
                 return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error'); 
-            }
-           
+            }           
         }else if(filter_var($property, FILTER_VALIDATE_URL)){            
             $property = '<'. $property .'>';
         }
@@ -192,7 +193,7 @@ class OeawStorage {
 
         try {        
             
-            $dcTitle = $this->titleProp;        
+            $dcTitle = RC::titleProp();
             $foafName = self::$sparqlPref["foafName"];
             $rdfsLabel = self::$sparqlPref["rdfsLabel"];
             
@@ -300,7 +301,7 @@ class OeawStorage {
         try {
             
             $rdfType = self::$sparqlPref["rdfType"];
-            $dcID = $this->idProp;
+            $dcID = RC::idProp();
             $rdfsSubClass = self::$sparqlPref["rdfsSubClass"];
             $owlClass = self::$sparqlPref["owlClass"];
             
@@ -398,9 +399,9 @@ class OeawStorage {
         try {
             
             $rdfType = self::$sparqlPref["rdfType"];
-            $dcTitle = $this->titleProp;        
+            $dcTitle = RC::titleProp();
             $rdfsLabel = self::$sparqlPref["rdfsLabel"];
-            $idProp = $this->idProp;
+            $idProp = RC::idProp();
             $rdfsSubClass = self::$sparqlPref['rdfsSubClass'];
             $rdfsDomain = self::$sparqlPref["rdfsDomain"];
             $dctLabel = self::$sparqlPref["dctLabel"];
@@ -499,7 +500,7 @@ class OeawStorage {
         }
         
         if($property == null){
-            $property = $this->idProp;
+            $property = RC::get('idProp');
         }
         
         $result = "";
@@ -511,6 +512,8 @@ class OeawStorage {
             $q->setSelect(array('?res'));
             $q->addParameter((new HasValue($property, $value)));
             $query = $q->getQuery();
+            
+          
             $result = $this->fedora->runSparql($query);
             
             $fields = $result->getFields(); 
@@ -541,7 +544,7 @@ class OeawStorage {
     public function searchForData(string $value, string $property): array{
         
         $rdfType = self::$sparqlPref["rdfType"];
-        $dcTitle = $this->titleProp;        
+        $dcTitle = RC::titleProp();
         $rdfsLabel = self::$sparqlPref["rdfsLabel"];
         
         if (empty($value) || empty($property)) {
@@ -566,7 +569,7 @@ class OeawStorage {
             $q3->addParameter((new HasTriple('?res', $rdfsLabel, '?label')));
             $q3->setJoinClause('optional');
             $q->addSubquery($q3);
-            
+         
             $query = $q->getQuery();
             
             /*

@@ -20,8 +20,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
-use acdhOeaw\util\EasyRdfUtil;
-use zozlak\util\Config;
+
+//use zozlak\util\Config;
+use acdhOeaw\util\RepoConfig as RC;
 use EasyRdf_Graph;
 use EasyRdf_Resource;
 use Drupal\oeaw\OeawStorage;
@@ -50,9 +51,10 @@ class EditForm extends FormBase {
      */
     protected $store;
 
-    private $config;
+    
     private $OeawFunctions;
     private $OeawStorage;
+    private $fedora;
     
     /**
      *
@@ -65,9 +67,10 @@ class EditForm extends FormBase {
         $this->sessionManager = $session_manager;
         $this->currentUser = $current_user;
         $this->store = $this->tempStoreFactory->get('edit_form');
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        \acdhOeaw\util\RepoConfig::init($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
+        $this->fedora = new Fedora();
     }
 
     public static function create(ContainerInterface $container) {
@@ -85,13 +88,14 @@ class EditForm extends FormBase {
         $form_state->disableCache();
         //get the hash uri from the url, based on the drupal routing file
         $editHash = \Drupal::request()->get('uri');
+        $editMetaData = array();
         if (empty($editHash)) {
             return drupal_set_message($this->t('The uri is not exists!'), 'error');            
         }
         
         $isImage = false;
         $editUri = $this->OeawFunctions->createDetailsUrl($editHash, 'decode');
-      
+        $editMetaData = $this->fedora->getResourceByUri($editUri)->getMetadata();
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->OeawStorage->getDigitalResources();
         
@@ -102,9 +106,10 @@ class EditForm extends FormBase {
         $classGraph = $this->OeawFunctions->makeGraph($editUri);
 
         $classVal = array();
-        //get tge identifier from the graph and convert the easyrdf_resource object to php array
-        $classValue = $classGraph->all($editUri, EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$rdfType));
-                
+        //get the identifier from the graph and convert the easyrdf_resource object to php array        
+        
+        $classValue = $editMetaData->all(\Drupal\oeaw\ConnData::$rdfType);
+        
         if(count($classValue) > 0){
             foreach ($classValue as $v) {
                 if(!empty($v->getUri())){
@@ -120,7 +125,7 @@ class EditForm extends FormBase {
        
         if (!empty($classVal)) {
             foreach ($classVal as $cval) {
-                $res = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $cval);
+                $res = $fedora->getResourcesByProperty(RC::get('fedoraIdProp'), $cval);
                 // this will contains the onotology uri, what will helps to use to know
                 // which fields we need to show in the editing form
                 if(count($res) > 0){
@@ -143,10 +148,9 @@ class EditForm extends FormBase {
         if(empty($editUriClassMetaFields)){
             return drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
         }
- 
         
         $resTitle = $classGraph->label($editUri);
-        
+
         $form['resource_title'] = array(
             '#markup' => '<h2><b><a href="'.$editUri.'" target="_blank">'.$resTitle.'</a></b></h2>',
         );
@@ -159,7 +163,9 @@ class EditForm extends FormBase {
             $attributes = array();
             $required = FALSE;
             
-            $fieldValues = $classGraph->all($editUri, EasyRdfUtil::fixPropName($m["id"]));
+            //$fieldValues = $classGraph->all($editUri, $m["id"]);
+            $fieldValues = $editMetaData->all($m["id"]);
+            
             //get the fields cardinality info
             $attributes = $this->setCardinality($m);
 
@@ -437,9 +443,8 @@ class EditForm extends FormBase {
                 }                
             }
         }
-        
-        $config = new Config($_SERVER["DOCUMENT_ROOT"] . '/modules/oeaw/config.ini');
-        $fedora = new Fedora($config);
+                
+        $fedora = new Fedora();
         $fedora->begin();
         $resourceUri = preg_replace('|^.*/rest/|', '', $resourceUri);
         $fr = $fedora->getResourceByUri($resourceUri);
@@ -524,7 +529,7 @@ class EditForm extends FormBase {
      */
     public function disableFields(string $field, array $attributes){
         
-        if($field === $this->config->get('fedoraRelProp') || $field === $this->config->get('fedoraIdProp')){
+        if($field === RC::get('fedoraRelProp') || $field === RC::get('fedoraIdProp')){
             $attributes['readonly'] = 'readonly';
             $attributes['data-repoid'] = $field;
         } else {
@@ -551,9 +556,9 @@ class EditForm extends FormBase {
         //if the value is not empty and starts with the http and it is an acdh http
         if (!empty($value) 
                 &&  (strpos(substr($value,0,4), 'http') !== false) 
-                && (strpos($value, $this->config->get('fedoraIdNamespace')) !== false)) {
+                && (strpos($value, RC::get('fedoraIdNamespace')) !== false)) {
             
-            $resOT = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), $value);
+            $resOT = $fedora->getResourcesByProperty(RC::get('fedoraIdProp'), $value);
             
             foreach($resOT as $ot){
                 if(!empty($ot->getMetadata()->label())){

@@ -15,7 +15,7 @@ use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
-use zozlak\util\Config;
+use acdhOeaw\util\RepoConfig as RC;
 use Drupal\oeaw\OeawStorage;
 use Drupal\oeaw\OeawFunctions;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -41,8 +41,7 @@ abstract class NewResourceFormBase extends FormBase {
     /**
     * @var \Drupal\user\PrivateTempStore
     */
-    protected $store;    
-    protected $config;
+    protected $store;
     protected $OeawStorage;
     protected $OeawFunctions;
     
@@ -58,7 +57,7 @@ abstract class NewResourceFormBase extends FormBase {
         $this->tempStoreFactory = $temp_store_factory;
         $this->sessionManager = $session_manager;
         $this->currentUser = $current_user;
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
+        \acdhOeaw\util\RepoConfig::init($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         $this->store = $this->tempStoreFactory->get('multistep_data');
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();        
@@ -136,7 +135,7 @@ abstract class NewResourceFormBase extends FormBase {
         $meta->addResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", $ontologyClassIdentifier);  
         
         //load the config file
-        $fedora = new Fedora($this->config);
+        $fedora = new Fedora();
         $fedora->begin();
 
         try{

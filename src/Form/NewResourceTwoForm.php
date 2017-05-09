@@ -6,10 +6,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
-use zozlak\util\Config;
+use acdhOeaw\util\RepoConfig as RC;
 use EasyRdf_Graph;
 use EasyRdf_Resource;
-use acdhOeaw\util\EasyRdfUtil;
 use InvalidArgumentException;
 use RuntimeException;
 use Drupal\oeaw\OeawFunctions;
@@ -41,9 +40,8 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         $formVal = $this->store->get('form1Elements');
         
         $class = $formVal['class'];
-        $root =  $formVal['root'];
-        
-        $fedora = new Fedora($this->config);
+        $root =  $formVal['root'];        
+        $fedora = new Fedora();        
         $rootID = $fedora->getResourceByUri($root)->getId();
         
         //get the value of the property
@@ -55,6 +53,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         // get the digital resource classes where the user must upload binary file
         $digitalResQuery = $this->OeawStorage->getDigitalResources();
+        
         //create the digitalResources array
         $digitalResources = array();
         foreach($digitalResQuery as $dr){
@@ -63,16 +62,14 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }
         }
         
-        $classID = $this->OeawFunctions->makeGraph($class)->get($class,EasyRdfUtil::fixPropName($this->config->get('fedoraIdProp')))->toRdfPhp();
+        //create and load the data to the graph        
+        $classRes = $fedora->getResourceByUri($class)->getMetadata()->get(RC::get('fedoraIdProp'));
         
-        if(!empty($classID)){             
-            if(empty($classID["value"])){
-                return drupal_set_message($this->t('ClassValue is empty!'), 'error');
-            }else {
-                $classValue = $classID["value"]; 
+        if(!empty($classRes->getUri())){
+                $classValue = $classRes->getUri();
                 //we store the ontology identifier for the saving process
                 $this->store->set('ontologyClassIdentifier', $classValue);
-            }
+            
         }else {
             return drupal_set_message($this->t('ClassValue is empty!'), 'error');
         }
@@ -81,10 +78,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
 
-        if(count($this->OeawStorage->getClassMeta($class)) < 0){
+        if(count($this->OeawStorage->getClassMeta($class)) < 0){            
             return drupal_set_message($this->t('There is no metadata for this class'), 'error');
         }else {
-            // get the actual class metadata
+            // get the actual class metadata            
             $metadataQuery = $this->OeawStorage->getClassMeta($class);
         }
         
@@ -94,7 +91,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         foreach ($metadataQuery as $m) {
             //we dont need the identifier, because doorkeeper will generate it automatically
-            if($m["id"] === $this->config->get('fedoraIdProp')){
+            if($m["id"] === RC::get('fedoraIdProp')){
                continue; 
             }
             
@@ -106,7 +103,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             $attributes = $this->setCardinality($m);
             $attributes["data-ownclass"] = $label."-input-class";
             
-            if($m["id"] === $this->config->get('fedoraRelProp') ){
+            if($m["id"] === RC::get('fedoraRelProp') ){
                 $defaultValue = $rootIdentifier;
                 $attributes["readonly"] = "readonly";
             } else {
@@ -324,8 +321,6 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             $fUri = $fObj->getFileUri();
         }
         
-        
-        
         //get the form fields
         foreach($form2Fields as $f){
             //get the property fields
@@ -360,18 +355,14 @@ class NewResourceTwoForm extends NewResourceFormBase  {
             }            
         }
         
-        $ownIdentifier = $this->OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), "https://id.acdh.oeaw.ac.at/".urlencode($form_state->getValue('ownIdentifier')));
+        $ownIdentifier = $this->OeawStorage->getDataByProp(RC::get('fedoraIdProp'), "https://id.acdh.oeaw.ac.at/".urlencode($form_state->getValue('ownIdentifier')));
         if(count($ownIdentifier) > 0){
             return drupal_set_message($this->t('This ownIdentifier is already exists in the DB, please change it!!!'), 'error');
         }else {
             // add the ownIdentifier
-            $uriAndValue[$this->config->get('fedoraIdProp')][] = "https://id.acdh.oeaw.ac.at/".urlencode($form_state->getValue('ownIdentifier'));
+            $uriAndValue[RC::get('fedoraIdProp')][] = "https://id.acdh.oeaw.ac.at/".urlencode($form_state->getValue('ownIdentifier'));
         }
-        
-
-        
-        
- 
+      
         $this->store->set('fileName', $fUri);
         $this->store->set('uriAndValue', $uriAndValue);
         

@@ -15,8 +15,9 @@ use Drupal\oeaw\ConnData;
 
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
-use acdhOeaw\util\EasyRdfUtil;
-use zozlak\util\Config;
+//use acdhOeaw\util\EasyRdfUtil;
+//use zozlak\util\Config;
+use acdhOeaw\util\RepoConfig as RC;
 use EasyRdf\Graph;
 use EasyRdf\Resource;
 
@@ -27,7 +28,8 @@ class OeawFunctions {
     private $config;
             
     public function __construct(){        
-        $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');     
+     //   $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');     
+        \acdhOeaw\util\RepoConfig::init($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
     }
         
     /**
@@ -39,7 +41,7 @@ class OeawFunctions {
     public function initFedora(): Fedora{
         // setup fedora
         $fedora = array();        
-        $fedora = new Fedora($this->config);
+        $fedora = new Fedora();
         
         return $fedora;
     }
@@ -83,7 +85,7 @@ class OeawFunctions {
         $fedora = array();
         $meta = array();
        // setup fedora        
-        $fedora = new Fedora($this->config);
+        $fedora = new Fedora();
         $res = $fedora->getResourceByUri($uri);
         $meta = $res->getMetadata();
         return $meta;
@@ -100,9 +102,8 @@ class OeawFunctions {
      
         $graph = array();
         // setup fedora        
-        $fedora = new Fedora($this->config);
-        //create and load the data to the graph
-        
+        $fedora = new Fedora();
+        //create and load the data to the graph        
         $res = $fedora->getResourceByUri($uri);        
         $meta = $res->getMetadata();
         
@@ -128,7 +129,7 @@ class OeawFunctions {
         $ajax_response = array();
         $fedora = array();
         
-        $fedora = new Fedora($this->config);
+        $fedora = new Fedora();
         
         if($mode == "edit"){
             //create the old values and the new values arrays with the user inputs
@@ -170,7 +171,7 @@ class OeawFunctions {
         
         foreach($result as $key => $value){
             
-            $resNL = $fedora->getResourcesByProperty($this->config->get('fedoraIdProp'), (string)$value);
+            $resNL = $fedora->getResourcesByProperty(RC::get('fedoraIdProp'), (string)$value);
        
             foreach($resNL as $nl){
                 if(!empty($nl->getMetadata()->label())){
@@ -334,8 +335,8 @@ class OeawFunctions {
       
         $returnData = "";
         
-        if ($way == 'encode') {
-            $data = str_replace($this->config->get('fedoraApiUrl').'/', '', $data);
+        if ($way == 'encode') {            
+            $data = str_replace(RC::get('fedoraApiUrl').'/', '', $data);
             $data = base64_encode($data);
             $returnData = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
         }
@@ -350,7 +351,7 @@ class OeawFunctions {
             
             $data = base64_decode($data);
                         
-            $returnData = $this->config->get('fedoraApiUrl').'/' . $data;
+            $returnData = RC::get('fedoraApiUrl').'/' . $data;
             
         }
         return $returnData;
@@ -377,8 +378,8 @@ class OeawFunctions {
             $childResult[$i]['uri']= $r->getUri();                
             $childResult[$i]['title']= $r->getMetadata()->label();
                 
-            $imageThumbnail = $r->getMetadata()->get(EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$imageThumbnail));
-            $imageRdfType = $r->getMetadata()->all(EasyRdfUtil::fixPropName(\Drupal\oeaw\ConnData::$rdfType));
+            $imageThumbnail = $r->getMetadata()->get(\Drupal\oeaw\ConnData::$imageThumbnail);
+            $imageRdfType = $r->getMetadata()->all(\Drupal\oeaw\ConnData::$rdfType);
                         
             //check the thumbnail
             if($imageThumbnail){
@@ -439,12 +440,11 @@ class OeawFunctions {
             
             foreach($rootMeta->propertyUris($uri) as $v){
             
-                foreach($rootMeta->all(EasyRdfUtil::fixPropName($v)) as $item){
-                    
+                foreach($rootMeta->all($v) as $item){
+            
                     // if there is a thumbnail
                     if($v == \Drupal\oeaw\ConnData::$imageThumbnail){
-                        if($item){
-                                                    
+                        if($item){                                                    
                             $imgData = $OeawStorage->getImage($item);
                             if(count($imgData) > 0){
                                 $hasImage = $imgData[0];
@@ -465,14 +465,16 @@ class OeawFunctions {
                             return drupal_set_message(t('Error in function: createPrefixesFromString'), 'error');
                         }
                         
-                        //check the title based on the acdh id
-                        $resVal = $item->getUri();                        
-                        if($this->getTitleByTheFedIdNameSpace($resVal)){
-                            $resVal = $this->getTitleByTheFedIdNameSpace($resVal);
+                        //check the title based on the acdh id                       
+                        if($item->getUri()){
+                            $resVal = $item->getUri();
+                            if($this->getTitleByTheFedIdNameSpace($resVal)){
+                                $resVal = $this->getTitleByTheFedIdNameSpace($resVal);
+                            }
+                            $results[$i]["value"][] = $resVal;                        
+                            $results[$i]["property"] = $this->createPrefixesFromString($v);
                         }
-
-                        $results[$i]["value"][] = $resVal;                        
-                        $results[$i]["property"] = $this->createPrefixesFromString($v);
+                        
                         
                         if($item->getUri() == \Drupal\oeaw\ConnData::$fedoraBinary){ $results["hasBinary"] = $uri; }
 
@@ -491,7 +493,7 @@ class OeawFunctions {
                         $results[$i]["value"][] = $item;
                     }
                 }
-                $i++;
+                $i++;                    
             } 
         }
         
@@ -513,8 +515,8 @@ class OeawFunctions {
         $return = "";
         $OeawStorage = new OeawStorage();
                 
-        if (strpos($string, $this->config->get('fedoraIdNamespace')) !== false) {            
-            $itemRes = $OeawStorage->getDataByProp($this->config->get('fedoraIdProp'), $string);
+        if (strpos($string, RC::get('fedoraIdNamespace')) !== false) {            
+            $itemRes = $OeawStorage->getDataByProp(RC::get('fedoraIdProp'), $string);
             if(count($itemRes) > 0){
                 if($itemRes[0]["title"]){
                     $return = $itemRes[0]["title"].' : '.$string;
@@ -543,7 +545,7 @@ class OeawFunctions {
         
         if (filter_var($string, FILTER_VALIDATE_URL)) { 
             
-            if (strpos($string, $this->config->get('fedoraApiUrl')) !== false) {
+            if (strpos($string, RC::get('fedoraApiUrl')) !== false) {
                 $res = $this->createDetailsUrl($string, 'encode');                
             }
             return $res;
