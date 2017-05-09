@@ -4,7 +4,13 @@
     "type": "drupal-module",
     "license": "MIT",
     "require": {
-           "acdh-oeaw/repo-php-util": "*"
-    }
+         "acdh-oeaw/repo-php-util": "v0.10.x-dev"
+     },
+     "repositories": [
+         {
+             "type": "vcs",
+             "url": "https://github.com/acdh-oeaw/repo-php-util"
+         }
+     ]    
 }
 
