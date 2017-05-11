@@ -39,24 +39,24 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // get form page 1 stored values
         $formVal = $this->store->get('form1Elements');
         
+        //the selected class
         $class = $formVal['class'];
-        $root =  $formVal['root'];        
-        $fedora = new Fedora();        
-        $rootID = $fedora->getResourceByUri($root)->getId();
+        //the selected root
+        $root =  $formVal['root'];
         
-        //get the value of the property
-        if(count($rootID) > 0 ){
-            $rootIdentifier = $rootID;
+        $fedora = new Fedora();
+        
+        //get the selected root class identifier
+        if(count($fedora->getResourceByUri($root)->getId()) > 0 ){
+            $rootIdentifier = $fedora->getResourceByUri($root)->getId();
         }else {
             return drupal_set_message($this->t('Your root element is missing! You cant add new resource without a root element!'), 'error');
         }
         
         // get the digital resource classes where the user must upload binary file
-        $digitalResQuery = $this->OeawStorage->getDigitalResources();
-        
         //create the digitalResources array
         $digitalResources = array();
-        foreach($digitalResQuery as $dr){
+        foreach($this->OeawStorage->getDigitalResources() as $dr){
             if(isset($dr["collection"])){
                 $digitalResources[] = $dr["id"];
             }
@@ -65,11 +65,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         //create and load the data to the graph        
         $classRes = $fedora->getResourceByUri($class)->getMetadata()->get(RC::get('fedoraIdProp'));
         
-        if(!empty($classRes->getUri())){
-                $classValue = $classRes->getUri();
+        if(!empty($fedora->getResourceByUri($class)->getMetadata()->get(RC::get('fedoraIdProp'))->getUri())){
+                $classValue = $fedora->getResourceByUri($class)->getMetadata()->get(RC::get('fedoraIdProp'))->getUri();
                 //we store the ontology identifier for the saving process
-                $this->store->set('ontologyClassIdentifier', $classValue);
-            
+                $this->store->set('ontologyClassIdentifier', $classValue);            
         }else {
             return drupal_set_message($this->t('ClassValue is empty!'), 'error');
         }
@@ -78,10 +77,10 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         // we need to show the fileupload option
         $checkDigRes = in_array($classValue, $digitalResources);
 
-        if(count($this->OeawStorage->getClassMeta($class)) < 0){            
+        if(count($this->OeawStorage->getClassMeta($class)) < 0){
             return drupal_set_message($this->t('There is no metadata for this class'), 'error');
         }else {
-            // get the actual class metadata            
+            // get the actual class metadata
             $metadataQuery = $this->OeawStorage->getClassMeta($class);
         }
         
@@ -268,7 +267,14 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         );
         return $form;
     }
-    
+    /**
+     * 
+     * the field ajax function
+     * 
+     * @param array $form
+     * @param FormStateInterface $form_state
+     * @return type
+     */
     public function fieldValidateCallback(array &$form, FormStateInterface $form_state) {
         //get the formelements
         $formElements = $form_state->getUserInput();
@@ -391,8 +397,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
 
         if(isset($m["maxCardinality"]) && !empty($m["maxCardinality"])){
             $attributes["data-maxcardinality"] = $m["maxCardinality"];
-        }
-        
+        }        
         return $attributes;
     }
     
@@ -413,8 +418,7 @@ class NewResourceTwoForm extends NewResourceFormBase  {
         
         if (strpos($expProp, '#') !== false) {
            $expProp = str_replace('#', '', $expProp);
-        }
-        
+        }        
         $label = $expProp;
         
         return $label;

@@ -88,12 +88,13 @@ class EditForm extends FormBase {
         $form_state->disableCache();
         //get the hash uri from the url, based on the drupal routing file
         $editHash = \Drupal::request()->get('uri');
+        
         $editMetaData = array();
+        $isImage = false;
         if (empty($editHash)) {
             return drupal_set_message($this->t('The uri is not exists!'), 'error');            
         }
         
-        $isImage = false;
         $editUri = $this->OeawFunctions->createDetailsUrl($editHash, 'decode');
         $editMetaData = $this->fedora->getResourceByUri($editUri)->getMetadata();
         // get the digital resource classes where the user must upload binary file
@@ -104,7 +105,8 @@ class EditForm extends FormBase {
         
         //create and load the data to the graph
         $classGraph = $this->OeawFunctions->makeGraph($editUri);
-
+        $resTitle = $classGraph->label($editUri);
+        
         $classVal = array();
         //get the identifier from the graph and convert the easyrdf_resource object to php array        
         
@@ -149,8 +151,6 @@ class EditForm extends FormBase {
             return drupal_set_message($this->t('There are no Fields for this URI CLASS'), 'error');
         }
         
-        $resTitle = $classGraph->label($editUri);
-
         $form['resource_title'] = array(
             '#markup' => '<h2><b><a href="'.$editUri.'" target="_blank">'.$resTitle.'</a></b></h2>',
         );
@@ -170,13 +170,12 @@ class EditForm extends FormBase {
             $attributes = $this->setCardinality($m);
 
             //if the input field has value then we need to check the type
-            if(count($fieldValues) !== 0){
-                if(get_class($fieldValues[0]) == "EasyRdf\Literal"){
-                    $fieldValue = $fieldValues[0]->getValue();                    
-                }
-                
+            if(count($fieldValues) > 0){           
                 if(get_class($fieldValues[0]) == "EasyRdf\Resource"){
-                    $fieldValue = $fieldValues[0]->getUri();
+                    $fieldValue = $this->getResourceValue($fieldValues[0]);
+                }                
+                if(get_class($fieldValues[0]) == "EasyRdf\Literal"){
+                    $fieldValue = $this->getLiteralValue($fieldValues[0]);
                 }
             }
             
@@ -185,7 +184,6 @@ class EditForm extends FormBase {
             // if the label is the isPartOf or identifier, then we need to disable the editing
             // to the users, they do not have a permission to change it
             $attributes = $this->disableFields($m["id"], $attributes);
-            
             
             $oldLabel = $this->getOldLabel($fieldValue, $classGraph, $fedora, $editUri, $m["id"]);
             
@@ -236,18 +234,16 @@ class EditForm extends FormBase {
             
             if(isset($attributes["data-mincardinality"]) && $attributes["data-mincardinality"] > 1){
                 
-                for($x = 2; $x <= $attributes["data-mincardinality"]; $x++) {
-                    
-                    $fieldValue = "";
+                for($x = 2; $x <= $attributes["data-mincardinality"]; $x++) {                    
+                    $fieldValue = "";                    
                     if(isset($fieldValues[$x-1])){
-                        if(get_class($fieldValues[$x-1]) == "EasyRdf\Literal"){
-                            $fieldValue = $fieldValues[$x-1]->getValue();
-                        }
-
                         if(get_class($fieldValues[$x-1]) == "EasyRdf\Resource"){
-                            $fieldValue = $fieldValues[$x-1]->getUri();
+                            $fieldValue = $this->getResourceValue($fieldValues[$x-1]);
+                        }                
+                        if(get_class($fieldValues[$x-1]) == "EasyRdf\Literal"){
+                            $fieldValue = $this->getLiteralValue($fieldValues[$x-1]);
                         }
-                    }
+                    }                    
                     
                     $oldLabel = "";
                     $oldLabel = $this->getOldLabel($fieldValue, $classGraph, $fedora, $editUri, $m["id"]);
@@ -344,14 +340,13 @@ class EditForm extends FormBase {
               
                 }
             }
-            
+            //if we have a maxcardinality property then we need to add the add/remove buttons to the UI
             if(isset($attributes["data-maxcardinality"])){
                 $form[$label.'-add_remove'] = array(
                     '#type' => 'item',
                     '#markup' => t('<a href="#" id="'.$label.'-plus">Add fields</a> <a href="#" id="'.$label.'-minus">Remove last</a>')
                 );
-            }
-        
+            }        
         }
         
         $this->store->set('formEditFields', $fieldsArray);        
@@ -527,7 +522,7 @@ class EditForm extends FormBase {
      * @param array $attributes
      * @return string
      */
-    public function disableFields(string $field, array $attributes){
+    public function disableFields(string $field, array $attributes):array{
         
         if($field === RC::get('fedoraRelProp') || $field === RC::get('fedoraIdProp')){
             $attributes['readonly'] = 'readonly';
@@ -573,6 +568,31 @@ class EditForm extends FormBase {
         }
                 
         return $oldLabel;   
+    }
+    /**
+     * Get the Value of the literal property for the edit input fields
+     * 
+     * @param \EasyRdf\Literal $obj
+     * @return string
+     */
+    public function getLiteralValue(\EasyRdf\Literal $obj):string{
+        if(get_class($obj) == "EasyRdf\Literal"){
+            $fieldValue = $obj->getValue();
+        }
+        return $fieldValue;
+    }
+    /**
+     * 
+     * Get the Value of the Resource property for the edit input fields
+     * 
+     * @param \EasyRdf\Resource $obj
+     * @return string
+     */
+    private function getResourceValue(\EasyRdf\Resource $obj):string{
+        if(get_class($obj) == "EasyRdf\Resource"){
+            $fieldValue = $obj->getUri();
+        }
+        return $fieldValue;
     }
     
      /**

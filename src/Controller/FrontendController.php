@@ -39,15 +39,8 @@ class FrontendController extends ControllerBase {
     public function __construct() {
         $this->OeawStorage = new OeawStorage();
         $this->OeawFunctions = new OeawFunctions();
-        
-        //$this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
         \acdhOeaw\util\RepoConfig::init($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');
     }    
-    
-    public function oeaw_ac_form(){        
-        $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\AutoCompleteForm');
-        return $form;        
-    }
     
     /**
      * 
@@ -74,8 +67,7 @@ class FrontendController extends ControllerBase {
             foreach($result as $value){
                 // check that the value is an Url or not
                 
-                $decodeUrl = $this->OeawFunctions->isURL($value["uri"], "decode");
-                
+                $decodeUrl = $this->OeawFunctions->isURL($value["uri"], "decode");                
                 //create details and editing urls
                 if($decodeUrl){
                     $res[$i]['detail'] = "/oeaw_detail/".$decodeUrl;

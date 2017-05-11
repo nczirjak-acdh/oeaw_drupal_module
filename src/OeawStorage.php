@@ -6,7 +6,7 @@ use Drupal\Core\Url;
 use Drupal\oeaw\OeawFunctions;
 use Drupal\oeaw\ConnData;
 use Drupal\Core\Form\ConfigFormBase;
-use Drupal\Component\Render\MarkupInterface;
+
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 
@@ -48,20 +48,10 @@ class OeawStorage {
         'owlMinCardinality' => 'http://www.w3.org/2002/07/owl#minCardinality',
         'owlMaxCardinality' => 'http://www.w3.org/2002/07/owl#maxCardinality'        
     );
-    
-    private $apiUrl;
-    
-    private $idProp;
-    
-    private $relProp;
-    
-    private $titleProp;
-    
-    private $OeawFunctions;
-    
+        
+    private $titleProp;    
+    private $OeawFunctions;    
     private $fedora;
-    
-    
     
     public function __construct() {  
         
@@ -88,8 +78,7 @@ class OeawStorage {
      * @return Array     
      */
     public function getRootFromDB(): array {
-  
-        //$dcTitle = $this->titleProp;
+          
         $dcTitle = RC::titleProp();
         $isPartOf = RC::relProp();
         
@@ -176,8 +165,7 @@ class OeawStorage {
         }else if(filter_var($property, FILTER_VALIDATE_URL)){            
             $property = '<'. $property .'>';
         }
-
-
+        
         if(!filter_var($value, FILTER_VALIDATE_URL)){
             $value = $this->OeawFunctions->createUriFromPrefix($value);
             if($value === false){
@@ -195,8 +183,7 @@ class OeawStorage {
             
             $dcTitle = RC::titleProp();
             $foafName = self::$sparqlPref["foafName"];
-            $rdfsLabel = self::$sparqlPref["rdfsLabel"];
-            
+            $rdfsLabel = self::$sparqlPref["rdfsLabel"];            
             
             $q = new Query();
             $q->addParameter((new HasValue($property, $value))->setSubVar('?uri'));
@@ -211,26 +198,12 @@ class OeawStorage {
             $q4 = new Query();
             $q4->addParameter((new HasTriple('?uri', $foafName, '?name')));
             $q4->setJoinClause('optional');
-            $q->addSubquery($q4);
-            
+            $q->addSubquery($q4);            
             $q->setSelect(array('?uri', '?title', '?label', '?name'));
             $query = $q->getQuery();
             
             $result = $this->fedora->runSparql($query);
-            
-   
-/*               $result = $sparql->query(
-                        self::$prefixes . ' '
-                        . 'SELECT '
-                            . '?uri ?title ?label ?name '
-                        . ' WHERE { '
-                            . '?uri ' . $property . ' '.$value.' . '
-                            . 'OPTIONAL { ?uri dc:title ?title } .'
-                            . 'OPTIONAL { ?uri rdfs:label ?label } . '
-                            . 'OPTIONAL { ?uri foaf:name ?name } . '
-                        . '}'); 
-          
-  */       
+     
             $fields = $result->getFields(); 
             $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
 
@@ -251,22 +224,11 @@ class OeawStorage {
         
         $getResult = array();
         
-        try {
-        
+        try {        
             $rdfType = self::$sparqlPref["rdfType"];
-            $dcTitle = $this->titleProp;        
             $rdfsLabel = self::$sparqlPref["rdfsLabel"];
             $owlClass = self::$sparqlPref["owlClass"];
-            /*
-             * 
-             * SELECT 
-                            ?uri ?title 
-                        WHERE {
-                            ?uri a owl:Class .
-                            ?uri rdfs:label ?title .
-                          }
-             * 
-             */
+           
             $q = new Query();
             $q->addParameter((new HasValue($rdfType, $owlClass))->setSubVar('?uri'));
             $q->addParameter(new HasTriple('?uri', $rdfsLabel, '?title'));
@@ -282,8 +244,7 @@ class OeawStorage {
             
         } catch (Exception $ex) {
             return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
-        }    
-        
+        }
     }
    
     /* 
@@ -294,15 +255,12 @@ class OeawStorage {
      * @return Array     
     */    
     public function getDigitalResources(): array
-    {
-        
+    {        
         $getResult = array();
         
-        try {
-            
+        try {            
             $rdfType = self::$sparqlPref["rdfType"];
-            $dcID = RC::idProp();
-            $rdfsSubClass = self::$sparqlPref["rdfsSubClass"];
+            $dcID = RC::idProp();            
             $owlClass = self::$sparqlPref["owlClass"];
             
             $q = new Query();            
@@ -312,8 +270,7 @@ class OeawStorage {
             $q->addParameter(new HasTriple('?class', $dcID, '?id'));
             
             $q2 = new Query();
-            $q2->setJoinClause('optional');
-            
+            $q2->setJoinClause('optional');            
             
             $q->addSubquery($q2);
             
@@ -394,18 +351,14 @@ class OeawStorage {
             return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
         }
         
-        $getResult = array();        
+        $getResult = array();
         
-        try {
+        try {            
             
-            $rdfType = self::$sparqlPref["rdfType"];
-            $dcTitle = RC::titleProp();
-            $rdfsLabel = self::$sparqlPref["rdfsLabel"];
+            $dcTitle = RC::titleProp();            
             $idProp = RC::idProp();
             $rdfsSubClass = self::$sparqlPref['rdfsSubClass'];
             $rdfsDomain = self::$sparqlPref["rdfsDomain"];
-            $dctLabel = self::$sparqlPref["dctLabel"];
-            $owlOnProperty = self::$sparqlPref["owlOnProperty"];
             $owlCardinality = self::$sparqlPref["owlCardinality"];
             $owlMinCardinality = self::$sparqlPref["owlMinCardinality"];
             $owlMaxCardinality = self::$sparqlPref["owlMaxCardinality"];
@@ -499,21 +452,14 @@ class OeawStorage {
             return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
         }
         
-        if($property == null){
-            $property = RC::get('idProp');
-        }
-        
-        $result = "";
+        if($property == null){ $property = RC::get('idProp'); }                
         $res = array();
 
-        try{
-            
+        try{            
             $q = new Query();
             $q->setSelect(array('?res'));
             $q->addParameter((new HasValue($property, $value)));
             $query = $q->getQuery();
-            
-          
             $result = $this->fedora->runSparql($query);
             
             $fields = $result->getFields(); 
@@ -521,10 +467,8 @@ class OeawStorage {
            
             if(count($getResult) > 0){
                 $res[] = $getResult[0]["res"];
-            }
-            
-            return $res;            
-         
+            }            
+            return $res;         
         } catch (Exception $ex) {
             return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
         }
@@ -543,14 +487,12 @@ class OeawStorage {
     
     public function searchForData(string $value, string $property): array{
         
-        $rdfType = self::$sparqlPref["rdfType"];
-        $dcTitle = RC::titleProp();
-        $rdfsLabel = self::$sparqlPref["rdfsLabel"];
-        
         if (empty($value) || empty($property)) {
             return drupal_set_message(t('Empty values! -->'.__FUNCTION__), 'error');
         }
-        
+                
+        $dcTitle = RC::titleProp();
+        $rdfsLabel = self::$sparqlPref["rdfsLabel"];
         $getResult = array();
         
         try {
@@ -571,30 +513,17 @@ class OeawStorage {
             $q->addSubquery($q3);
          
             $query = $q->getQuery();
-            
-            /*
-            $query =
-                    self::$prefixes . ' SELECT ?uri ?property ?value ?title ?label  '
-                    . 'WHERE {'
-                        . '?uri '.$property.' ?value . '
-                        . ' FILTER (  '
-                            . ' regex( str(?value), "' . $value . '", "i")'
-                        . ') . '
-                        . ' OPTIONAL {?uri dc:title ?title} . '
-                        . ' OPTIONAL {?uri rdfs:label ?label} . '
-                    . '} ';
-*/
+         
             $result = $this->fedora->runSparql($query);
             
             $fields = $result->getFields(); 
             $getResult = $this->OeawFunctions->createSparqlResult($result, $fields);
-
+            
             return $getResult;
 
         } catch (Exception $ex) {
             return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
-        }
-        
+        }        
     }
     /*
      * 
@@ -606,12 +535,10 @@ class OeawStorage {
     
     public function getClassesForSideBar():array
     {        
-        $rdfType = self::$sparqlPref["rdfType"];
-        
+        $rdfType = self::$sparqlPref["rdfType"];        
         $getResult = array();
         
-        try {
-            
+        try {            
             $q = new Query();
             $q->addParameter(new HasTriple('?aaa', $rdfType, '?type'));
             $q->setSelect(array('?type', '(COUNT(?type) as ?typeCount)'));
@@ -633,8 +560,7 @@ class OeawStorage {
 
         } catch (Exception $ex) {
             return drupal_set_message(t('There was an error in the function: '.__FUNCTION__), 'error');
-        }
-        
+        }        
     }
 
 } 

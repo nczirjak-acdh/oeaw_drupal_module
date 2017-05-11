@@ -24,8 +24,6 @@ use EasyRdf\Resource;
 
  
 class OeawFunctions {
-    
-    private $config;
             
     public function __construct(){        
      //   $this->config = new Config($_SERVER["DOCUMENT_ROOT"].'/modules/oeaw/config.ini');     
@@ -40,33 +38,9 @@ class OeawFunctions {
      */   
     public function initFedora(): Fedora{
         // setup fedora
-        $fedora = array();        
+        $fedora = array();
         $fedora = new Fedora();
-        
         return $fedora;
-    }
-    
-    
-    public function getDuplicatesFromArray(array $data, string $array_key): array{
-        
-        if(empty($data) || empty($array_key)){
-            return drupal_set_message(t('Data is missing!'), 'error');
-        }
-        
-        $result = array();
-        
-        foreach ($data as $current_key => $current_array) {        
-            foreach ($data as $search_key => $search_array) {
-                if ($search_array[$array_key] == $current_array[$array_key]) {
-                    if ($search_key != $current_key) {
-                        $result[$search_array[$array_key]][] = $search_key;
-                    }
-                }
-            }
-        }
-        
-        return $result;
-        
     }
         
     /**
@@ -82,12 +56,10 @@ class OeawFunctions {
             return drupal_set_message(t('The uri is missing!'), 'error');
         }
         
-        $fedora = array();
         $meta = array();
-       // setup fedora        
+       // setup fedora
         $fedora = new Fedora();
-        $res = $fedora->getResourceByUri($uri);
-        $meta = $res->getMetadata();
+        $meta = $fedora->getResourceByUri($uri)->getMetadata();
         return $meta;
     }
     
@@ -103,11 +75,8 @@ class OeawFunctions {
         $graph = array();
         // setup fedora        
         $fedora = new Fedora();
-        //create and load the data to the graph        
-        $res = $fedora->getResourceByUri($uri);        
-        $meta = $res->getMetadata();
-        
-        $graph = $meta->getGraph();
+        //create and load the data to the graph
+        $graph = $fedora->getResourceByUri($uri)->getMetadata()->getGraph();
         
         return $graph;
     }
@@ -148,25 +117,19 @@ class OeawFunctions {
             
         }else if($mode == "new"){
                                    
-            foreach($formElements as $key => $value){
-                error_log($key);
-                error_log("<br>");
+            foreach($formElements as $key => $value){                
                 if((strpos($key, ':prop') !== false)) {
                     unset($formElements[$key]);
                 }elseif (strpos($value, 'http') !== false) {
                     $result[$key] = $value;
                 }
             }
-        }
-        error_log("itt");
-        error_log(print_r($result, true));
+        }        
         $ajax_response = new AjaxResponse();
         
-        if(empty($result)){
-            return $ajax_response;
-        }
+        if(empty($result)){ return $ajax_response; }
        
-        $color = 'green';        
+        $color = 'green';
         $resNL = array();
         
         foreach($result as $key => $value){
@@ -177,10 +140,7 @@ class OeawFunctions {
                 if(!empty($nl->getMetadata()->label())){
                     $label = htmlentities($nl->getMetadata()->label(), ENT_QUOTES, "UTF-8");
                 }else { $label = ""; }
-            }
-            
-            error_log("itt a label---".$key);
-            error_log($label);
+            }            
             
             if(!empty($label)){
                 
@@ -207,8 +167,7 @@ class OeawFunctions {
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
         $res = array();
-        $resCount = count($result)-1;
-        $objClass = array();
+        $resCount = count($result)-1;        
         $val = "";
         
         for ($x = 0; $x <= $resCount; $x++) {
@@ -248,12 +207,9 @@ class OeawFunctions {
      */
     public static function createPrefixesFromString(string $string): string{
         
-        if (empty($string)) {
-           return false;
-        }
+        if (empty($string)) { return false; }
         
-        $result = array();
-        $endValue = array();
+        $result = array();        
         
         $endValue = explode('/', $string);
         $endValue = end($endValue);
@@ -292,8 +248,7 @@ class OeawFunctions {
             return drupal_set_message(t('Error in function: '.__FUNCTION__), 'error');
         }
         
-        $result = array();
-        $endValue= array();
+        $result = array();        
         $newString = array();        
         
         for ($index = 0; $index < count($header); $index++) {
@@ -508,9 +463,7 @@ class OeawFunctions {
      */
     function getTitleByTheFedIdNameSpace(string $string): string{
         
-        if(!$string) {
-            return false;
-        }
+        if(!$string) { return false; }
         
         $return = "";
         $OeawStorage = new OeawStorage();
@@ -526,11 +479,9 @@ class OeawFunctions {
                     $return = $itemRes[0]["name"].' : '.$string;
                 }
             }
-        }
-        
+        }        
         return $return;
     }
-    
        
     /**
      * 
@@ -541,12 +492,10 @@ class OeawFunctions {
      */
     public function isURL(string $string): string{
         
-        $res = "";
-        
-        if (filter_var($string, FILTER_VALIDATE_URL)) { 
-            
+        $res = "";        
+        if (filter_var($string, FILTER_VALIDATE_URL)) {
             if (strpos($string, RC::get('fedoraApiUrl')) !== false) {
-                $res = $this->createDetailsUrl($string, 'encode');                
+                $res = $this->createDetailsUrl($string, 'encode');
             }
             return $res;
         } else {
@@ -554,8 +503,6 @@ class OeawFunctions {
         }        
     }
 
-    
-        
     /**
      * 
      * Creates a property uri based on the prefix
@@ -565,27 +512,21 @@ class OeawFunctions {
      */
     public function createUriFromPrefix(string $prefix): string{
         
-        if(empty($prefix)){
-           return false;
-        }
+        if(empty($prefix)){ return false; }
         
         $res = "";
-        $newValue = array();
-        $newPrefix = array();
-        $prefixes = array();
         
-        $newValue = explode(':', $prefix);        
+        $newValue = explode(':', $prefix);
         $newPrefix = $newValue[0];
         $newValue =  $newValue[1];
         
         $prefixes = \Drupal\oeaw\ConnData::$prefixesToChange;
         
-        foreach ($prefixes as $key => $value){            
+        foreach ($prefixes as $key => $value){
             if($value == $newPrefix){
                 $res = $key.$newValue;
             }
-        }
-        
+        }        
         return $res;
     }
     

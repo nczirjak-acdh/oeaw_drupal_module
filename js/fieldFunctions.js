@@ -21,6 +21,7 @@
                             var itemValue = $('#'+id).val();
                             if(!itemValue){
                                 $('#'+id).parent().hide();
+                                $('#'+id).val("");
                             }
                         }
                     });
@@ -37,6 +38,7 @@
                         var itemValue = $('#'+id).val();
                         if(!itemValue){
                             $('#'+id).parent().hide();
+                            $('#'+id).val("");
                         }
                     });                                       
                 }
@@ -86,14 +88,13 @@
                             var indexOfTheInput = $('input[id^="edit-'+str2+'"]').length;
                             
                             if($("div[class*='js-form-item-"+str2+"']").length > 0){
-
                                 var minusArray = new Array();
                                 //add the divs to an array
                                 $("div[class*='js-form-item-"+str2+"-']").each(function(){
                                     minusArray.push($(this));
                                 });
-                                //loopon the array backwards because we need to remove the last displayed element                                    
-                                for (var i = indexOfTheInput; i > 0; i--) {                                    
+                                //loopon the array backwards because we need to remove the last displayed element
+                                for (var i = indexOfTheInput; i > 0; i--) {
                                     jQuery.each(minusArray, function(index, item) {
                                         //if we showed the last element then we can exit from the loop
                                         if(succ === true){
@@ -106,6 +107,7 @@
                                                 //then we need to hide it and set the success to true
                                                 var elemClass = item.attr('class');
                                                 $("div[class='"+elemClass+"']").css('display', 'none');
+                                                
                                                 succ = true;
                                             }
                                         }
@@ -115,10 +117,15 @@
                         }
                     });
                 }
-                
-                
-              
             });
+            /*
+            $("form#multistep-form-two").submit(function( event ) {
+                $("form#multistep-form-two :input").each(function(){
+                var input = $(this); // This is the jquery object of the input, do what you will
+                
+                });
+                event.preventDefault();
+            });*/
         }
     };
 }(jQuery, Drupal, this, this.document));
