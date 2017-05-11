@@ -21,7 +21,6 @@ use Symfony\Component\HttpFoundation\Request;
 use acdhOeaw\fedora\Fedora;
 use acdhOeaw\fedora\FedoraResource;
 
-//use zozlak\util\Config;
 use acdhOeaw\util\RepoConfig as RC;
 use EasyRdf_Graph;
 use EasyRdf_Resource;

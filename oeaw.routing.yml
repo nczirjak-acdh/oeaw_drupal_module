@@ -104,14 +104,6 @@ oeaw.autocomplete:
         _controller: '\Drupal\oeaw\Controller\FrontendController::autocomplete'
     requirements:
         _permission: 'TRUE'
-        
-oeaw_ac_form:
-    path: '/oeaw_ac_form'
-    defaults:
-        _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_ac_form'
-    requirements:
-        _permission: 'access content'
-        _access: 'TRUE'
 
 oeaw_new_success:
   path: '/new_res_success/{uri}'
