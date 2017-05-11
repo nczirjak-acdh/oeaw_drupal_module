@@ -96,18 +96,21 @@
                                 //loopon the array backwards because we need to remove the last displayed element
                                 for (var i = indexOfTheInput; i > 0; i--) {
                                     jQuery.each(minusArray, function(index, item) {
+                                        
                                         //if we showed the last element then we can exit from the loop
                                         if(succ === true){
                                             return false;
                                         }
                                         //if the checked div has the actual class
                                         if(item.hasClass('js-form-item-'+str2+'-'+i)){
+                                            
                                             //and it is displayed
                                             if(item.css('display') == 'block'){
                                                 //then we need to hide it and set the success to true
                                                 var elemClass = item.attr('class');
                                                 $("div[class='"+elemClass+"']").css('display', 'none');
-                                                
+                                                //remove the value of the removed input field
+                                                $("input#edit-"+str2+'-'+i).val("");
                                                 succ = true;
                                             }
                                         }
