@@ -112,3 +112,12 @@ oeaw_new_success:
   requirements:
     _permission: 'access content'
     _access: 'TRUE'
+
+oeaw_deposition_agreement:
+  path: '/oeaw_deposition_agreement'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_deposition_agreement'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
+    

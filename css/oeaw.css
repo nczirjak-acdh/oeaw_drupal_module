@@ -14,3 +14,6 @@
 .search-form input {
     max-width: 200px!important;
 }
+.depagree-form input{
+    width: 100%!important;
+}
