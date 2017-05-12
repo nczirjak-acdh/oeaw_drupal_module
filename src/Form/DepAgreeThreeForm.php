@@ -24,7 +24,7 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
         );       
         
         $form['transfer']['folder_name'] = array(
-            '#type' => 'textarea',
+            '#type' => 'textfield',
             '#title' => t('Folder name or BagIt name:'),            
         );
         
@@ -34,23 +34,20 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
             '#attributes' => array("readonly" => TRUE),
             '#default_value' => date("d-m-Y")            
         );
+       
+        
+        $transferMeth = array();
+        $transferMeth["CD"] = "CD";
+        $transferMeth["DVD"] = "DVD";
+        $transferMeth["HDD"] = "Hard Drive";
+        $transferMeth["NETWORK"] = "Network Transfer";
+        $transferMeth["USB"] = "USB";
         
         $form['transfer']['transfer_method'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Transfer medium and method:'),
-            '#description' => $this->t('e.g. hard drive, CD, DVD, USB stick, network transfer'),    
-        );
-        
-        $accMode = array();
-        $accMode["PUB"] = "Public content (PUB): free access to the general public without any restriction. The classification of a resource as public content does not mean that the resources may be used for any purpose. The permissible types of use are further detailed by the license accompanying every resource";
-        $accMode["ACA"] = "Academic content (ACA): to access the resource the user has to register as an academic user. This is accomplished by authentication with the home identity provider by means of the Identity Federation.";
-        $accMode["RES"] = "Restricted content (RES): includes resources with a special access mode. Special authorization rules apply that are detailed in the accompanying metadata record";        
-        
-        $form['transfer']['access_mode'] = array(
             '#type' => 'radios',
-            '#title' => t('Access mode:'),
-            '#options' => $accMode,
-            '#description' => $this->t(''),
+            '#title' => t('Transfer medium and method:'),
+            '#options' => $transferMeth,
+            '#description' => $this->t('e.g. hard drive, CD, DVD, USB stick, network transfer'),    
         );
         
         

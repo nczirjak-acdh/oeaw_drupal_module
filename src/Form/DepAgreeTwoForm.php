@@ -132,6 +132,27 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
             '#description' => $this->t(''),
         );
         
+        $form['extent']['soft_req'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Software requirements:'),            
+            '#description' => $this->t('list any software programs formats that are not typically used in a standard office environment, that are required to access content being transferred'),
+        );
+        
+        $form['extent']['arrangement'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Arrangement:'),            
+            '#description' => $this->t('The aim is to give a logical and coherent overall view of the whole set of objects, describe folder structure, nature of relationship between objects and metadata, etc.  If necessary, attach diagrams or screenshots from the original system'),
+        );
+        
+        $form['extent']['name_scheme'] = array(
+            '#type' => 'managed_file',
+            '#title' => t('Naming scheme:'),
+            '#upload_validators' => array(
+                'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
+             ),
+            '#description' => $this->t('Provide if one exists'),
+        );
+        
         
         $fileTypes = array();
         $fileTypes["3DVirtual"] = "3D Data and Virtual Reality";
@@ -152,6 +173,12 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
             '#title' => t('List of file types included:'),            
             '#options' => $fileTypes,
             '#description' => $this->t(''),
+        );
+        
+        $form['other_file_type'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Other File types:'),            
+            '#description' => $this->t('If your file type is not in the list, then please add it here.'),
         );
         
         $fileFormats = array();
@@ -240,25 +267,11 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
             '#description' => $this->t(''),
         );
         
-        
-        $form['extent']['soft_req'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Software requirements:'),            
-            '#description' => $this->t('list any software programs formats that are not typically used in a standard office environment, that are required to access content being transferred'),
+        $form['other_file_formats'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Other File formats:'),
+            '#description' => $this->t('If your file format is not in the list, then please add it here.'),
         );
-        
-        $form['extent']['arrangement'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Arrangement:'),            
-            '#description' => $this->t('The aim is to give a logical and coherent overall view of the whole set of objects, describe folder structure, nature of relationship between objects and metadata, etc.  If necessary, attach diagrams or screenshots from the original system'),
-        );
-        
-        $form['extent']['name_scheme'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Naming scheme:'),            
-            '#description' => $this->t('Provide if one exists'),
-        );
-        
         
         $form['actions']['previous'] = array(
             '#type' => 'link',
