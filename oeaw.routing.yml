@@ -113,11 +113,46 @@ oeaw_new_success:
     _permission: 'access content'
     _access: 'TRUE'
 
-oeaw_deposition_agreement:
-  path: '/oeaw_deposition_agreement'
+oeaw_depagree_base:
+  path: '/oeaw_depagree_base'
   defaults:
-    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_deposition_agreement'
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_depagree_base'
   requirements:
     _permission: 'access content'
     _access: 'TRUE'
     
+oeaw_depagree_one:
+  path: '/oeaw_depagree_one'
+  defaults:
+    _form: '\Drupal\oeaw\Form\DepAgreeOneForm'
+    _title: 'Deposition agreement, Step 1'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
+    
+oeaw_depagree_two:
+  path: '/oeaw_depagree_two'
+  defaults:
+    _form: '\Drupal\oeaw\Form\DepAgreeTwoForm'
+    _title: 'Deposition agreement, Step 2'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
+
+oeaw_depagree_three:
+  path: '/oeaw_depagree_three'
+  defaults:
+    _form: '\Drupal\oeaw\Form\DepAgreeThreeForm'
+    _title: 'Deposition agreement, Step 3'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
+
+oeaw_depagree_four:
+  path: '/oeaw_depagree_four'
+  defaults:
+    _form: '\Drupal\oeaw\Form\DepAgreeFourForm'
+    _title: 'Deposition agreement, Step 4'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'

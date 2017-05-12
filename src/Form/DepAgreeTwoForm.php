@@ -4,8 +4,9 @@ namespace Drupal\oeaw\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
-class DepAgreeForm extends FormBase{
+class DepAgreeTwoForm extends DepAgreeBaseForm{
     
     public function getFormId() {
         return 'depagree_form';
@@ -13,80 +14,10 @@ class DepAgreeForm extends FormBase{
     
     public function buildForm(array $form, FormStateInterface $form_state) {
         
+        $form = parent::buildForm($form, $form_state);
+        
         $form['depositor_agreement_title'] = array(
             '#markup' => '<h1><b>Deposition agreement</b></h1>',
-        );
-        
-        $form['depositor'] = array(
-            '#type' => 'fieldset',
-            '#title' => t('<h2><b>Depositor</b></h2>'),
-            '#collapsible' => TRUE,
-            '#collapsed' => FALSE,  
-        );
-              
-        
-        $form['depositor']['title'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Name Title:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['l_name'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Last Name:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['f_name'] = array(
-            '#type' => 'textfield',
-            '#title' => t('First Name:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['institution'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Institution:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['city'] = array(
-            '#type' => 'textfield',
-            '#title' => t('City:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['address'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Address:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['zipcode'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Zipcode:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['email'] = array(
-            '#type' => 'email',
-            '#title' => t('Email:'),
-            '#required' => TRUE,
-        );
-        
-        $form['depositor']['phone'] = array (
-            '#type' => 'tel',
-            '#title' => t('Phone'),
-            '#required' => TRUE,
-        );
-        /*
-        $form['depositor_agreement_title'] = array(
-            '#markup' => '',
-        );
-        */
-        
-        
-        $form['creators_title3'] = array(
-            '#markup' => '<br><br>',
         );
         
         $form['material'] = array(
@@ -99,7 +30,7 @@ class DepAgreeForm extends FormBase{
         $form['material']['acdh_repo_id'] = array(
             '#type' => 'textfield',
             '#title' => t('ACDH-repo ID:'),
-            '#required' => TRUE,
+            
             '#default_value' => substr( md5(rand()), 0, 20),
             '#attributes' => array("readonly" => TRUE),
             '#description' => $this->t('string used as an internal identifier for the deposited resources'),
@@ -108,21 +39,21 @@ class DepAgreeForm extends FormBase{
         $form['material']['title'] = array(
             '#type' => 'textfield',
             '#title' => t('Title:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t(''),
         );
         
         $form['material']['ipr'] = array(
             '#type' => 'textarea',
             '#title' => t('Intellectual Property Rights (IPR):'),
-            '#required' => TRUE,
+            
             '#description' => $this->t('Intellectual property rights including, but not limited to copyrights, related (or neighbouring) rights and database rights'),
         );
         
         $form['material']['metadata'] = array(
             '#type' => 'textarea',
             '#title' => t('Metadata:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t('is the information that may serve to identify, discover, interpret, manage, and describe content and structure.'),
         );
         
@@ -164,14 +95,14 @@ class DepAgreeForm extends FormBase{
                 'Copyright Not Evaluated' => t('Copyright Not Evaluated'),                
             ),
             '#title' => t('Licence:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t(''),
         );
         
         $form['material']['scope_content_statement'] = array(
             '#type' => 'textarea',
             '#title' => t('Scope and content statement:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t('Provide a description of genres, purpose, and content of the resources being deposited.'),
         );
         
@@ -192,158 +123,160 @@ class DepAgreeForm extends FormBase{
         $form['extent']['file_size_byte'] = array(
             '#type' => 'textfield',
             '#title' => t('Overall file size in bytes:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t(''),
         );
         
         $form['extent']['file_number'] = array(
             '#type' => 'textfield',
             '#title' => t('Number of files:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t(''),
         );
         
         $form['extent']['folder_number'] = array(
             '#type' => 'textfield',
             '#title' => t('Number of folders:'),
-            '#required' => TRUE,
+            
             '#description' => $this->t(''),
         );
         
         
         $fileTypes = array();
-        $fileTypes["1"] = "One";
-        $fileTypes["2"] = "Two";
-        $fileTypes["3"] = "Three";
-        $fileTypes["4"] = "Four";
+        $fileTypes["Database"] = "DataBase";
+        $fileTypes["Spreadsheets"] = "Spreadsheets";
+        $fileTypes["Images"] = "Images";
+        $fileTypes["TextDocument"] = "Text Documents";
         
         $form['file_types'] = array(
             '#type' => 'checkboxes',
-            '#title' => t('List of file types included:'),
-            '#required' => TRUE,
+            '#title' => t('List of file types included:'),            
             '#options' => $fileTypes,
             '#description' => $this->t(''),
         );
         
         $fileFormats = array();
-        $fileFormats["1"] = "One";
-        $fileFormats["2"] = "Two";
-        $fileFormats["3"] = "Three";
-        $fileFormats["4"] = "Four";
+        $fileFormats["PDF_A-1"]="PDF/A-1";
+        $fileFormats["PDF_A-2"]="PDF/A-2";
+        $fileFormats["PDF_A-3"]="PDF/A-3";
+        $fileFormats["PDF (other)"]="PDF (other)";
+        $fileFormats["ODT"]="ODT";
+        $fileFormats["DOCX"]="DOCX";
+        $fileFormats["DOC"]="DOC";
+        $fileFormats["RTF"]="RTF";
+        $fileFormats["SXW"]="SXW";
+        $fileFormats["TXT"]="TXT";
+        $fileFormats["XML"]="XML";
+        $fileFormats["SGML"]="SGML";
+        $fileFormats["HTML"]="HTML";
+        $fileFormats["DTD"]="DTD";
+        $fileFormats["XSD"]="XSD";
+        $fileFormats["TIFF"]="TIFF";
+        $fileFormats["DNG"]="DNG";
+        $fileFormats["PNG"]="PNG";
+        $fileFormats["JPEG"]="JPEG";
+        $fileFormats["GIF"]="GIF";
+        $fileFormats["BMP"]="BMP";
+        $fileFormats["PSD"]="PSD";
+        $fileFormats["CPT"]="CPT";
+        $fileFormats["JPEG2000"]="JPEG2000";
+        $fileFormats["SVG"]="SVG";
+        $fileFormats["CGM"]="CGM";
+        $fileFormats["DXF"]="DXF";
+        $fileFormats["DWG"]="DWG";
+        $fileFormats["PostScript"]="PostScript";
+        $fileFormats["AI"]="AI";
+        $fileFormats["DWF"]="DWF";
+        $fileFormats["CSV"]="CSV";
+        $fileFormats["TSV"]="TSV";
+        $fileFormats["ODS"]="ODS";
+        $fileFormats["XLSX"]="XLSX";
+        $fileFormats["SXC"]="SXC";
+        $fileFormats["XLS"]="XLS";
+        $fileFormats["SIARD"]="SIARD";
+        $fileFormats["SQL"]="SQL";
+        $fileFormats["JSON"]="JSON";
+        $fileFormats["MDB"]="MDB";
+        $fileFormats["FMP"]="FMP";
+        $fileFormats["DBF"]="DBF";
+        $fileFormats["BAK"]="BAK";
+        $fileFormats["ODB"]="ODB";
+        $fileFormats["MKV"]="MKV";
+        $fileFormats["MJ2"]="MJ2";
+        $fileFormats["MP4"]="MP4";
+        $fileFormats["MXF"]="MXF";
+        $fileFormats["MPEG"]="MPEG";
+        $fileFormats["AVI"]="AVI";
+        $fileFormats["MOV"]="MOV";
+        $fileFormats["ASF_WMV"]="ASF/WMV";
+        $fileFormats["OGG"]="OGG";
+        $fileFormats["FLV"]="FLV";
+        $fileFormats["FLAC"]="FLAC";
+        $fileFormats["WAV"]="WAV";
+        $fileFormats["BWF"]="BWF";
+        $fileFormats["RF64_MBWF"]="RF64/MBWF";
+        $fileFormats["AAC_MP4"]="AAC/MP4";
+        $fileFormats["MP3"]="MP3";
+        $fileFormats["AIFF"]="AIFF";
+        $fileFormats["WMA"]="WMA";
+        $fileFormats["X3D"]="X3D";
+        $fileFormats["COLLADA"]="COLLADA";
+        $fileFormats["OBJ"]="OBJ";
+        $fileFormats["PLY"]="PLY";
+        $fileFormats["VRML"]="VRML";
+        $fileFormats["U3D"]="U3D";
+        $fileFormats["STL"]="STL";
+        $fileFormats["XHTML"]="XHTML";
+        $fileFormats["MHTML"]="MHTML";
+        $fileFormats["WARC"]="WARC";
+        $fileFormats["MAFF"]="MAFF";
         
         $form['file_formats'] = array(
             '#type' => 'checkboxes',
             '#title' => t('List of file formats included:'),
-            '#required' => TRUE,
+            
             '#options' => $fileFormats,
             '#description' => $this->t(''),
         );
         
-       
-        $form['creators_title2'] = array(
-            '#markup' => '<br><br>',
-        );
         
-        $form['creators'] = array(
-            '#type' => 'fieldset',
-            '#title' => t('<h2><b>Creators</b></h2>'),
-            '#collapsible' => TRUE,
-            '#collapsed' => FALSE,  
-        );       
-     
-        
-        $form['creators']['title'] = array(
+        $form['extent']['soft_req'] = array(
             '#type' => 'textfield',
-            '#title' => t('Name Title:'),
-            '#required' => TRUE,
+            '#title' => t('Software requirements:'),            
+            '#description' => $this->t('list any software programs formats that are not typically used in a standard office environment, that are required to access content being transferred'),
         );
         
-        $form['creators']['l_name'] = array(
+        $form['extent']['arrangement'] = array(
             '#type' => 'textfield',
-            '#title' => t('Last Name:'),
-            '#required' => TRUE,
+            '#title' => t('Arrangement:'),            
+            '#description' => $this->t('The aim is to give a logical and coherent overall view of the whole set of objects, describe folder structure, nature of relationship between objects and metadata, etc.  If necessary, attach diagrams or screenshots from the original system'),
         );
         
-        $form['creators']['f_name'] = array(
+        $form['extent']['name_scheme'] = array(
             '#type' => 'textfield',
-            '#title' => t('First Name:'),
-            '#required' => TRUE,
+            '#title' => t('Naming scheme:'),            
+            '#description' => $this->t('Provide if one exists'),
         );
         
-        $form['creators']['institution'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Institution:'),
-            '#required' => TRUE,
-        );
         
-        $form['creators']['city'] = array(
-            '#type' => 'textfield',
-            '#title' => t('City:'),
-            '#required' => TRUE,
-        );
-        
-        $form['creators']['address'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Address:'),
-            '#required' => TRUE,
-        );
-        
-        $form['creators']['zipcode'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Zipcode:'),
-            '#required' => TRUE,
-        );
-        
-        $form['creators']['email'] = array(
-            '#type' => 'email',
-            '#title' => t('Email:'),
-            '#required' => TRUE,
-        );
-        
-        $form['creators']['phone'] = array (
-            '#type' => 'tel',
-            '#title' => t('Phone'),
-            '#required' => TRUE,
-        );
-        
-         $form['creators_add'] = array(
-            '#markup' => '<a href="#">Add more creators</a>',
-        );
-         
-        
-         
-        $form['creators_title2'] = array(
-            '#markup' => '<br><br>',
-        );
-         
-        $form['candidate_confirmation'] = array (
-            '#type' => 'radios',
-            '#required' => TRUE,
-            '#title' => ('I read and agree the ....'),
-            '#options' => array(
-                'Yes' =>t('Yes'),
-                'No' =>t('No')
+        $form['actions']['previous'] = array(
+            '#type' => 'link',
+            '#title' => $this->t('Previous'),
+            '#attributes' => array(
+                'class' => array('button'),
             ),
+            '#weight' => 0,
+            '#url' => Url::fromRoute('oeaw_depagree_one'),
         );
         
-       
-        
-        
-        $form['actions']['#type'] = 'actions';
-        $form['actions']['submit'] = array(
-            '#type' => 'submit',
-            '#value' => $this->t('Save'),
-            '#button_type' => 'primary',
-        );
+        //create the next button to the form second page
+        $form['actions']['submit']['#value'] = $this->t('Next');
         
         return $form;
-  }
+    } 
   
-   public function submitForm(array &$form, FormStateInterface $form_state) {
-   // drupal_set_message($this->t('@can_name ,Your application is being submitted!', array('@can_name' => $form_state->getValue('candidate_name'))));
-    foreach ($form_state->getValues() as $key => $value) {
-      drupal_set_message($key . ': ' . $value);
+    public function submitForm(array &$form, FormStateInterface $form_state) {   
+        $form_state->setRedirect('oeaw_depagree_three');
     }
-   }
     
 }

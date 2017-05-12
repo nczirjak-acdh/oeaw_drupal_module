@@ -229,7 +229,7 @@ class FrontendController extends ControllerBase {
             $rows[2] = array('data' => array($link2));
         }
         
-        $link3 = Link::fromTextAndUrl('Deposition Agreement', Url::fromRoute('oeaw_deposition_agreement'));
+        $link3 = Link::fromTextAndUrl('Deposition Agreement', Url::fromRoute('oeaw_depagree_base'));
         $rows[3] = array('data' => array($link3));
         
         $table = array(
@@ -526,8 +526,8 @@ class FrontendController extends ControllerBase {
         return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\NewResourceOneForm');
     }
     
-    public function oeaw_deposition_agreement(){
-        return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\DepAgreeForm');
+    public function oeaw_depagree_base(){
+        return $form = \Drupal::formBuilder()->getForm('Drupal\oeaw\Form\DepAgreeOneForm');
     }
     
     /**
