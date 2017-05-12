@@ -22,7 +22,7 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
         
         $form['material'] = array(
             '#type' => 'fieldset',
-            '#title' => t('<h2><b>Description Of Material</b></h2>'),
+            '#title' => t('<b>Description Of Material</b>'),
             '#collapsible' => TRUE,
             '#collapsed' => FALSE,  
         );
@@ -108,14 +108,9 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
         
         
         
-        $form['creators_title3'] = array(
-            '#markup' => '<br><br>',
-        );
-        
-        
         $form['extent'] = array(
             '#type' => 'fieldset',
-            '#title' => t('<h2><b>Extent</b></h2>'),
+            '#title' => t('<b>Extent</b>'),
             '#collapsible' => TRUE,
             '#collapsed' => FALSE,  
         );

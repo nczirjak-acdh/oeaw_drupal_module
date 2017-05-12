@@ -22,7 +22,7 @@ class DepAgreeFourForm extends DepAgreeBaseForm{
       
         $form['creators'] = array(
             '#type' => 'fieldset',
-            '#title' => t('<h2><b>Creators</b></h2>'),
+            '#title' => t('<b>Creators</b>'),
             '#collapsible' => TRUE,
             '#collapsed' => FALSE,  
         );       

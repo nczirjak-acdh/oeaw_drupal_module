@@ -21,7 +21,7 @@ class DepAgreeOneForm extends DepAgreeBaseForm{
         
         $form['depositor'] = array(
             '#type' => 'fieldset',
-            '#title' => t('<h2><b>Depositor</b></h2>'),
+            '#title' => t('<b>Depositor</b>'),
             '#collapsible' => TRUE,
             '#collapsed' => FALSE,  
         );
