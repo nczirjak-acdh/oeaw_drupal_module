@@ -143,10 +143,18 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
         
         
         $fileTypes = array();
-        $fileTypes["Database"] = "DataBase";
+        $fileTypes["3DVirtual"] = "3D Data and Virtual Reality";
+        $fileTypes["AudioFiles"] = "Audio Files";
+        $fileTypes["Database"] = "DataBase";        
+        $fileTypes["Images"] = "Images (raster)";        
+        $fileTypes["PDFDocuments"] = "PDF Documents";
         $fileTypes["Spreadsheets"] = "Spreadsheets";
-        $fileTypes["Images"] = "Images";
-        $fileTypes["TextDocument"] = "Text Documents";
+        $fileTypes["StructFiles"] = "Structured text files (e. g. XML files)";
+        $fileTypes["TextDocuments"] = "Text Documents";
+        $fileTypes["VectorImages"] = "Vector Images";
+        $fileTypes["VideoFiles"] = "Video Files";
+        $fileTypes["Websites"] = "Websites";
+        
         
         $form['file_types'] = array(
             '#type' => 'checkboxes',
