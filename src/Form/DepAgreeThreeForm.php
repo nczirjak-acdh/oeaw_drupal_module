@@ -22,7 +22,7 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
       
         $form['transfer'] = array(
             '#type' => 'fieldset',
-            '#title' => t('<h2><b>Transfer Procedures</b></h2>'),
+            '#title' => t('<b>Transfer Procedures</b>'),
             '#collapsible' => TRUE,
             '#collapsed' => FALSE,  
         );       
@@ -51,7 +51,7 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
         $accMode["RES"] = "Restricted content (RES): includes resources with a special access mode. Special authorization rules apply that are detailed in the accompanying metadata record";        
         
         $form['transfer']['access_mode'] = array(
-            '#type' => 'checkboxes',
+            '#type' => 'radios',
             '#title' => t('Access mode:'),
             '#options' => $accMode,
             '#description' => $this->t(''),
@@ -64,7 +64,7 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
         $dataValidation[2] = "No data validation will be performed on objects submitted.";        
         
         $form['transfer']['data_validation'] = array(
-            '#type' => 'checkboxes',
+            '#type' => 'radios',
             '#title' => t('Data Validation:'),
             '#options' => $dataValidation,
             '#description' => $this->t(''),
