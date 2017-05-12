@@ -27,9 +27,15 @@ class DepAgreeForm extends FormBase{
             '#required' => TRUE,
         );
         
-        $form['l_name_f_name'] = array(
+        $form['l_name'] = array(
             '#type' => 'textfield',
-            '#title' => t('Last Name, First Name:'),
+            '#title' => t('Last Name:'),
+            '#required' => TRUE,
+        );
+        
+        $form['f_name'] = array(
+            '#type' => 'textfield',
+            '#title' => t('First Name:'),
             '#required' => TRUE,
         );
         
