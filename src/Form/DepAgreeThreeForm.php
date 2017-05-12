@@ -15,11 +15,7 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
     public function buildForm(array $form, FormStateInterface $form_state) {
         
         $form = parent::buildForm($form, $form_state);
-        
-        $form['depositor_agreement_title'] = array(
-            '#markup' => '<h1><b>Deposition agreement</b></h1>',
-        );
-      
+       
         $form['transfer'] = array(
             '#type' => 'fieldset',
             '#title' => t('<b>Transfer Procedures</b>'),

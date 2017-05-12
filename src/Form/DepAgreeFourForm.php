@@ -15,11 +15,7 @@ class DepAgreeFourForm extends DepAgreeBaseForm{
     public function buildForm(array $form, FormStateInterface $form_state) {
         
         $form = parent::buildForm($form, $form_state);
-        
-        $form['depositor_agreement_title'] = array(
-            '#markup' => '<h1><b>Deposition agreement</b></h1>',
-        );
-      
+              
         $form['creators'] = array(
             '#type' => 'fieldset',
             '#title' => t('<b>Creators</b>'),
@@ -112,13 +108,6 @@ class DepAgreeFourForm extends DepAgreeBaseForm{
             '#url' => Url::fromRoute('oeaw_depagree_three'),
         );
         
-        
-        $form['actions']['#type'] = 'actions';
-        $form['actions']['submit'] = array(
-            '#type' => 'submit',
-            '#value' => $this->t('Save'),
-            '#button_type' => 'primary',
-        );
         
         return $form;
   }
