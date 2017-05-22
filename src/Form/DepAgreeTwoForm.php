@@ -2,7 +2,7 @@
 
 namespace Drupal\oeaw\Form;
 
-use Drupal\Core\Form\FormBase;
+
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
@@ -23,86 +23,79 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
             '#collapsed' => FALSE,  
         );
         
-        $form['material']['acdh_repo_id'] = array(
+        $form['material']['material_acdh_repo_id'] = array(
             '#type' => 'textfield',
-            '#title' => t('ACDH-repo ID:'),
-            
-            '#default_value' => substr( md5(rand()), 0, 20),
+            '#title' => t('ACDH-repo ID:'),            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_acdh_repo_id'),
             '#attributes' => array("readonly" => TRUE),
             '#description' => $this->t('string used as an internal identifier for the deposited resources'),
         );
         
-        $form['material']['title'] = array(
+        $form['material']['material_title'] = array(
             '#type' => 'textfield',
             '#title' => t('Title:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_title') ? $this->store->get('material_title') : '',
             '#description' => $this->t(''),
         );
         
-        $form['material']['ipr'] = array(
+        $form['material']['material_ipr'] = array(
             '#type' => 'textarea',
             '#title' => t('Intellectual Property Rights (IPR):'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_ipr') ? $this->store->get('material_ipr') : '',
             '#description' => $this->t('Intellectual property rights including, but not limited to copyrights, related (or neighbouring) rights and database rights'),
         );
         
-        $form['material']['metadata'] = array(
+        $form['material']['material_metadata'] = array(
             '#type' => 'textarea',
             '#title' => t('Metadata:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_metadata') ? $this->store->get('material_metadata') : '',
             '#description' => $this->t('is the information that may serve to identify, discover, interpret, manage, and describe content and structure.'),
         );
         
-        $form['material']['file'] = array(
+        $form['material']['material_metadata_file'] = array(
             '#type' => 'managed_file',
-            '#title' => t('Metadata Resource:'),                
+            '#title' => t('Metadata Resource:'),
+            '#upload_location' => 'public://'.$this->store->get('material_acdh_repo_id').'/',
+            '#default_value' => $this->store->get('material_metadata_file') ? $this->store->get('material_metadata_file') : '',
             '#upload_validators' => array(
                 'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
              ),
             '#description' => $this->t(''),
+            '#required' => TRUE,            
         );
         
-        $form['material']['preview'] = array(
+        $form['material']['material_preview'] = array(
             '#type' => 'managed_file',
             '#title' => t('Preview:'),
+            '#upload_location' => 'public://'.$this->store->get('material_acdh_repo_id').'/',
+            '#default_value' => $this->store->get('material_preview') ? $this->store->get('material_preview') : '',
             '#upload_validators' => array(
                 'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
              ),
             '#description' => $this->t('A reduced size or length audio and/or visual representation of Content, in the form of one or more images, text files, audio files and/or moving image files.'),
+            '#required' => TRUE,            
         );    
         
-        $form['material']['licence'] = array(
-            '#type' => 'select',
-            '#default_value' => 'CC-BY',
-            '#options' => array(
-                'Public Domain Mark' => t('Public Domain Mark'),
-                'No Copyright - non commercial re-use only' => t('No Copyright - non commercial re-use only'),
-                'No Copyright - other known legal restrictions ' => t('No Copyright - other known legal restrictions '),
-                'CC0' => t('CC0'),
-                'CC-BY' => t('CC-BY'),
-                'CC-BY-SA' => t('CC-BY-SA'),
-                'CC-BY-ND' => t('CC-BY-ND'),
-                'CC-BY-NC' => t('CC-BY-NC'),
-                'CC-BY-NC-SA' => t('CC-BY-NC-SA'),
-                'CC-BY-NC-ND' => t('CC-BY-NC-ND'),
-                'In Copyright' => t('In Copyright'),
-                'In Copyright - Educational Use Permitted' => t('In Copyright - Educational Use Permitted'),
-                'In Copyright - EU Orphan Work' => t('In Copyright - EU Orphan Work'),
-                'Copyright Not Evaluated' => t('Copyright Not Evaluated'),                
-            ),
+        $form['material']['material_mat_licence'] = array(
+            '#type' => 'select',            
+            '#options' => \Drupal\oeaw\ConnData::getMaterialLicences(),            
             '#title' => t('Licence:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_mat_licence') ? $this->store->get('material_mat_licence') : 'CC-BY',
             '#description' => $this->t(''),
         );
         
-        $form['material']['scope_content_statement'] = array(
+        $form['material']['material_scope_content_statement'] = array(
             '#type' => 'textarea',
             '#title' => t('Scope and content statement:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_scope_content_statement') ? $this->store->get('material_scope_content_statement') : '',
             '#description' => $this->t('Provide a description of genres, purpose, and content of the resources being deposited.'),
         );
-        
-        
         
         $form['extent'] = array(
             '#type' => 'fieldset',
@@ -111,165 +104,93 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
             '#collapsed' => FALSE,  
         );
               
-        $form['extent']['file_size_byte'] = array(
+        $form['extent']['material_file_size_byte'] = array(
             '#type' => 'textfield',
             '#title' => t('Overall file size in bytes:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_file_size_byte') ? $this->store->get('material_file_size_byte') : '',
             '#description' => $this->t(''),
         );
         
-        $form['extent']['file_number'] = array(
+        $form['extent']['material_file_number'] = array(
             '#type' => 'textfield',
             '#title' => t('Number of files:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_file_number') ? $this->store->get('material_file_number') : '',
             '#description' => $this->t(''),
         );
         
-        $form['extent']['folder_number'] = array(
+        $form['extent']['material_folder_number'] = array(
             '#type' => 'textfield',
             '#title' => t('Number of folders:'),
-            
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_folder_number') ? $this->store->get('material_folder_number') : '',
             '#description' => $this->t(''),
         );
         
-        $form['extent']['soft_req'] = array(
+        $form['extent']['material_soft_req'] = array(
             '#type' => 'textfield',
             '#title' => t('Software requirements:'),            
             '#description' => $this->t('list any software programs formats that are not typically used in a standard office environment, that are required to access content being transferred'),
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_soft_req') ? $this->store->get('material_soft_req') : '',
         );
         
-        $form['extent']['arrangement'] = array(
+        $form['extent']['material_arrangement'] = array(
             '#type' => 'textarea',
-            '#title' => t('Arrangement:'),            
+            '#title' => t('Arrangement:'),    
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_arrangement') ? $this->store->get('material_arrangement') : '',
             '#description' => $this->t('The aim is to give a logical and coherent overall view of the whole set of objects, describe folder structure, nature of relationship between objects and metadata, etc.  If necessary, attach diagrams or screenshots from the original system'),
         );
         
-        $form['extent']['name_scheme'] = array(
+        
+        $form['extent']['material_name_scheme'] = array(
             '#type' => 'managed_file',
             '#title' => t('Naming scheme:'),
+            '#upload_location' => 'public://'.$this->store->get('material_acdh_repo_id').'/',
             '#upload_validators' => array(
                 'file_validate_extensions' => array('xml doc txt simplified docx pdf jpg png tiff gif bmp'),
              ),
             '#description' => $this->t('Provide if one exists'),
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('material_name_scheme') ? $this->store->get('material_name_scheme') : '',
         );
         
+        if($this->store->get('material_file_types')){
+            $form['material_file_types']['#default_value'] =  $this->store->get('material_file_types');
+        }
         
-        $fileTypes = array();
-        $fileTypes["3DVirtual"] = "3D Data and Virtual Reality";
-        $fileTypes["AudioFiles"] = "Audio Files";
-        $fileTypes["Database"] = "DataBase";        
-        $fileTypes["Images"] = "Images (raster)";        
-        $fileTypes["PDFDocuments"] = "PDF Documents";
-        $fileTypes["Spreadsheets"] = "Spreadsheets";
-        $fileTypes["StructFiles"] = "Structured text files (e. g. XML files)";
-        $fileTypes["TextDocuments"] = "Text Documents";
-        $fileTypes["VectorImages"] = "Vector Images";
-        $fileTypes["VideoFiles"] = "Video Files";
-        $fileTypes["Websites"] = "Websites";
-        
-        
-        $form['file_types'] = array(
+        $form['material_file_types'] = array(
             '#type' => 'checkboxes',
             '#title' => t('List of file types included:'),            
-            '#options' => $fileTypes,
+            '#options' => \Drupal\oeaw\ConnData::getFileTypes(),
             '#description' => $this->t(''),
+            '#required' => TRUE        
         );
         
-        $form['other_file_type'] = array(
+        $form['material_other_file_type'] = array(
             '#type' => 'textarea',
-            '#title' => t('Other File types:'),            
+            '#title' => t('Other File types:'),               
+            '#default_value' => $this->store->get('material_other_file_type') ? $this->store->get('material_other_file_type') : '',
             '#description' => $this->t('If your file type is not in the list, then please add it here.'),
         );
         
-        $fileFormats = array();
-        $fileFormats["AAC_MP4"]="AAC/MP4";
-        $fileFormats["AI"]="AI";
-        $fileFormats["AIFF"]="AIFF";
-        $fileFormats["ASF_WMV"]="ASF/WMV";
-        $fileFormats["AVI"]="AVI";
-        $fileFormats["BAK"]="BAK";
-        $fileFormats["BMP"]="BMP";
-        $fileFormats["BWF"]="BWF";
-        $fileFormats["CGM"]="CGM";
-        $fileFormats["COLLADA"]="COLLADA";
-        $fileFormats["CPT"]="CPT";
-        $fileFormats["CSV"]="CSV";
-        $fileFormats["DBF"]="DBF";
-        $fileFormats["DNG"]="DNG";
-        $fileFormats["DOC"]="DOC";
-        $fileFormats["DOCX"]="DOCX";
-        $fileFormats["DTD"]="DTD";
-        $fileFormats["DWF"]="DWF";
-        $fileFormats["DWG"]="DWG";
-        $fileFormats["DXF"]="DXF";
-        $fileFormats["FLAC"]="FLAC";
-        $fileFormats["FLV"]="FLV";
-        $fileFormats["FMP"]="FMP";
-        $fileFormats["GIF"]="GIF";
-        $fileFormats["HTML"]="HTML";
-        $fileFormats["JPEG"]="JPEG";
-        $fileFormats["JPEG2000"]="JPEG2000";
-        $fileFormats["JSON"]="JSON";
-        $fileFormats["MAFF"]="MAFF";
-        $fileFormats["MDB"]="MDB";
-        $fileFormats["MHTML"]="MHTML";
-        $fileFormats["MJ2"]="MJ2";
-        $fileFormats["MKV"]="MKV";
-        $fileFormats["MOV"]="MOV";
-        $fileFormats["MP3"]="MP3";
-        $fileFormats["MP4"]="MP4";
-        $fileFormats["MPEG"]="MPEG";
-        $fileFormats["MXF"]="MXF";
-        $fileFormats["OBJ"]="OBJ";
-        $fileFormats["ODB"]="ODB";
-        $fileFormats["ODS"]="ODS";
-        $fileFormats["ODT"]="ODT";
-        $fileFormats["OGG"]="OGG";
-        $fileFormats["PDF (other)"]="PDF (other)";
-        $fileFormats["PDF_A-1"]="PDF/A-1";
-        $fileFormats["PDF_A-2"]="PDF/A-2";
-        $fileFormats["PDF_A-3"]="PDF/A-3";
-        $fileFormats["PLY"]="PLY";
-        $fileFormats["PNG"]="PNG";
-        $fileFormats["PostScript"]="PostScript";
-        $fileFormats["PSD"]="PSD";
-        $fileFormats["RF64_MBWF"]="RF64/MBWF";
-        $fileFormats["RTF"]="RTF";
-        $fileFormats["SGML"]="SGML";
-        $fileFormats["SIARD"]="SIARD";
-        $fileFormats["SQL"]="SQL";
-        $fileFormats["STL"]="STL";
-        $fileFormats["SVG"]="SVG";
-        $fileFormats["SXC"]="SXC";
-        $fileFormats["SXW"]="SXW";
-        $fileFormats["TIFF"]="TIFF";
-        $fileFormats["TSV"]="TSV";
-        $fileFormats["TXT"]="TXT";
-        $fileFormats["U3D"]="U3D";
-        $fileFormats["VRML"]="VRML";
-        $fileFormats["WARC"]="WARC";
-        $fileFormats["WAV"]="WAV";
-        $fileFormats["WMA"]="WMA";
-        $fileFormats["X3D"]="X3D";
-        $fileFormats["XHTML"]="XHTML";
-        $fileFormats["XLS"]="XLS";
-        $fileFormats["XLSX"]="XLSX";
-        $fileFormats["XML"]="XML";
-        $fileFormats["XSD"]="XSD";
-
-
-        
-        $form['file_formats'] = array(
+        if($this->store->get('material_file_formats')){
+            $form['material_file_formats']['#default_value'] =  $this->store->get('material_file_formats');
+        }
+        $form['material_file_formats'] = array(
             '#type' => 'checkboxes',
             '#title' => t('List of file formats included:'),
-            
-            '#options' => $fileFormats,
+            '#required' => TRUE,            
+            '#options' => \Drupal\oeaw\ConnData::getFileFormats(),            
             '#description' => $this->t(''),
         );
         
-        $form['other_file_formats'] = array(
+        $form['material_other_file_formats'] = array(
             '#type' => 'textarea',
-            '#title' => t('Other File formats:'),
+            '#title' => t('Other File formats:'),            
+            '#default_value' => $this->store->get('material_other_file_formats') ? $this->store->get('material_other_file_formats') : '',
             '#description' => $this->t('If your file format is not in the list, then please add it here.'),
         );
         
@@ -290,6 +211,49 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
     } 
   
     public function submitForm(array &$form, FormStateInterface $form_state) {   
+                
+        $form2Val = array();
+        //get the class and root values from the form
+        $form2Val['material_acdh_repo_id'] = $form_state->getValue('material_acdh_repo_id');
+        $form2Val['material_title'] = $form_state->getValue('material_title');
+        $form2Val['material_ipr'] = $form_state->getValue('material_ipr');
+        $form2Val['material_metadata'] = $form_state->getValue('material_metadata');
+        $form2Val['material_metadata_file'] = $form_state->getValue('material_metadata_file');
+        $form2Val['material_preview'] = $form_state->getValue('material_preview');
+        $form2Val['material_mat_licence'] = $form_state->getValue('material_mat_licence');
+        $form2Val['material_scope_content_statement'] = $form_state->getValue('material_scope_content_statement');
+        $form2Val['material_file_size_byte'] = $form_state->getValue('material_file_size_byte');
+        $form2Val['material_file_number'] = $form_state->getValue('material_file_number');
+        $form2Val['material_folder_number'] = $form_state->getValue('material_folder_number');
+        $form2Val['material_soft_req'] = $form_state->getValue('material_soft_req');
+        $form2Val['material_arrangement'] = $form_state->getValue('material_arrangement');
+        $form2Val['material_name_scheme'] = $form_state->getValue('material_name_scheme');
+        $form2Val['material_other_file_type'] = $form_state->getValue('material_other_file_type');
+        $form2Val['material_other_file_formats'] = $form_state->getValue('material_other_file_formats');
+        $form2Val['material_file_formats'] = $form_state->getValue('material_file_formats');
+        $form2Val['material_file_types'] = $form_state->getValue('material_file_types');
+              
+        
+        $this->store->set('material_title', $form_state->getValue('material_title'));
+        $this->store->set('material_ipr', $form_state->getValue('material_ipr'));
+        $this->store->set('material_metadata', $form_state->getValue('material_metadata'));
+        $this->store->set('material_metadata_file', $form_state->getValue('material_metadata_file'));
+        $this->store->set('material_preview', $form_state->getValue('material_preview'));
+        $this->store->set('material_mat_licence', $form_state->getValue('material_mat_licence'));
+        $this->store->set('material_scope_content_statement', $form_state->getValue('material_scope_content_statement'));
+        $this->store->set('material_file_size_byte', $form_state->getValue('material_file_size_byte'));
+        $this->store->set('material_file_number', $form_state->getValue('material_file_number'));
+        $this->store->set('material_folder_number', $form_state->getValue('material_folder_number'));
+        $this->store->set('material_soft_req', $form_state->getValue('material_soft_req'));
+        $this->store->set('material_arrangement', $form_state->getValue('material_arrangement'));
+        $this->store->set('material_name_scheme', $form_state->getValue('material_name_scheme'));
+        $this->store->set('material_other_file_type', $form_state->getValue('material_other_file_type'));
+        $this->store->set('material_other_file_formats', $form_state->getValue('material_other_file_formats'));
+        $this->store->set('material_file_formats', $form_state->getValue('material_file_formats'));
+        $this->store->set('material_file_types', $form_state->getValue('material_file_types'));
+        
+        $this->store->set('form2Val', $form2Val);        
+        
         $form_state->setRedirect('oeaw_depagree_three');
     }
     

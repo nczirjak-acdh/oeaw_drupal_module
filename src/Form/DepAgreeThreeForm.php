@@ -2,7 +2,6 @@
 
 namespace Drupal\oeaw\Form;
 
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
@@ -25,7 +24,9 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
         
         $form['transfer']['folder_name'] = array(
             '#type' => 'textfield',
-            '#title' => t('Folder name or BagIt name:'),            
+            '#title' => t('Folder name or BagIt name:'),
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('folder_name') ? $this->store->get('folder_name') : '',
         );
         
         $form['transfer']['transfer_date'] = array(
@@ -35,32 +36,23 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
             '#default_value' => date("d-m-Y")            
         );
        
-        
-        $transferMeth = array();
-        $transferMeth["CD"] = "CD";
-        $transferMeth["DVD"] = "DVD";
-        $transferMeth["HDD"] = "Hard Drive";
-        $transferMeth["NETWORK"] = "Network Transfer";
-        $transferMeth["USB"] = "USB";
-        
         $form['transfer']['transfer_method'] = array(
             '#type' => 'radios',
             '#title' => t('Transfer medium and method:'),
-            '#options' => $transferMeth,
+            '#options' => \Drupal\oeaw\ConnData::getTransferMedium(),
             '#description' => $this->t('e.g. hard drive, CD, DVD, USB stick, network transfer'),    
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('transfer_method') ? $this->store->get('transfer_method') : '',
         );
         
-        
-        $dataValidation = array();
-        $dataValidation[0] = "The donor/depository has provided a tab-delimited text file providing full object paths and filenames for the all objects being submitted, with an MD5 checksum for each object.  The repository will perform automated validation.";
-        $dataValidation[1] = "Based on incomplete information supplied by the depositor/donor prior to transfer, the repository will carry out selected content and completeness checks to verify that the transmitted data is what is expected, and that it is complete.";
-        $dataValidation[2] = "No data validation will be performed on objects submitted.";        
         
         $form['transfer']['data_validation'] = array(
             '#type' => 'radios',
             '#title' => t('Data Validation:'),
-            '#options' => $dataValidation,
+            '#options' => \Drupal\oeaw\ConnData::getDataValidation(),
             '#description' => $this->t(''),
+            '#required' => TRUE,
+            '#default_value' => $this->store->get('data_validation') ? $this->store->get('data_validation') : '',
         );
        
         $form['actions']['previous'] = array(
@@ -80,7 +72,19 @@ class DepAgreeThreeForm extends DepAgreeBaseForm{
   }
   
    public function submitForm(array &$form, FormStateInterface $form_state) {
-   // drupal_set_message($this->t('@can_name ,Your application is being submitted!', array('@can_name' => $form_state->getValue('candidate_name'))));
+   $form3Val = array();
+    //get the class and root values from the form
+    $form3Val['folder_name'] = $form_state->getValue('folder_name');
+    $form3Val['transfer_date'] = $form_state->getValue('transfer_date');
+    $form3Val['transfer_method'] = $form_state->getValue('transfer_method');
+    $form3Val['data_validation'] = $form_state->getValue('data_validation');
+        
+    $this->store->set('folder_name', $form_state->getValue('folder_name'));
+    $this->store->set('transfer_date', $form_state->getValue('transfer_date'));
+    $this->store->set('transfer_method', $form_state->getValue('transfer_method'));
+    $this->store->set('data_validation', $form_state->getValue('data_validation'));
+        
+    $this->store->set('form3Val', $form3Val);
     $form_state->setRedirect('oeaw_depagree_four');
    }
     

@@ -26,6 +26,8 @@ use acdhOeaw\fedora\FedoraResource;
 use EasyRdf\Graph;
 use EasyRdf\Resource;
 
+use TCPDF;
+
 //autocomplete
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -257,6 +259,31 @@ class FrontendController extends ControllerBase {
         $datatable = array(
             '#theme' => 'oeaw_success_resource',
             '#result' => $uri,
+            '#userid' => $uid,
+            '#attached' => [
+                'library' => [
+                'oeaw/oeaw-styles', 
+                ]
+            ]
+        );
+        
+        return $datatable;
+    }
+    
+    
+    public function oeaw_form_success(string $url){
+        
+        if (empty($url)) {
+           return drupal_set_message(t('The $url is missing!'), 'error');
+        }
+        $uid = \Drupal::currentUser()->id();
+        // decode the uri hash
+        
+        //$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]/modules/oeaw/src/pdftmp".$url.'.pdf';
+        $url = "/modules/oeaw/src/pdftmp/".$url.".pdf";
+        $datatable = array(
+            '#theme' => 'oeaw_form_resource',
+            '#result' => $url,
             '#userid' => $uid,
             '#attached' => [
                 'library' => [

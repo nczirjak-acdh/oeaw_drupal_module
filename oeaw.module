@@ -21,6 +21,12 @@ function oeaw_theme() {
     'template' => 'success_res',
   ];
   
+  
+  $theme['oeaw_form_resource'] = [
+    'variables' => ['result' => NULL, 'userid' => NULL, 'errorMSG' => null],
+    'template' => 'form_res',
+  ];
+  
   $theme['oeaw_search_res_dt'] = [
     'variables' => ['result' => NULL, 'searchedValues' => NULL, 'userid' => NULL, 'errorMSG' => null],
     'template' => 'search_res',

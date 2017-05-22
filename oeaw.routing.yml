@@ -113,6 +113,14 @@ oeaw_new_success:
     _permission: 'access content'
     _access: 'TRUE'
 
+oeaw_form_success:
+  path: '/oeaw_form_success/{url}'
+  defaults:
+    _controller: '\Drupal\oeaw\Controller\FrontendController::oeaw_form_success'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
+
 oeaw_depagree_base:
   path: '/oeaw_depagree_base'
   defaults:
@@ -153,6 +161,15 @@ oeaw_depagree_four:
   defaults:
     _form: '\Drupal\oeaw\Form\DepAgreeFourForm'
     _title: 'Deposition agreement, Step 4'
+  requirements:
+    _permission: 'access content'
+    _access: 'TRUE'
+
+oeaw_test_form:
+  path: '/oeaw_test_form'
+  defaults:
+    _form: '\Drupal\oeaw\Form\TestForm'
+    _title: 'Test Form'
   requirements:
     _permission: 'access content'
     _access: 'TRUE'

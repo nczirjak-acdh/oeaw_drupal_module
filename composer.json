@@ -4,7 +4,8 @@
     "type": "drupal-module",
     "license": "MIT",
     "require": {
-         "acdh-oeaw/repo-php-util": ">=0.10.0"
-     }
+           "acdh-oeaw/repo-php-util": ">=0.10.0",
+	   "tecnickcom/tcpdf": ">=6.2.11"
+    }
 }
 
