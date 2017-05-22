@@ -101,13 +101,13 @@ abstract class DepAgreeBaseForm extends FormBase {
         $filePreview = $filePreview[0];
         
         $fmdObj = file_load($fileMetaData);
-        $form2['material_metadata_file'] = '/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$fmdObj->getFilename();        
+        $form2['material_metadata_file'] = $_SERVER['HTTP_HOST'].'/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$fmdObj->getFilename();        
         
         $fnsObj = file_load($fileNameScheme);
-        $form2['material_name_scheme'] = '/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$fnsObj->getFilename();
+        $form2['material_name_scheme'] = $_SERVER['HTTP_HOST'].'/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$fnsObj->getFilename();
         
         $fpObj = file_load($filePreview);
-        $form2['material_preview'] = '/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$fpObj->getFilename();
+        $form2['material_preview'] = $_SERVER['HTTP_HOST'].'/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$fpObj->getFilename();
         
         $dv = \Drupal\oeaw\ConnData::getDataValidation();
         $form3['data_validation'] = $dv[$form3['data_validation']];
@@ -138,7 +138,7 @@ abstract class DepAgreeBaseForm extends FormBase {
         $this->generatePdfPage($tcpdf, $form4, "Creators");       
  
          //Close and output PDF document
-        $tcpdf->Output($_SERVER['DOCUMENT_ROOT'].'/modules/oeaw/src/pdftmp/'.$form2['material_acdh_repo_id'].'.pdf', 'F');
+        $tcpdf->Output($_SERVER['DOCUMENT_ROOT'].'/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$form2['material_acdh_repo_id'].'.pdf', 'F');
         
         $this->deleteStore($form1);
         $this->deleteStore($form2);

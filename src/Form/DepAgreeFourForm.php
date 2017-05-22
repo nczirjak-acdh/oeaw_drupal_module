@@ -42,11 +42,13 @@ class DepAgreeFourForm extends DepAgreeBaseForm{
                 $form['fields']['creators']['creator_l_name_'.$i] = array(
                     '#type' => 'textfield',
                     '#title' => t('Last Name:'),
+                    '#required' => TRUE,
                     '#default_value' => $this->store->get('creator_l_name_'.$i) ? $this->store->get('creator_l_name_'.$i) : '',
                 );
                 $form['fields']['creators']['creator_f_name_'.$i] = array(
                     '#type' => 'textfield',
                     '#title' => t('First Name:'),
+                    '#required' => TRUE,
                     '#default_value' => $this->store->get('creator_f_name_'.$i) ? $this->store->get('creator_f_name_'.$i) : '',
                 );
                 $form['fields']['creators']['creator_institution_'.$i] = array(

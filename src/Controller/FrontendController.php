@@ -212,6 +212,7 @@ class FrontendController extends ControllerBase {
      * @return array
     */
     public function oeaw_menu(): array {
+        
         drupal_get_messages('error', TRUE);
         $table = array();
         $header = array('id' => t('MENU'));
@@ -280,7 +281,7 @@ class FrontendController extends ControllerBase {
         // decode the uri hash
         
         //$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]/modules/oeaw/src/pdftmp".$url.'.pdf';
-        $url = "/modules/oeaw/src/pdftmp/".$url.".pdf";
+        $url = $_SERVER['HTTP_HOST'].'/sites/default/files/'.$url.'/'.$url.'.pdf';
         $datatable = array(
             '#theme' => 'oeaw_form_resource',
             '#result' => $url,

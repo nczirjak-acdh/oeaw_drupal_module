@@ -105,7 +105,7 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
         );
               
         $form['extent']['material_file_size_byte'] = array(
-            '#type' => 'textfield',
+            '#type' => 'number',
             '#title' => t('Overall file size in bytes:'),
             '#required' => TRUE,
             '#default_value' => $this->store->get('material_file_size_byte') ? $this->store->get('material_file_size_byte') : '',
@@ -113,7 +113,7 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
         );
         
         $form['extent']['material_file_number'] = array(
-            '#type' => 'textfield',
+            '#type' => 'number',
             '#title' => t('Number of files:'),
             '#required' => TRUE,
             '#default_value' => $this->store->get('material_file_number') ? $this->store->get('material_file_number') : '',
@@ -121,7 +121,7 @@ class DepAgreeTwoForm extends DepAgreeBaseForm{
         );
         
         $form['extent']['material_folder_number'] = array(
-            '#type' => 'textfield',
+            '#type' => 'number',
             '#title' => t('Number of folders:'),
             '#required' => TRUE,
             '#default_value' => $this->store->get('material_folder_number') ? $this->store->get('material_folder_number') : '',
