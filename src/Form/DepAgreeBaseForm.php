@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use TCPDF;
 
+
 abstract class DepAgreeBaseForm extends FormBase {
    
     /**
@@ -111,32 +112,57 @@ abstract class DepAgreeBaseForm extends FormBase {
         
         $dv = \Drupal\oeaw\ConnData::getDataValidation();
         $form3['data_validation'] = $dv[$form3['data_validation']];
+                
         
-        
-        
-        $tcpdf = new TCPDF();
-        
-        $tcpdf->SetCreator(PDF_CREATOR);
+        $tcpdf = new \Drupal\oeaw\deppPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $tcpdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE, PDF_HEADER_STRING);
+
+        // set header and footer fonts
+        $tcpdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+        $tcpdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+        // set default monospaced font
+        $tcpdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+        // set margins
+        $tcpdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $tcpdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+        $tcpdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+        $tcpdf->SetCreator('ACDH');
         $tcpdf->SetAuthor('ACDH');
         $tcpdf->SetTitle('Deposition Agreement');
         $tcpdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-        // remove default header/footer
         $tcpdf->setPrintHeader(true);
-        $tcpdf->setPrintFooter(false);
+        $tcpdf->setPrintFooter(true);
         $tcpdf->SetFont('times', 'r', 14);
-        $PDF_HEADER_LOGO = "";
-        $PDF_HEADER_LOGO_WIDTH = "20";
-        $PDF_HEADER_TITLE = "ACDH  - DEPOSITION AGREEMENT FORM";
-        $PDF_HEADER_STRING = "";
         
-        $tcpdf->SetHeaderData($PDF_HEADER_LOGO, $PDF_HEADER_LOGO_WIDTH, $PDF_HEADER_TITLE, $PDF_HEADER_STRING);
-        
+      
        //generate the pages
-        $this->generatePdfPage($tcpdf, $form1, "Depositor");
-        $this->generatePdfPage($tcpdf, $form2, "Description Of Material, Extent, Files");
-        $this->generatePdfPage($tcpdf, $form3, "Transfer Procedures");
+        $this->generatePdfPage($tcpdf, $form1, "Depositor", \Drupal\oeaw\ConnData::$depTXT);
+        $this->generatePdfPage($tcpdf, $form2, "Description Of Material, Extent, Files", \Drupal\oeaw\ConnData::$descTXT);
+        $this->generatePdfPage($tcpdf, $form3, "Transfer Procedures", \Drupal\oeaw\ConnData::$transferTXT);
         $this->generatePdfPage($tcpdf, $form4, "Creators");       
  
+        $tcpdf->AddPage();
+        $signTXT = '
+            <table width="100%">
+                <tr>
+                    <td colspan="2"><h1>Signatures<br /></h1></td>
+                </tr>
+                <tr width="50%">
+                        <td align="center"><b>For the Repository<br/></b></td>
+                        <td align="center"><b>For the Depositor<br/></b></td>
+                </tr>
+                <tr width="50%">
+                        <td align="center" style="padding-top:20px;"><br />---------------------------------</td>
+                        <td align="center" style="padding-top:20px;"><br />---------------------------------</td>
+                </tr>
+                <tr width="50%">
+                        <td align="center">Date, Signature</td>
+                        <td align="center">Date, Signature</td>
+                </tr>
+            </table>';
+        $tcpdf->writeHTML($signTXT, true, false, false, false, '');
          //Close and output PDF document
         $tcpdf->Output($_SERVER['DOCUMENT_ROOT'].'/sites/default/files/'.$form2['material_acdh_repo_id'].'/'.$form2['material_acdh_repo_id'].'.pdf', 'F');
         
@@ -154,10 +180,11 @@ abstract class DepAgreeBaseForm extends FormBase {
         return;
     }
     
-    public function generatePdfPage(TCPDF $tcpdf, array $formData, string $title ): TCPDF{
+    public function generatePdfPage(TCPDF $tcpdf, array $formData, string $title, string $ftrTXT = "" ): TCPDF{
         
          // add a page
         $tcpdf->AddPage();
+        
         // set some text to print
         $txt = "<h1>".$title."</h1><br/>";
        
@@ -195,6 +222,10 @@ abstract class DepAgreeBaseForm extends FormBase {
             }      
         }
         $tcpdf->writeHTML($txt, true, false, false, false, '');
+        
+        if($ftrTXT){
+            $tcpdf->writeHTML($ftrTXT, true, false, false, false, '');
+        }
         // print a block of text using Write()
         
         return $tcpdf;

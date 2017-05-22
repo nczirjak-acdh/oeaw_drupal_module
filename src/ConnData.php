@@ -47,9 +47,74 @@ class ConnData
     public static $fedoraBinary = "http://fedora.info/definitions/v4/repository#Binary";
     public static $foafName = "http://xmlns.com/foaf/0.1/name";
     
-    public static function getPDFLng(string $lng): string {
+    public static $depTXT = "This agreement is between the organisation or person(s) authorised to transfer and deposit digital resources (hereinafter the Depositor) and ACDH-repo (hereinafter the Repository), "
+                . "which is run and represented by the Austrian Centre for Digital Humanities of the Austrian Academy of Sciences. "
+                . "The agreement concerns transfer, curation, archival, and dissemination of electronic resources described in the section 'Description of Material'.<br /><br />"
+            . "<b>Repository</b><br />
+            ACDH-repo<br />
+            Austrian Centre for Digital Humanities<br />
+            Austrian Academy of Sciences<br />
+            Sonnenfelsgasse 19<br />
+            1010 Wien<br />";
         
-
+    
+    public static $descTXT = "The resources being agreed upon are described below and comprise the Submission Information Package (SIP). "
+                . "A change in the extent of the resources after signing this agreement is only possible by mutual agreement between the Depositor and the Repository. "
+                . "File formats included should adhere to the preferred and accepted formats specified in XXX."
+            . "<br /><br />"
+            . "For presentation and dissemination the information provided in ‘Description of Material’ might be used.<br /><br />
+        The Depositor and the Repository agree on following procedures to check for data integrityvalidation (please tick as appropriate):        
+        
+            <input type='checkbox' name='1' val='1'> The donor/depository has provided a tab-delimited text file providing full object paths and filenames for the all objects being submitted, with an MD5 checksum for each object.  The repository will perform automated validation.<br />
+            <input type='checkbox' name='2' val='2'> Based on incomplete information supplied by the depositor/donor prior to transfer, the repository will carry out selected content and completeness checks to verify that the transmitted data is what is expected, and that it is complete. .<br />
+            <input type='checkbox' name='3' val='3'>No data validation will be performed on objects submitted..<br />
+        <br />
+        The Repository reserves the right to reject data transfers at any stage of processing. The Repository will notify the Depositor of the reason of rejection, which can include:
+        <ul>
+            <li>The deposit does not conform to the agreed SIP definition</li>
+            <li>The deposit does not contain the expected content</li>
+            <li>The deposit is incomplete</li>
+            <li>The deposit contains an unacceptable level of duplication (within itself and/or with existing content already held by the repository)</li>
+            <li>The deposit includes insufficient metadata.  </li>
+        </ul>        
+        <br />
+        Rejected data transfers will be returned to the Depositor using the original transfer method, and the Depositor will be given due notice. If relevant a replacement data transfer will be agreed between the Depositor and the Repository.<br /><br />
+        The Repository will provide the Depositor with receipts at the following points:
+        <ul>
+            <li>a.)When data is first received</li>
+            <li>b.)Once data has been successfully ingested</li>
+            <li>c,)Once data is ready for publication</li>
+        </ul>
+        <br />
+        Furthermore the Repository will provide the Depositor with a processing plan in due time.";
+        
+    public static $transferTXT = "The Depositor will present data for transfer to the Repository in the formats described above, 
+            within a single folder named as below. If possible the Depositor will present data in BagIt format with the filename stated below. 
+            Furthermore the Depositor will supply metadata as described in XXX, in the format and to the specifications described there. 
+            In addition the Depositor will choose an access mode and a licence, and provide information about sensible information.
+            <br /><br />
+            Data shall be transmitted to the repository by the Depositor on the following date or schedule, using the transfer medium described:            
+            <ul>
+                <li>Folder name or BagIt name</li>
+                <li>Required metadata</li>
+                <li>Transfer date</li>
+            </ul>
+            <br />
+            <br />
+            Transfer medium and method (please tick as appropriate):<br />            
+                <input type='checkbox' name='4' val='4'> Upload (max. 100MB)<br />
+                <input type='checkbox' name='5' val='5'> oeawCloud please provide the URL<br />
+                <input type='checkbox' name='6' val='6'> Link to file storage: please provide the URL<br />
+                <input type='checkbox' name='7' val='7'> With physical storage medium: we will contact you to clarify details<br />
+                <br /><br />
+            Where the transfer medium is supplied by the Repository, the Repository accepts no responsibility for any loss or damage to the Depositor’s systems which may result from its use.
+            <br />
+            Where the transfer medium is supplied by the Donor, the Repository will ensure to return it to the Depositor when it isn’t needed anymore.
+            ";
+        
+    
+    
+    public static function getPDFLng(string $lng): string {
         $lngData = array(
             'title' => 'Title',
             'l_name' => 'Last Name',
@@ -243,6 +308,8 @@ class ConnData
         $dataValidation[2] = "No data validation will be performed on objects submitted.";        
         return $dataValidation;
     }
+    
+    
     
 }
 
